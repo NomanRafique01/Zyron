@@ -22,6 +22,7 @@
 
 ---
 
+
 ## What is Zyron?
 
 Zyron is a production-grade Android AI assistant that replaces a single chatbot with a **coordinated swarm of four specialist agents** running in parallel. Every query is routed to a team of domain experts — an analyst, an executor, a validator, and a synthesizer — whose outputs are fused into a single, high-quality response.
@@ -220,6 +221,92 @@ World-class creative team. Best for copywriting, brand strategy, storytelling, c
 - **API Config panel** — per-provider key entry, model selection, key status verification, share-key-across-agents toggle
 - **Privacy panel** — privacy mode, profile context injection toggle
 - **Reset panel** — wipe conversation history, clear API keys, full factory reset
+
+---
+## How to Use
+
+Follow these steps once the app is installed and running on your Android device.
+
+### Step 1 — Add Your API Keys
+
+1. Tap the **⚙ Settings** icon (top-right of the chat screen)
+2. Navigate to **API Config**
+3. For each agent socket (Agent 1 – 4), select a provider from the dropdown and paste your API key
+4. Tap **Verify** to confirm the key is live — a green status indicator means it's ready
+5. Enable **Share key across agents** if you want all four sockets to use the same key
+
+> You only need one working key to start. Zyron will use it across all agents until you configure individual keys.
+
+---
+
+### Step 2 — Choose a Team
+
+1. In **Settings → Agent Library**, browse the six specialist teams:
+   `Dev Core · Coders · Scientists · Mega Minds · Historians · Creative Thinkers`
+2. Tap a team to preview its four agents and their roles
+3. Tap **Set as Active Team** to activate it for your next query
+
+The active team is shown in the header.
+
+---
+
+### Step 3 — Send a Query
+
+1. Type your question or task in the **input bar** at the bottom
+2. Tap **Send** (or press Enter)
+3. Watch the four agent progress bars appear — each agent streams its output in real time:
+   - 🧠 Agent 1 — **Thinking / Analyzing**
+   - ⚡ Agent 2 — **Building / Executing**
+   - 🔍 Agent 3 — **Red-teaming / Validating**
+   - ✍️ Agent 4 — **Synthesizing** (waits for Agents 1–3, then produces the final answer)
+4. The final fused response appears in the chat bubble when Agent 4 completes
+
+To **stop** a generation mid-stream, tap the **Stop** button that replaces Send while the agents are running.
+
+---
+
+### Step 4 — Customize Synthesis Persona
+
+1. Open **Settings → Profile**
+2. Under **Writer Persona**, pick one of five modes:
+
+   | Persona | When to use |
+   |---------|-------------|
+   | **Balanced** | Everyday queries |
+   | **Precise** | Technical / factual answers needing exact numbers |
+   | **Educator** | Learning new concepts step-by-step |
+   | **Creative** | Brainstorming, copywriting, storytelling |
+   | **Executive** | Quick decisions — TL;DR + action item |
+
+---
+
+### Step 5 — Manage Conversations
+
+| Action | How |
+|--------|-----|
+| **New chat** | Tap **＋** in the top-left sidebar |
+| **Switch session** | Slide open the left drawer and tap any past conversation |
+| **Delete session** | Long-press a session in the sidebar → Delete |
+| **Search history** | Use the search bar at the top of the sidebar |
+
+---
+
+### Step 6 — Lock API Settings (Optional)
+
+If other people use your device, enable **API Config Lock** in **Settings → Privacy**:
+
+1. Set a PIN or use biometric authentication
+2. Once enabled, the **API Config** panel requires authentication before it can be opened
+3. To remove the lock, authenticate and tap **Remove Lock**
+
+---
+
+### Tips
+
+- **Offline?** Zyron falls back to on-device **Gemini Nano** automatically when all network providers are unreachable
+- **Wrong team for your query?** The router will suggest a better-suited team — look for the suggestion banner below your response
+- **Regenerate** a response by long-pressing the assistant bubble → **Regenerate**
+- **Copy code** from any code block by tapping the copy icon in the top-right of the block
 
 ---
 
