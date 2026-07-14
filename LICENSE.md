@@ -23,7 +23,6 @@ This Software is NOT open source. It is NOT freeware. It is NOT public domain.
 
 
 1. OWNERSHIP & INTELLECTUAL PROPERTY
-──────────────────────────────────────
 1.1  The Software and every component thereof — including but not limited to
      its multi-agent swarm engine, AI team routing logic, provider abstraction
      layer, memory systems, streaming infrastructure, synthesis pipeline,
@@ -42,7 +41,6 @@ This Software is NOT open source. It is NOT freeware. It is NOT public domain.
 
 
 2. RESTRICTIONS
-────────────────
 The following acts are strictly prohibited without the Author's prior express
 written consent:
 
@@ -74,7 +72,6 @@ written consent:
 
 
 3. PUBLIC REPOSITORY & DECOY FILES
-────────────────────────────────────
 3.1  Any public repository associated with this project may contain intentional
      placeholder ("decoy") files that mirror the project's folder structure for
      portfolio and demonstration purposes only. These files are explicitly
@@ -90,7 +87,6 @@ written consent:
 
 
 4. LIMITED VIEWING PERMISSION
-───────────────────────────────
 4.1  The Author grants you a limited, non-exclusive, non-transferable,
      revocable permission solely to VIEW the public-facing placeholder files
      for the purpose of evaluating the Author's portfolio and professional
@@ -101,7 +97,6 @@ written consent:
 
 
 5. CONFIDENTIALITY
-───────────────────
 5.1  Any non-public portions of the Software, including its full source code,
      architectural specifications, AI model configurations, API integrations,
      and business logic, constitute confidential and proprietary information
@@ -113,7 +108,6 @@ written consent:
 
 
 6. NO WARRANTIES
-─────────────────
 THE SOFTWARE IS PROVIDED "AS IS" FOR PORTFOLIO DEMONSTRATION PURPOSES ONLY.
 THE AUTHOR MAKES NO WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
 TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, OR
@@ -122,7 +116,6 @@ ANY USE OR INABILITY TO USE THE SOFTWARE.
 
 
 7. ENFORCEMENT & REMEDIES
-──────────────────────────
 7.1  Any unauthorized use, reproduction, distribution, or exploitation of the
      Software constitutes a material breach of this License and an infringement
      of the Author's intellectual property rights.
@@ -137,7 +130,6 @@ ANY USE OR INABILITY TO USE THE SOFTWARE.
 
 
 8. GOVERNING LAW
-─────────────────
 This License shall be governed by and construed in accordance with applicable
 intellectual property laws. Any disputes arising under or in connection with
 this License shall be subject to the exclusive jurisdiction of the competent
@@ -145,13 +137,11 @@ courts of the Author's jurisdiction.
 
 
 9. SEVERABILITY
-────────────────
 If any provision of this License is held to be invalid or unenforceable, the
 remaining provisions shall continue in full force and effect.
 
 
 10. CONTACT & LICENSING INQUIRIES
-───────────────────────────────────
 For licensing inquiries, collaboration proposals, or commercial use requests,
 please contact the Author directly:
 
@@ -160,10 +150,9 @@ please contact the Author directly:
      Project   :  Zyron AI Assistant — Powered by Multiple Agent Coordination
      Platform  :  React Native (iOS & Android)
 
-The Author welcomes genuine collaboration and licensing discussions.
+                                                   The Author welcomes genuine collaboration and licensing discussions.
 
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
               ALL RIGHTS RESERVED. UNAUTHORIZED USE IS PROHIBITED.
 
