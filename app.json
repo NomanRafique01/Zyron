@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "Zyron",
+    "slug": "zyron",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/splash/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0A0A0F",
+    "androidStatusBar": {
+      "backgroundColor": "#0A0A0F",
+      "barStyle": "light-content",
+      "translucent": false
+    },
+    "androidNavigationBar": {
+      "backgroundColor": "#050508",
+      "barStyle": "light-content"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "backgroundColor": "#0A0A0F",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/splash/adaptive-icon.png",
+        "backgroundColor": "#050508"
+      },
+      "minSdkVersion": 21,
+      "targetSdkVersion": 34,
+      "edgeToEdgeEnabled": false,
+      "softwareKeyboardLayoutMode": "pan",
+      "package": "com.nomanrafique.zyron",
+      "allowBackup": false,
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.VIBRATE",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/icons/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "48175bff-5435-47f5-a295-e541065dde2e"
+      }
+    },
+    "plugins": [
+      "expo-secure-store",
+      "./plugins/withAndroidWindowBackground",
+      "expo-sqlite"
+    ]
+  }
+}

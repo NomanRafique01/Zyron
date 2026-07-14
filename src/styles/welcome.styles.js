@@ -1,0 +1,186 @@
+import { Dimensions } from 'react-native';
+import C from '../config/colors.config';
+import { scale, fontScale, verticalScale, spacing, radius, wp } from '../utils/responsive.utils';
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const isCompact = SCREEN_HEIGHT < 700;
+
+const welcomeStyles = {
+  welcomeContainer: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingHorizontal: spacing(25),
+    paddingTop: spacing(80),
+  },
+  welcomeHeroStatic: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  welcomeContent: {
+    width: '100%',
+    maxWidth: 560,
+    alignItems: 'center',
+  },
+  welcomeHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing(16),
+    marginBottom: spacing(24),
+    alignSelf: 'stretch',
+  },
+  welcomeHeaderRightBlock: {
+    flex: 1,
+    gap: spacing(4),
+  },
+  glowLogoBorder: {
+    shadowColor: C.purple,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.7,
+    shadowRadius: 12,
+    elevation: 8,
+    borderRadius: radius(16),
+    backgroundColor: '#000000',
+    padding: 2,
+    borderWidth: 1.5,
+    borderColor: 'rgba(123, 47, 255, 0.4)',
+  },
+  welcomeLogo: {
+    width: wp(22),
+    height: wp(22),
+    borderRadius: wp(5.5),
+    marginBottom: spacing(isCompact ? 12 : 16),
+    backgroundColor: '#050508',
+  },
+  welcomeHeading: {
+    fontSize: fontScale(isCompact ? 24 : 28),
+    fontWeight: '600',
+    color: '#ECECF1',
+    letterSpacing: -0.3,
+    textAlign: 'center',
+    marginBottom: spacing(10),
+  },
+  welcomeSubHeading: {
+    fontSize: fontScale(isCompact ? 15 : 17),
+    fontWeight: '400',
+    color: '#8E8EA0',
+    lineHeight: fontScale(isCompact ? 22 : 26),
+    textAlign: 'center',
+    letterSpacing: 0,
+    paddingHorizontal: spacing(12),
+  },
+  nicknameOnboardingBanner: {
+    width: '100%',
+    maxWidth: 430,
+    backgroundColor: 'rgba(17, 17, 26, 0.96)',
+    borderWidth: 1,
+    borderColor: 'rgba(123, 47, 255, 0.36)',
+    borderRadius: radius(16),
+    padding: spacing(18),
+    shadowColor: C.purple,
+    shadowOpacity: 0.35,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 12 },
+    elevation: 16,
+  },
+  nicknameBannerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing(8),
+    marginBottom: spacing(8),
+  },
+  nicknameBannerDot: {
+    width: scale(7),
+    height: scale(7),
+    borderRadius: scale(3.5),
+    backgroundColor: C.purpleSoft || C.purple,
+  },
+  nicknameBannerKicker: {
+    color: C.purpleSoft || C.purple,
+    fontSize: fontScale(9),
+    fontWeight: '900',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  nicknameBannerTitle: {
+    color: '#FFFFFF',
+    fontSize: fontScale(15),
+    fontWeight: '900',
+    marginBottom: spacing(5),
+  },
+  nicknameBannerText: {
+    color: '#A8A8B8',
+    fontSize: fontScale(11),
+    lineHeight: fontScale(16),
+    marginBottom: spacing(12),
+  },
+  nicknameInputRow: {
+    flexDirection: 'row',
+    gap: spacing(8),
+    marginBottom: spacing(9),
+  },
+  nicknameInput: {
+    flex: 1,
+    backgroundColor: '#050508',
+    borderWidth: 1,
+    borderColor: '#242436',
+    borderRadius: radius(10),
+    paddingHorizontal: spacing(12),
+    paddingVertical: verticalScale(10),
+    color: '#FFFFFF',
+    fontSize: fontScale(12),
+  },
+  nicknameSaveBtn: {
+    minWidth: scale(72),
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: C.purple,
+    borderRadius: radius(10),
+    paddingHorizontal: spacing(12),
+  },
+  nicknameSaveBtnText: {
+    color: '#FFFFFF',
+    fontSize: fontScale(10),
+    fontWeight: '900',
+  },
+  nicknameSkipText: {
+    alignSelf: 'center',
+    color: '#8A8A9D',
+    fontSize: fontScale(10),
+    fontWeight: '700',
+  },
+  gridContainer: {
+    width: '100%',
+    gap: spacing(12),
+  },
+  gridRow: {
+    flexDirection: 'row',
+    gap: spacing(12),
+  },
+  suggestCard: {
+    flex: 1,
+    backgroundColor: '#111119',
+    borderWidth: 1,
+    borderColor: '#20202F',
+    borderRadius: radius(14),
+    paddingHorizontal: spacing(14),
+    paddingVertical: verticalScale(14),
+    minHeight: verticalScale(88),
+    justifyContent: 'center',
+  },
+  suggestCardTitle: {
+    fontSize: fontScale(11),
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: spacing(4),
+    letterSpacing: 0.2,
+  },
+  suggestCardDesc: {
+    fontSize: fontScale(9),
+    color: '#5E5E72',
+    lineHeight: fontScale(13),
+  },
+};
+
+export default welcomeStyles;
