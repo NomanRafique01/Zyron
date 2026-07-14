@@ -1,12 +1,12 @@
 <div align="center">
 
 ```
-███████╗██╗   ██╗██████╗  ██████╗ ███╗   ██╗
-╚══███╔╝╚██╗ ██╔╝██╔══██╗██╔═══██╗████╗  ██║
-  ███╔╝  ╚████╔╝ ██████╔╝██║   ██║██╔██╗ ██║
- ███╔╝    ╚██╔╝  ██╔══██╗██║   ██║██║╚██╗██║
-███████╗   ██║   ██║  ██║╚██████╔╝██║ ╚████║
-╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝
+                  ███████╗██╗   ██╗██████╗  ██████╗ ███╗   ██╗
+                  ╚══███╔╝╚██╗ ██╔╝██╔══██╗██╔═══██╗████╗  ██║
+                    ███╔╝  ╚████╔╝ ██████╔╝██║   ██║██╔██╗ ██║
+                   ███╔╝    ╚██╔╝  ██╔══██╗██║   ██║██║╚██╗██║
+                  ███████╗   ██║   ██║  ██║╚██████╔╝██║ ╚████║
+                  ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝
 ```
 
 **A multi-agent AI assistant for Android — built on a swarm of specialist models<br>that analyze, execute, and synthesize in parallel.**
@@ -34,40 +34,44 @@ Unlike standard AI apps where one model does everything, Zyron assigns each agen
 
 ## Core Architecture
 
-```
-User Query
-    │
-    ▼
-┌─────────────────────────────────────────────────┐
-│              Query Analyzer                      │
-│  Classifies: type · complexity · coordination   │
-│  Routes to: team blend or active team pipeline   │
-└─────────────────┬───────────────────────────────┘
-                  │
-    ┌─────────────┼──────────────────┐
-    │             │                  │
-    ▼             ▼                  ▼
-┌────────┐  ┌─────────┐       ┌──────────┐
-│Agent 1 │  │ Agent 2 │       │ Agent 3  │
-│Reasoner│  │  Coder  │       │  Vision  │
-│(Analyst│  │(Executor│       │(Validator│
-│  /ADR) │  │  /Impl) │       │ /QA/Red) │
-└────┬───┘  └────┬────┘       └────┬─────┘
-     │           │                 │
-     └─────────┬─┴─────────────────┘
-               │   Specialist outputs
-               ▼
-        ┌────────────┐
-        │  Agent 4   │
-        │   Writer   │
-        │(Synthesizer│
-        │  /Output)  │
-        └─────┬──────┘
-              │
-              ▼
-       Final Response
-```
 
+```
+                     User Query
+                         │
+                         ▼
+┌┬─────────────────────────────────────────────────┬┐
+││             Query Analyzer                      ││
+││ Classifies: type · complexity · coordination    ││
+││ Routes to: team blend or active team pipeline   ││
+└┴───────────────────────┬─────────────────────────┴┘
+                         │
+     ┌───────────────────┼─────────────────────┐
+     │                   │                     │
+     ▼                   ▼                     ▼
+┌─────────┐         ┌─────────┐           ┌──────────┐
+│ Agent 1 │         │ Agent 2 │           │ Agent 3  │
+│         │         │         │           │          │
+│(Analyst │         │(Executor│           │(Validator│
+│  /ADR)  │         │  /Impl) │           │ /QA/Red) │
+└────┬────┘         └────┬────┘           └────┬─────┘
+     │                   │                     │     
+     └───────────────────┼─────────────────────┘
+                         │                           
+               ┌┬────────┴─────────┬┐
+               ││Specialist outputs││
+               └┴────────┬─────────┴┘
+                         ╷                
+                         │
+                   ┌─────┴──────┐
+                   │  Agent 4   │
+                   │   Writer   │
+                   │(Synthesizer│
+                   │  /Output)  │
+                   └─────┬──────┘
+                         │
+                         ▼
+                  Final Response
+```
 The pipeline runs three phases:
 1. **Analysis** — `queryAnalyzer.js` classifies intent, detects coding/STEM/creative signals, and selects COMPACT vs. FULL coordination mode
 2. **Specialist execution** — Agents 1–3 run in parallel with individual SSE streaming, circuit-breakers, and automatic fallback chains
