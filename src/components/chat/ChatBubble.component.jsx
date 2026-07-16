@@ -855,15 +855,22 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
 
   // ─────────────────────────────────────────────────────────────────────
   // Split sanitized text into viewport-sized windows.
-  // Each window holds as many characters as can be spoken in one viewport-
-  // height of scroll distance (~windowDuration ms at 13 chars/s).
+  //
+  // Strategy: estimate how many characters visually fill one viewport by
+  // using the rendered line height (22 px) and average chars per line at
+  // the bubble font size (14.5 px, ~46 chars/line at 320 px content width).
+  // This makes each window hold exactly the text that fits on screen —
+  // scroll fires only when the speaker finishes the last word visible
+  // in the current viewport, not on a fixed-second timer.
   // ─────────────────────────────────────────────────────────────────────
   const splitIntoWindows = useCallback((text, viewportH) => {
     if (!text) return [text];
-    // Approximate chars that fill one viewport of spoken audio (~3 s window)
-    const CHARS_PER_S = 13;           // chars per second at rate 0.92
-    const WINDOW_SECS = 4;            // aim for ~4-second windows
-    const WINDOW_CHARS = Math.max(200, Math.round(CHARS_PER_S * WINDOW_SECS));
+
+    const LINE_HEIGHT_PX   = 22;   // mdParagraph lineHeight
+    const CHARS_PER_LINE   = 46;   // ~14.5px font in a ~320px wide bubble
+    const LINES_PER_SCREEN = Math.max(4, Math.floor(viewportH / LINE_HEIGHT_PX));
+    // How many characters fill one viewport
+    const WINDOW_CHARS = CHARS_PER_LINE * LINES_PER_SCREEN;
 
     if (text.length <= WINDOW_CHARS) return [text];
 
@@ -872,14 +879,18 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
     while (remaining.length > 0) {
       if (remaining.length <= WINDOW_CHARS) { windows.push(remaining); break; }
       const slice = remaining.slice(0, WINDOW_CHARS);
-      // Break at a sentence boundary when possible
-      const lastBreak = Math.max(
+      // Prefer breaking at a sentence end; fall back to a word boundary
+      const sentBreak = Math.max(
         slice.lastIndexOf('. '),
         slice.lastIndexOf('! '),
         slice.lastIndexOf('? '),
-        slice.lastIndexOf('\n'),
       );
-      const cutAt = lastBreak > WINDOW_CHARS * 0.35 ? lastBreak + 1 : WINDOW_CHARS;
+      const paraBreak = slice.lastIndexOf('\n');
+      const wordBreak  = slice.lastIndexOf(' ');
+      let cutAt = WINDOW_CHARS;
+      if (sentBreak > WINDOW_CHARS * 0.4)       cutAt = sentBreak + 1;
+      else if (paraBreak > WINDOW_CHARS * 0.4)  cutAt = paraBreak + 1;
+      else if (wordBreak > WINDOW_CHARS * 0.4)  cutAt = wordBreak + 1;
       windows.push(remaining.slice(0, cutAt).trim());
       remaining = remaining.slice(cutAt).trim();
     }
@@ -972,13 +983,13 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
   // ─────────────────────────────────────────────────────────────────────
   // Build the per-window scroll offsets from the message's position.
   // scrollBase = scrollY after snapping to the top of this bubble.
-  // Each subsequent window advances by 85 % of viewport height.
+  // Each window maps to exactly one viewport height of scroll distance —
+  // matching the visual text density used in splitIntoWindows.
   // ─────────────────────────────────────────────────────────────────────
   const buildWindowOffsets = useCallback((scrollBase, winCount, viewportH) => {
     const offsets = [];
-    const step = viewportH * 0.85;
     for (let i = 0; i < winCount; i++) {
-      offsets.push(scrollBase + i * step);
+      offsets.push(scrollBase + i * viewportH);
     }
     return offsets;
   }, []);
