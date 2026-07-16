@@ -770,7 +770,7 @@ function PulsingDots() {
 // ═══════════════════════════════════════════════════════
 // MAIN CHAT BUBBLE COMPONENT
 // ═══════════════════════════════════════════════════════
-export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onRegenerate, flatListRef }) {
+export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onRegenerate, flatListRef, scrollMetricsRef, userScrollingRef }) {
   const isUser = msg ? msg.sender === 'user' : false;
   const [copied, setCopied] = useState(false);
   const [userCopied, setUserCopied] = useState(false);
@@ -779,75 +779,147 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
   const [metricsExpanded, setMetricsExpanded] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const speakIntervalRef = useRef(null);
+  const chunkIndexRef = useRef(0);
+  const chunksRef = useRef([]);
+  const speakScrollBaseRef = useRef(0); // scrollY at the moment TTS starts
+  const speakRelockTimerRef = useRef(null);
 
-  const speakSpeechRate = 0.92;
+  // Android TTS hard-caps at 4000 chars per utterance. Chunk at sentence
+  // boundaries so each segment ends on a natural pause and stays ≤4000 chars.
+  const TTS_CHUNK_MAX = 3900;
 
-  const handleSpeak = useCallback(() => {
-    if (!msg?.text) return;
+  const chunkText = useCallback((text) => {
+    if (!text) return [];
+    if (text.length <= TTS_CHUNK_MAX) return [text];
+    const chunks = [];
+    let remaining = text;
+    while (remaining.length > 0) {
+      if (remaining.length <= TTS_CHUNK_MAX) { chunks.push(remaining); break; }
+      // Find the last sentence-end (. ! ? \n) within the limit
+      const slice = remaining.slice(0, TTS_CHUNK_MAX);
+      const lastBreak = Math.max(
+        slice.lastIndexOf('. '),
+        slice.lastIndexOf('! '),
+        slice.lastIndexOf('? '),
+        slice.lastIndexOf('\n'),
+      );
+      const cutAt = lastBreak > TTS_CHUNK_MAX * 0.4 ? lastBreak + 1 : TTS_CHUNK_MAX;
+      chunks.push(remaining.slice(0, cutAt).trim());
+      remaining = remaining.slice(cutAt).trim();
+    }
+    return chunks.filter(Boolean);
+  }, []);
 
-    if (isSpeaking) {
-      Speech.stop();
+  const stopSpeak = useCallback(() => {
+    Speech.stop();
+    setIsSpeaking(false);
+    chunkIndexRef.current = 0;
+    chunksRef.current = [];
+    if (speakIntervalRef.current) { clearInterval(speakIntervalRef.current); speakIntervalRef.current = null; }
+    if (speakRelockTimerRef.current) { clearTimeout(speakRelockTimerRef.current); speakRelockTimerRef.current = null; }
+  }, []);
+
+  // Speak a single chunk; on completion move to next chunk
+  const speakChunk = useCallback((chunks, index) => {
+    if (index >= chunks.length) {
       setIsSpeaking(false);
-      if (speakIntervalRef.current) {
-        clearInterval(speakIntervalRef.current);
-        speakIntervalRef.current = null;
-      }
+      if (speakIntervalRef.current) { clearInterval(speakIntervalRef.current); speakIntervalRef.current = null; }
       return;
     }
-
-    // ── Step 1: Scroll to top of this message bubble ──
-    if (flatListRef?.current) {
-      try {
-        flatListRef.current.scrollToItem({ item: msg, animated: true, viewPosition: 0 });
-      } catch (_) {
-        // scrollToItem may fail if item isn't rendered yet — ignore
-      }
-    }
-
-    // ── Step 2: After snap-scroll settles, begin a gentle cascading drift to bottom ──
-    // We fire multiple staged scrollToEnd calls spread across the speech duration
-    // so the list appears to smoothly follow the spoken content.
-    InteractionManager.runAfterInteractions(() => {
-      if (!flatListRef?.current) return;
-      const charCount = msg.text.length;
-      // chars ÷ chars-per-second at rate 0.92 → speech duration in ms
-      const estimatedMs = Math.max(5000, (charCount / 13) * 1000);
-      // Schedule 6–10 evenly-spaced smooth scrolls across the speech duration
-      const NUDGE_COUNT = Math.min(10, Math.max(6, Math.floor(estimatedMs / 1200)));
-      const interval = Math.floor(estimatedMs / NUDGE_COUNT);
-      let fired = 0;
-      const id = setInterval(() => {
-        fired++;
-        if (!flatListRef?.current) { clearInterval(id); return; }
-        flatListRef.current.scrollToEnd({ animated: true });
-        if (fired >= NUDGE_COUNT) {
-          clearInterval(id);
-          speakIntervalRef.current = null;
-        }
-      }, interval);
-      speakIntervalRef.current = id;
-    });
-
-    // ── Step 3: Start speaking ──
-    setIsSpeaking(true);
-    Speech.speak(msg.text, {
+    chunkIndexRef.current = index;
+    Speech.speak(chunks[index], {
       language: 'en',
       pitch: 1.0,
-      rate: speakSpeechRate,
-      onDone: () => {
-        setIsSpeaking(false);
-        if (speakIntervalRef.current) { clearInterval(speakIntervalRef.current); speakIntervalRef.current = null; }
-      },
+      rate: 0.92,
+      onDone: () => speakChunk(chunks, index + 1),
       onError: () => {
         setIsSpeaking(false);
         if (speakIntervalRef.current) { clearInterval(speakIntervalRef.current); speakIntervalRef.current = null; }
       },
       onStopped: () => {
+        // Manually stopped — do not advance to next chunk
         setIsSpeaking(false);
         if (speakIntervalRef.current) { clearInterval(speakIntervalRef.current); speakIntervalRef.current = null; }
       },
     });
-  }, [msg, isSpeaking, flatListRef]);
+  }, []);
+
+  const handleSpeak = useCallback(() => {
+    if (!msg?.text) return;
+
+    if (isSpeaking) {
+      stopSpeak();
+      return;
+    }
+
+    // ── Step 1: Scroll to the very top of this message bubble ──
+    if (flatListRef?.current) {
+      try {
+        flatListRef.current.scrollToItem({ item: msg, animated: true, viewPosition: 0 });
+      } catch (_) {}
+    }
+
+    // ── Step 2: Capture the scroll baseline and start incremental scroll ──
+    InteractionManager.runAfterInteractions(() => {
+      if (!flatListRef?.current) return;
+
+      const metrics = scrollMetricsRef?.current ?? { contentH: 0, viewportH: 0, scrollY: 0 };
+      // Record where we are right after snapping to this bubble
+      speakScrollBaseRef.current = metrics.scrollY;
+
+      const charCount = msg.text.length;
+      // Estimated speech ms at 0.92 rate ≈ 13 chars/sec
+      const estimatedMs = Math.max(5000, (charCount / 13) * 1000);
+      // Fire a nudge every ~1.5 s — each nudge advances by a viewport height
+      const NUDGE_INTERVAL = 1500;
+      const totalNudges = Math.ceil(estimatedMs / NUDGE_INTERVAL);
+      let nudge = 0;
+
+      const id = setInterval(() => {
+        if (!flatListRef?.current) { clearInterval(id); speakIntervalRef.current = null; return; }
+
+        nudge++;
+
+        // If user is currently scrolling, skip this nudge and let the re-lock
+        // timer (in ChatMessageList) reset userScrollingRef after 3 s.
+        if (userScrollingRef?.current) {
+          // Still count nudges so we don't fall behind — just don't scroll
+          if (nudge >= totalNudges) { clearInterval(id); speakIntervalRef.current = null; }
+          return;
+        }
+
+        const m = scrollMetricsRef?.current ?? { contentH: 0, viewportH: 0, scrollY: 0 };
+        const maxScroll = Math.max(0, m.contentH - m.viewportH);
+
+        if (maxScroll === 0) {
+          // Content shorter than viewport — nothing to scroll
+          if (nudge >= totalNudges) { clearInterval(id); speakIntervalRef.current = null; }
+          return;
+        }
+
+        // Advance by ~80% of a viewport height per nudge for a smooth page-turn feel
+        const advance = m.viewportH * 0.8;
+        const current = m.scrollY;
+        const next = Math.min(current + advance, maxScroll);
+
+        flatListRef.current.scrollToOffset({ offset: next, animated: true });
+
+        if (nudge >= totalNudges || next >= maxScroll) {
+          clearInterval(id);
+          speakIntervalRef.current = null;
+        }
+      }, NUDGE_INTERVAL);
+
+      speakIntervalRef.current = id;
+    });
+
+    // ── Step 3: Chunk text and start speaking ──
+    const chunks = chunkText(msg.text);
+    chunksRef.current = chunks;
+    chunkIndexRef.current = 0;
+    setIsSpeaking(true);
+    speakChunk(chunks, 0);
+  }, [msg, isSpeaking, flatListRef, scrollMetricsRef, userScrollingRef, chunkText, speakChunk, stopSpeak]);
 
   const handleCopyResponse = () => {
     if (!msg || !msg.text) return;
