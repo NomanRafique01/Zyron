@@ -307,19 +307,19 @@ const renderTextStyles = (txt, keyPrefix = '') => {
 //   Always scrollable. Each column gets MIN_COL_WIDTH px so content never
 //   squeezes. Live animated scrollbar sits outside the ScrollView.
 //
-// OVERFLOW-DETECTION path  (colCount < LARGE_TABLE_COL_THRESHOLD):
+// OVERFLOW-DETECTION path  (colCount < LARGE_TABLE_COL_THRESHOLD, i.e. single-col):
 //   Render the table normally first. The header row measures its own natural
 //   content width (via onLayout on an unconstrained inner View). If that
 //   content width exceeds the visible container width we promote to the same
-//   scrollable treatment — with MIN_COL_WIDTH per column — and re-render.
-//   This catches 2- or 3-column tables with long cell content (equations,
-//   long strings) without affecting tables that fit the screen comfortably.
+//   scrollable treatment — with per-column widths — and re-render.
+//   All multi-column tables (2+) start directly in wide/scrollable mode so
+//   long-text cells (e.g. "Why it matters") are always properly constrained.
 //
-const LARGE_TABLE_COL_THRESHOLD = 4;   // 4+ columns → always scrollable
-const COL_WIDTH_MIN   = 130;           // floor: no column is ever narrower than this
-const COL_WIDTH_MAX   = 260;           // ceiling: no column dominates the table width
-const COL_CHARS_SHORT = 12;            // content <= this → use min width
-const COL_CHARS_LONG  = 60;            // content >= this → use max width
+const LARGE_TABLE_COL_THRESHOLD = 2;   // 2+ columns → always scrollable
+const COL_WIDTH_MIN   = 100;           // floor: no column is ever narrower than this
+const COL_WIDTH_MAX   = 320;           // ceiling: wide enough for long-text columns
+const COL_CHARS_SHORT = 10;            // content <= this → use min width
+const COL_CHARS_LONG  = 80;            // content >= this → use max width
 const MIN_THUMB_RATIO = 0.15;          // scrollbar thumb floor
 
 /**
@@ -351,7 +351,7 @@ function MarkdownTable({ headers, rows, visualMode, blockIndex }) {
   const colCount = headers.length;
 
   // Whether we are in "wide/scrollable" mode.
-  // Starts true for 4+ cols; for fewer cols it may be promoted after measurement.
+  // Starts true for 2+ cols; single-col tables stay in static mode.
   const [wideMode, setWideMode] = useState(colCount >= LARGE_TABLE_COL_THRESHOLD);
 
   // Overflow detection for small tables: measure unconstrained header row width.
@@ -1480,13 +1480,14 @@ const s = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 10,
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
   mdTableCellText: {
     fontSize: 12.5,
     color: '#D0D0E0',
     lineHeight: 18,
     flexShrink: 1,
+    flexWrap: 'wrap',
   },
   mdTableFirstCol: {
     flex: 1.6,

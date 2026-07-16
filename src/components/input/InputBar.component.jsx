@@ -1,7 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, Animated, Platform } from 'react-native';
 import C from '../../config/colors.config';
-import { SendIcon, StopIcon } from '../shared/Icons';
+import { SendIcon, StopIcon, MicIcon } from '../shared/Icons';
 import {
   fontScale,
   spacing,
@@ -99,6 +100,26 @@ export default function InputBar({
   // Treat loading the same as offline for interactivity — nothing is editable/sendable
   const blocked = isTyping || offline || loading;
 
+  const [isListening, setIsListening] = useState(false);
+
+  const startVoice = async () => {
+    const { granted } = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+    if (!granted) return;
+    setIsListening(true);
+    ExpoSpeechRecognitionModule.start({ lang: 'en-US', interimResults: true });
+  };
+
+  const stopVoice = () => {
+    ExpoSpeechRecognitionModule.stop();
+    setIsListening(false);
+  };
+
+  useSpeechRecognitionEvent('result', (e) => {
+    if (e.results?.[0]?.transcript) setInputText(e.results[0].transcript);
+  });
+
+  useSpeechRecognitionEvent('end', () => setIsListening(false));
+
   const handleSend = () => {
     inputRef?.current?.blur();
     requestAnimationFrame(onSend);
@@ -130,6 +151,15 @@ export default function InputBar({
           multiline
           blurOnSubmit={false}
         />
+
+        <TouchableOpacity
+          style={[s.micBtn, isListening && s.micBtnActive]}
+          onPress={isListening ? stopVoice : startVoice}
+          disabled={isTyping || offline || loading}
+          activeOpacity={0.8}
+        >
+          <MicIcon active={isListening} />
+        </TouchableOpacity>
 
         {isTyping ? (
           <TouchableOpacity
@@ -292,6 +322,19 @@ const s = StyleSheet.create({
   },
   inputBarLoading: {
     opacity: 0.38,
+  },
+  micBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: verticalScale(32),
+    height: verticalScale(32),
+    borderRadius: verticalScale(16),
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    marginBottom: spacing(2),
+    marginRight: spacing(4),
+  },
+  micBtnActive: {
+    backgroundColor: 'rgba(123, 47, 255, 0.25)',
   },
   inputBarScrim: {
     ...StyleSheet.absoluteFillObject,

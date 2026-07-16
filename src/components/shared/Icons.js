@@ -354,3 +354,14 @@ export function RefreshIcon({ color = '#8A8A9D', size = 15 }) {
   );
 }
 
+export function MicIcon({ active = false, size = 18 }) {
+  const color = active ? '#7B2FFF' : '#6B6B7A';
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill={color} />
+      <Path d="M19 10v2a7 7 0 0 1-14 0v-2" stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <Path d="M12 19v4M8 23h8" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
