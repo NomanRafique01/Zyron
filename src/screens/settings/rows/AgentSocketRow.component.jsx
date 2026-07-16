@@ -83,7 +83,31 @@ export default function AgentSocketRow({
       style={s.agentSocketGroup}
       onLayout={(e) => { socketLayoutRef.current[role] = e.nativeEvent.layout; }}
     >
-      <Text style={s.agentSocketLabel}>Agent {index + 1}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+        <Text style={s.agentSocketLabel}>Agent {index + 1}</Text>
+        {index === 0 && (
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0,212,255,0.08)',
+            borderRadius: 6,
+            borderWidth: 1,
+            borderColor: 'rgba(0,212,255,0.22)',
+            paddingHorizontal: 8,
+            paddingVertical: 3,
+            marginBottom: 2,
+          }}>
+            <Text style={{ fontSize: 9, fontWeight: '700', color: '#00D4FF', letterSpacing: 0.6 }}>
+              📡 LIVE TALK
+            </Text>
+          </View>
+        )}
+      </View>
+      {index === 0 && (
+        <Text style={{ fontSize: 10, color: '#5A8A9D', marginBottom: 8, lineHeight: 15 }}>
+          The Agent 1 API configuration is also used for Live Talk Mode.
+        </Text>
+      )}
 
       {/* ── Collapsed header ── */}
       <TouchableOpacity

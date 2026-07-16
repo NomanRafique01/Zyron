@@ -85,6 +85,8 @@ import SidebarDrawer from '../../components/layout/SidebarDrawer.component.jsx';
 import SetupGuideModal from '../../components/modals/SetupGuideModal.modal.jsx';
 import ConfirmDialog from '../../components/modals/ConfirmDialog.modal.jsx';
 import SettingsModal from '../settings/SettingsModal.screen.jsx';
+import LiveTalkModal from '../../components/modals/LiveTalkModal.component.jsx';
+import useLiveTalk from '../../hooks/useLiveTalk.hook.js';
 
 // Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -119,6 +121,7 @@ export default function MainApp({ splashVisible = true }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState(false);
   const [visualMode, setVisualMode] = useState(false);
+  const [liveTalkVisible, setLiveTalkVisible] = useState(false);
 
   // Sidebar search query (string)
   const [sidebarSearchQuery, setSidebarSearchQuery] = useState('');
@@ -216,6 +219,27 @@ export default function MainApp({ splashVisible = true }) {
     chatShouldStickToBottomRef.current = true;
     scrollRef.current?.scrollToEnd({ animated: false });
   }, []);
+
+  // ── Live Talk hook ───────────────────────────────────────────────────────
+  const liveTalk = useLiveTalk({ agentConfigs: sockets.agentConfigs });
+
+  const handleOpenLiveTalk = useCallback(() => {
+    setLiveTalkVisible(true);
+  }, []);
+
+  const handleCloseLiveTalk = useCallback(() => {
+    liveTalk.stop();
+    setLiveTalkVisible(false);
+  }, [liveTalk]);
+
+  // Auto-start listening when the modal opens
+  const prevLiveTalkVisible = useRef(false);
+  useEffect(() => {
+    if (liveTalkVisible && !prevLiveTalkVisible.current) {
+      liveTalk.start();
+    }
+    prevLiveTalkVisible.current = liveTalkVisible;
+  }, [liveTalkVisible, liveTalk]);
 
   // ── Conversations hook ───────────────────────────────────────────────────
   const conversations = useConversations({
@@ -662,6 +686,7 @@ export default function MainApp({ splashVisible = true }) {
                   docked
                   onInputPressIn={handleWelcomeInputPressIn}
                   placeholder={conversations.messages.length === 0 ? 'Ask anything' : 'Ask Zyron'}
+                  onLiveTalk={handleOpenLiveTalk}
                 />
               </View>
 
@@ -729,6 +754,7 @@ export default function MainApp({ splashVisible = true }) {
                 chatMode={conversations.messages.length > 0}
                 docked
                 placeholder={conversations.messages.length === 0 ? 'Ask anything' : 'Ask Zyron'}
+                onLiveTalk={handleOpenLiveTalk}
               />
             </View>
 
@@ -796,6 +822,18 @@ export default function MainApp({ splashVisible = true }) {
       <ConfirmDialog
         confirmDialog={confirmDialog}
         onClose={() => setConfirmDialog(null)}
+      />
+
+      {/* LIVE TALK OVERLAY */}
+      <LiveTalkModal
+        visible={liveTalkVisible}
+        phase={liveTalk.phase}
+        volumeRef={liveTalk.volumeRef}
+        transcript={liveTalk.transcript}
+        aiText={liveTalk.aiText}
+        errorMsg={liveTalk.errorMsg}
+        onStop={handleCloseLiveTalk}
+        onInterrupt={liveTalk.interruptAI}
       />
     </View>
   );

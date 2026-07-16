@@ -10,7 +10,7 @@ import {
   PermissionsAndroid,
 } from 'react-native';
 import C from '../../config/colors.config';
-import { SendIcon, StopIcon, MicIcon } from '../shared/Icons';
+import { SendIcon, StopIcon, MicIcon, LiveIcon } from '../shared/Icons';
 import {
   fontScale,
   spacing,
@@ -215,13 +215,14 @@ export default function InputBar({
   keyboardVisible,
   simulatedAgents,
   offline,
-  loading      = false,
-  floating     = false,
-  docked       = false,
-  chatMode     = false,
+  loading       = false,
+  floating      = false,
+  docked        = false,
+  chatMode      = false,
   onInputPressIn,
-  placeholder  = 'Message Zyron',
+  placeholder   = 'Message Zyron',
   inputRef,
+  onLiveTalk,   // () => void — opens the Live Talk overlay
 }) {
   const hasText     = inputText.trim().length > 0;
   const sendBtnSize = verticalScale(32);
@@ -380,20 +381,34 @@ export default function InputBar({
           blurOnSubmit={false}
         />
 
-        {/* ── Mic button ─────────────────────────────────────────────── */}
-        <TouchableOpacity
-          style={[
-            s.micBtn,
-            isListening && s.micBtnActive,
-            micError    && s.micBtnError,
-          ]}
-          onPress={isListening ? stopVoice : startVoice}
-          disabled={isTyping || offline || loading}
-          activeOpacity={0.75}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <MicIcon active={isListening} />
-        </TouchableOpacity>
+        {/* ── Mic + Live buttons — hidden when text is present ──── */}
+        {!hasText && (
+          <>
+            <TouchableOpacity
+              style={[
+                s.micBtn,
+                isListening && s.micBtnActive,
+                micError    && s.micBtnError,
+              ]}
+              onPress={isListening ? stopVoice : startVoice}
+              disabled={isTyping || offline || loading}
+              activeOpacity={0.75}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <MicIcon active={isListening} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={s.liveBtn}
+              onPress={onLiveTalk}
+              disabled={isTyping || offline || loading}
+              activeOpacity={0.75}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <LiveIcon active={false} />
+            </TouchableOpacity>
+          </>
+        )}
 
         {/* ── Send / Stop button ─────────────────────────────────────── */}
         {isTyping ? (
@@ -589,6 +604,18 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(239,68,68,0.25)',
     borderWidth: 1,
     borderColor: 'rgba(239,68,68,0.5)',
+  },
+  liveBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: verticalScale(32),
+    height: verticalScale(32),
+    borderRadius: verticalScale(16),
+    backgroundColor: 'rgba(0,212,255,0.07)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,212,255,0.22)',
+    marginBottom: spacing(2),
+    marginRight: spacing(4),
   },
 
   // Loading scrim

@@ -385,3 +385,28 @@ export function MicIcon({ active = false, size = 18 }) {
   );
 }
 
+export function LiveIcon({ active = false, size = 18 }) {
+  const color = active ? '#00D4FF' : '#6B6B7A';
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {/* Centre mic dot */}
+      <Circle cx="12" cy="12" r="2.5" fill={color} />
+      {/* Inner arc */}
+      <Path
+        d="M8.5 15.5a5 5 0 0 1 0-7M15.5 15.5a5 5 0 0 0 0-7"
+        stroke={color}
+        strokeWidth={active ? 2 : 1.8}
+        strokeLinecap="round"
+      />
+      {/* Outer arc */}
+      <Path
+        d="M5.5 18.5a9 9 0 0 1 0-13M18.5 18.5a9 9 0 0 0 0-13"
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeOpacity={active ? 0.65 : 0.45}
+      />
+    </Svg>
+  );
+}
+
