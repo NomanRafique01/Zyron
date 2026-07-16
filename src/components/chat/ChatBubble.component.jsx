@@ -913,55 +913,58 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
   }, [flatListRef]);
 
   // ─────────────────────────────────────────────────────────────────────
-  // Speak a single TTS chunk; on completion advance window + chunk.
+  // Speak a single window's chunk list then advance to next window.
+  // winChunks  = array of TTS-safe sub-strings for the current window
+  // chunkIdx   = index within winChunks
+  // winIdx     = which window we are in
+  // allWinChunks = array-of-arrays, one entry per window
   // ─────────────────────────────────────────────────────────────────────
-  const speakChunk = useCallback((chunks, index, winOffsets, winCount) => {
-    if (index >= chunks.length) {
+  const speakChunk = useCallback((allWinChunks, winIdx, chunkIdx) => {
+    const winChunks = allWinChunks[winIdx];
+
+    // ── All windows finished ──
+    if (!winChunks) {
       setIsSpeaking(false);
       setTtsWindowIndex(0);
       setTtsWindowCount(0);
-      if (speakIntervalRef.current) { clearInterval(speakIntervalRef.current); speakIntervalRef.current = null; }
       return;
     }
-    chunkIndexRef.current = index;
 
-    // ── Determine which window this chunk belongs to ──
-    // We pre-computed one offset per window; advance the window when the
-    // cumulative chars spoken crosses the next window boundary.
-    const totalChars = chunks.slice(0, index + 1).reduce((s, c) => s + c.length, 0);
-    const charsPerWindow = winCount > 0
-      ? Math.ceil(chunks.reduce((s, c) => s + c.length, 0) / winCount)
-      : Infinity;
-    const newWinIdx = Math.min(
-      Math.floor(totalChars / Math.max(charsPerWindow, 1)),
-      winCount - 1,
-    );
-
-    if (newWinIdx !== currentWindowRef.current) {
-      currentWindowRef.current = newWinIdx;
-      setTtsWindowIndex(newWinIdx);
-      // Scroll to the new window (only if user is not actively scrolling)
-      if (!userScrollingRef?.current) {
-        scrollToWindow(newWinIdx);
+    // ── All chunks in this window finished → advance window ──
+    if (chunkIdx >= winChunks.length) {
+      const nextWin = winIdx + 1;
+      if (nextWin >= allWinChunks.length) {
+        setIsSpeaking(false);
+        setTtsWindowIndex(0);
+        setTtsWindowCount(0);
+        return;
       }
+      // Move to next window: update index state + scroll
+      currentWindowRef.current = nextWin;
+      setTtsWindowIndex(nextWin);
+      if (!userScrollingRef?.current) {
+        scrollToWindow(nextWin);
+      }
+      speakChunk(allWinChunks, nextWin, 0);
+      return;
     }
 
-    Speech.speak(chunks[index], {
+    chunkIndexRef.current = chunkIdx;
+
+    Speech.speak(winChunks[chunkIdx], {
       language: 'en',
       pitch: 1.0,
       rate: 0.92,
-      onDone: () => speakChunk(chunks, index + 1, winOffsets, winCount),
+      onDone: () => speakChunk(allWinChunks, winIdx, chunkIdx + 1),
       onError: () => {
         setIsSpeaking(false);
         setTtsWindowIndex(0);
         setTtsWindowCount(0);
-        if (speakIntervalRef.current) { clearInterval(speakIntervalRef.current); speakIntervalRef.current = null; }
       },
       onStopped: () => {
         setIsSpeaking(false);
         setTtsWindowIndex(0);
         setTtsWindowCount(0);
-        if (speakIntervalRef.current) { clearInterval(speakIntervalRef.current); speakIntervalRef.current = null; }
       },
     });
   }, [scrollToWindow, userScrollingRef]);
@@ -1025,16 +1028,21 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
     }
 
     // ── Step 1: Scroll to the very top of this message bubble ──
+    // Use scrollToItem so the list snaps to the bubble top regardless of
+    // where it currently is — including on a restart after stop.
     if (flatListRef?.current) {
       try {
-        flatListRef.current.scrollToItem({ item: msg, animated: true, viewPosition: 0 });
+        flatListRef.current.scrollToItem({ item: msg, animated: false, viewPosition: 0 });
       } catch (_) {}
     }
 
-    // ── Step 2: Sanitize text, split into windows, build offsets and speak ──
-    InteractionManager.runAfterInteractions(() => {
+    // ── Step 2: Wait for the scroll to settle then build windows ──
+    // Use a short fixed delay instead of runAfterInteractions so that
+    // metrics.scrollY is already updated to the post-snap position.
+    setTimeout(() => {
       if (!flatListRef?.current) return;
 
+      // Read scrollY AFTER the snap has committed
       const metrics = scrollMetricsRef?.current ?? { contentH: 0, viewportH: 0, scrollY: 0 };
       const scrollBase = metrics.scrollY;
       const viewportH = metrics.viewportH || 600;
@@ -1047,7 +1055,7 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
       const windows = splitIntoWindows(cleanText, viewportH);
       const winCount = windows.length;
 
-      // Build per-window scroll offsets
+      // Build per-window scroll offsets anchored to the post-snap position
       const offsets = buildWindowOffsets(scrollBase, winCount, viewportH);
       windowOffsetsRef.current = offsets;
       windowScrollBaseRef.current = offsets[0] ?? scrollBase;
@@ -1056,17 +1064,17 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
       setTtsWindowIndex(0);
       setTtsWindowCount(winCount);
 
-      // Chunk each window text for Android's 4000-char TTS limit
-      const allChunks = windows.flatMap(w => chunkText(w));
-      chunksRef.current = allChunks;
+      // Chunk each window independently (keeps window boundaries intact)
+      const allWinChunks = windows.map(w => chunkText(w));
+      chunksRef.current = allWinChunks;
       chunkIndexRef.current = 0;
       setIsSpeaking(true);
 
-      // Scroll to window 0 immediately
+      // Scroll to window 0 (the bubble top) to confirm start position
       scrollToWindow(0);
 
-      speakChunk(allChunks, 0, offsets, winCount);
-    });
+      speakChunk(allWinChunks, 0, 0);
+    }, 120);
   }, [msg, isSpeaking, flatListRef, scrollMetricsRef, sanitizeTtsText, splitIntoWindows, buildWindowOffsets, chunkText, scrollToWindow, speakChunk, stopSpeak]);
 
   const handleCopyResponse = () => {
