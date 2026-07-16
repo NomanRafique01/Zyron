@@ -619,6 +619,10 @@ function MarkdownText({ content, visualMode, blockIndex, activeLine, themeColor 
           return <View key={idx} style={s.mdLineSpacing} />;
         }
 
+        if (/^(\*{3,}|-{3,}|_{3,})\s*$/.test(line.trim())) {
+          return null;
+        }
+
         return (
           <Text key={idx} style={[s.mdParagraph, s.mdLine, rowHighlight]}>
             {renderInlineStyles(line, `p${idx}`)}
