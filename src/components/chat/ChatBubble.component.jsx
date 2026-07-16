@@ -778,11 +778,55 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
   const [visualMode, setVisualMode] = useState(false);
   const [metricsExpanded, setMetricsExpanded] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  // TTS window index — which paragraph-window is currently being spoken
+  const [ttsWindowIndex, setTtsWindowIndex] = useState(0);
+  const [ttsWindowCount, setTtsWindowCount] = useState(0);
+
   const speakIntervalRef = useRef(null);
   const chunkIndexRef = useRef(0);
   const chunksRef = useRef([]);
-  const speakScrollBaseRef = useRef(0); // scrollY at the moment TTS starts
-  const speakRelockTimerRef = useRef(null);
+  // Ordered scroll offsets — one per TTS window
+  const windowOffsetsRef = useRef([]);
+  // Index of the window currently being spoken (mirror of ttsWindowIndex but writable in callbacks)
+  const currentWindowRef = useRef(0);
+  // scrollY locked to the top of the current window
+  const windowScrollBaseRef = useRef(0);
+  // Relock timer ref (reset 3 s after user stops scrolling)
+  const relockTimerRef = useRef(null);
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Sanitise text for TTS: remove markdown symbols, special chars, math
+  // operators etc. — keep only words, spaces and basic sentence punctuation.
+  // ─────────────────────────────────────────────────────────────────────
+  const sanitizeTtsText = useCallback((raw) => {
+    if (!raw) return '';
+    return raw
+      // Strip fenced code blocks entirely (don't read code aloud)
+      .replace(/```[\s\S]*?```/g, ' ')
+      // Strip inline code
+      .replace(/`[^`]*`/g, ' ')
+      // Strip display math \[...\] and $$...$$
+      .replace(/\\\[[\s\S]*?\\\]/g, ' ')
+      .replace(/\$\$[\s\S]*?\$\$/g, ' ')
+      // Strip inline math \(...\) and $...$
+      .replace(/\\\([\s\S]*?\\\)/g, ' ')
+      .replace(/\$[^$\n]+\$/g, ' ')
+      // Strip markdown bold/italic markers
+      .replace(/\*{1,3}|_{1,3}/g, '')
+      // Strip markdown headings (#)
+      .replace(/^#{1,6}\s*/gm, '')
+      // Strip markdown table separators and pipe chars
+      .replace(/\|/g, ' ')
+      .replace(/[-]{3,}/g, ' ')
+      // Strip URLs
+      .replace(/https?:\/\/\S+/g, ' ')
+      // Strip remaining special / math / symbol characters — keep letters,
+      // digits, spaces, and basic sentence punctuation (. , ! ? ; : ' -)
+      .replace(/[^a-zA-Z0-9\s.,!?;:'\-]/g, ' ')
+      // Collapse multiple spaces / newlines into single space
+      .replace(/\s+/g, ' ')
+      .trim();
+  }, []);
 
   // Android TTS hard-caps at 4000 chars per utterance. Chunk at sentence
   // boundaries so each segment ends on a natural pause and stays ≤4000 chars.
@@ -795,7 +839,6 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
     let remaining = text;
     while (remaining.length > 0) {
       if (remaining.length <= TTS_CHUNK_MAX) { chunks.push(remaining); break; }
-      // Find the last sentence-end (. ! ? \n) within the limit
       const slice = remaining.slice(0, TTS_CHUNK_MAX);
       const lastBreak = Math.max(
         slice.lastIndexOf('. '),
@@ -810,39 +853,168 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
     return chunks.filter(Boolean);
   }, []);
 
+  // ─────────────────────────────────────────────────────────────────────
+  // Split sanitized text into viewport-sized windows.
+  // Each window holds as many characters as can be spoken in one viewport-
+  // height of scroll distance (~windowDuration ms at 13 chars/s).
+  // ─────────────────────────────────────────────────────────────────────
+  const splitIntoWindows = useCallback((text, viewportH) => {
+    if (!text) return [text];
+    // Approximate chars that fill one viewport of spoken audio (~3 s window)
+    const CHARS_PER_S = 13;           // chars per second at rate 0.92
+    const WINDOW_SECS = 4;            // aim for ~4-second windows
+    const WINDOW_CHARS = Math.max(200, Math.round(CHARS_PER_S * WINDOW_SECS));
+
+    if (text.length <= WINDOW_CHARS) return [text];
+
+    const windows = [];
+    let remaining = text;
+    while (remaining.length > 0) {
+      if (remaining.length <= WINDOW_CHARS) { windows.push(remaining); break; }
+      const slice = remaining.slice(0, WINDOW_CHARS);
+      // Break at a sentence boundary when possible
+      const lastBreak = Math.max(
+        slice.lastIndexOf('. '),
+        slice.lastIndexOf('! '),
+        slice.lastIndexOf('? '),
+        slice.lastIndexOf('\n'),
+      );
+      const cutAt = lastBreak > WINDOW_CHARS * 0.35 ? lastBreak + 1 : WINDOW_CHARS;
+      windows.push(remaining.slice(0, cutAt).trim());
+      remaining = remaining.slice(cutAt).trim();
+    }
+    return windows.filter(Boolean);
+  }, []);
+
   const stopSpeak = useCallback(() => {
     Speech.stop();
     setIsSpeaking(false);
+    setTtsWindowIndex(0);
+    setTtsWindowCount(0);
     chunkIndexRef.current = 0;
     chunksRef.current = [];
+    currentWindowRef.current = 0;
+    windowOffsetsRef.current = [];
     if (speakIntervalRef.current) { clearInterval(speakIntervalRef.current); speakIntervalRef.current = null; }
-    if (speakRelockTimerRef.current) { clearTimeout(speakRelockTimerRef.current); speakRelockTimerRef.current = null; }
+    if (relockTimerRef.current) { clearTimeout(relockTimerRef.current); relockTimerRef.current = null; }
   }, []);
 
-  // Speak a single chunk; on completion move to next chunk
-  const speakChunk = useCallback((chunks, index) => {
+  // ─────────────────────────────────────────────────────────────────────
+  // Scroll to the offset for the given window index and update the
+  // windowScrollBase so the relock knows where to return to.
+  // ─────────────────────────────────────────────────────────────────────
+  const scrollToWindow = useCallback((winIdx) => {
+    if (!flatListRef?.current) return;
+    const offsets = windowOffsetsRef.current;
+    if (!offsets.length) return;
+    const target = offsets[Math.min(winIdx, offsets.length - 1)];
+    windowScrollBaseRef.current = target;
+    flatListRef.current.scrollToOffset({ offset: target, animated: true });
+  }, [flatListRef]);
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Speak a single TTS chunk; on completion advance window + chunk.
+  // ─────────────────────────────────────────────────────────────────────
+  const speakChunk = useCallback((chunks, index, winOffsets, winCount) => {
     if (index >= chunks.length) {
       setIsSpeaking(false);
+      setTtsWindowIndex(0);
+      setTtsWindowCount(0);
       if (speakIntervalRef.current) { clearInterval(speakIntervalRef.current); speakIntervalRef.current = null; }
       return;
     }
     chunkIndexRef.current = index;
+
+    // ── Determine which window this chunk belongs to ──
+    // We pre-computed one offset per window; advance the window when the
+    // cumulative chars spoken crosses the next window boundary.
+    const totalChars = chunks.slice(0, index + 1).reduce((s, c) => s + c.length, 0);
+    const charsPerWindow = winCount > 0
+      ? Math.ceil(chunks.reduce((s, c) => s + c.length, 0) / winCount)
+      : Infinity;
+    const newWinIdx = Math.min(
+      Math.floor(totalChars / Math.max(charsPerWindow, 1)),
+      winCount - 1,
+    );
+
+    if (newWinIdx !== currentWindowRef.current) {
+      currentWindowRef.current = newWinIdx;
+      setTtsWindowIndex(newWinIdx);
+      // Scroll to the new window (only if user is not actively scrolling)
+      if (!userScrollingRef?.current) {
+        scrollToWindow(newWinIdx);
+      }
+    }
+
     Speech.speak(chunks[index], {
       language: 'en',
       pitch: 1.0,
       rate: 0.92,
-      onDone: () => speakChunk(chunks, index + 1),
+      onDone: () => speakChunk(chunks, index + 1, winOffsets, winCount),
       onError: () => {
         setIsSpeaking(false);
+        setTtsWindowIndex(0);
+        setTtsWindowCount(0);
         if (speakIntervalRef.current) { clearInterval(speakIntervalRef.current); speakIntervalRef.current = null; }
       },
       onStopped: () => {
-        // Manually stopped — do not advance to next chunk
         setIsSpeaking(false);
+        setTtsWindowIndex(0);
+        setTtsWindowCount(0);
         if (speakIntervalRef.current) { clearInterval(speakIntervalRef.current); speakIntervalRef.current = null; }
       },
     });
+  }, [scrollToWindow, userScrollingRef]);
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Build the per-window scroll offsets from the message's position.
+  // scrollBase = scrollY after snapping to the top of this bubble.
+  // Each subsequent window advances by 85 % of viewport height.
+  // ─────────────────────────────────────────────────────────────────────
+  const buildWindowOffsets = useCallback((scrollBase, winCount, viewportH) => {
+    const offsets = [];
+    const step = viewportH * 0.85;
+    for (let i = 0; i < winCount; i++) {
+      offsets.push(scrollBase + i * step);
+    }
+    return offsets;
   }, []);
+
+  // ─────────────────────────────────────────────────────────────────────
+  // User-scroll relock: when the user scrolls during TTS, start a 3-second
+  // countdown. When it expires, scroll back to the current window offset.
+  // ─────────────────────────────────────────────────────────────────────
+  const scheduleRelock = useCallback(() => {
+    if (relockTimerRef.current) clearTimeout(relockTimerRef.current);
+    relockTimerRef.current = setTimeout(() => {
+      // Only relock if still speaking
+      if (!flatListRef?.current) return;
+      const target = windowScrollBaseRef.current;
+      flatListRef.current.scrollToOffset({ offset: target, animated: true });
+    }, 3000);
+  }, [flatListRef]);
+
+  // Expose scheduleRelock so ChatMessageList can call it on scrollBeginDrag
+  // while TTS is active. We store it on a ref so the parent can read it
+  // without a prop callback loop.
+  const relockSchedulerRef = useRef(scheduleRelock);
+  useEffect(() => { relockSchedulerRef.current = scheduleRelock; }, [scheduleRelock]);
+
+  // Watch userScrollingRef changes — when the user starts dragging during TTS
+  // we kick off the 3-second relock timer.
+  const prevUserScrolling = useRef(false);
+  useEffect(() => {
+    if (!isSpeaking) return;
+    const check = setInterval(() => {
+      const cur = userScrollingRef?.current ?? false;
+      if (cur && !prevUserScrolling.current) {
+        // User just started scrolling — begin relock countdown
+        scheduleRelock();
+      }
+      prevUserScrolling.current = cur;
+    }, 150);
+    return () => clearInterval(check);
+  }, [isSpeaking, userScrollingRef, scheduleRelock]);
 
   const handleSpeak = useCallback(() => {
     if (!msg?.text) return;
@@ -859,67 +1031,43 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
       } catch (_) {}
     }
 
-    // ── Step 2: Capture the scroll baseline and start incremental scroll ──
+    // ── Step 2: Sanitize text, split into windows, build offsets and speak ──
     InteractionManager.runAfterInteractions(() => {
       if (!flatListRef?.current) return;
 
       const metrics = scrollMetricsRef?.current ?? { contentH: 0, viewportH: 0, scrollY: 0 };
-      // Record where we are right after snapping to this bubble
-      speakScrollBaseRef.current = metrics.scrollY;
+      const scrollBase = metrics.scrollY;
+      const viewportH = metrics.viewportH || 600;
 
-      const charCount = msg.text.length;
-      // Estimated speech ms at 0.92 rate ≈ 13 chars/sec
-      const estimatedMs = Math.max(5000, (charCount / 13) * 1000);
-      // Fire a nudge every ~1.5 s — each nudge advances by a viewport height
-      const NUDGE_INTERVAL = 1500;
-      const totalNudges = Math.ceil(estimatedMs / NUDGE_INTERVAL);
-      let nudge = 0;
+      // Sanitize — strip symbols, code, math
+      const cleanText = sanitizeTtsText(msg.text);
+      if (!cleanText) return;
 
-      const id = setInterval(() => {
-        if (!flatListRef?.current) { clearInterval(id); speakIntervalRef.current = null; return; }
+      // Split into viewport-sized windows
+      const windows = splitIntoWindows(cleanText, viewportH);
+      const winCount = windows.length;
 
-        nudge++;
+      // Build per-window scroll offsets
+      const offsets = buildWindowOffsets(scrollBase, winCount, viewportH);
+      windowOffsetsRef.current = offsets;
+      windowScrollBaseRef.current = offsets[0] ?? scrollBase;
+      currentWindowRef.current = 0;
 
-        // If user is currently scrolling, skip this nudge and let the re-lock
-        // timer (in ChatMessageList) reset userScrollingRef after 3 s.
-        if (userScrollingRef?.current) {
-          // Still count nudges so we don't fall behind — just don't scroll
-          if (nudge >= totalNudges) { clearInterval(id); speakIntervalRef.current = null; }
-          return;
-        }
+      setTtsWindowIndex(0);
+      setTtsWindowCount(winCount);
 
-        const m = scrollMetricsRef?.current ?? { contentH: 0, viewportH: 0, scrollY: 0 };
-        const maxScroll = Math.max(0, m.contentH - m.viewportH);
+      // Chunk each window text for Android's 4000-char TTS limit
+      const allChunks = windows.flatMap(w => chunkText(w));
+      chunksRef.current = allChunks;
+      chunkIndexRef.current = 0;
+      setIsSpeaking(true);
 
-        if (maxScroll === 0) {
-          // Content shorter than viewport — nothing to scroll
-          if (nudge >= totalNudges) { clearInterval(id); speakIntervalRef.current = null; }
-          return;
-        }
+      // Scroll to window 0 immediately
+      scrollToWindow(0);
 
-        // Advance by ~80% of a viewport height per nudge for a smooth page-turn feel
-        const advance = m.viewportH * 0.8;
-        const current = m.scrollY;
-        const next = Math.min(current + advance, maxScroll);
-
-        flatListRef.current.scrollToOffset({ offset: next, animated: true });
-
-        if (nudge >= totalNudges || next >= maxScroll) {
-          clearInterval(id);
-          speakIntervalRef.current = null;
-        }
-      }, NUDGE_INTERVAL);
-
-      speakIntervalRef.current = id;
+      speakChunk(allChunks, 0, offsets, winCount);
     });
-
-    // ── Step 3: Chunk text and start speaking ──
-    const chunks = chunkText(msg.text);
-    chunksRef.current = chunks;
-    chunkIndexRef.current = 0;
-    setIsSpeaking(true);
-    speakChunk(chunks, 0);
-  }, [msg, isSpeaking, flatListRef, scrollMetricsRef, userScrollingRef, chunkText, speakChunk, stopSpeak]);
+  }, [msg, isSpeaking, flatListRef, scrollMetricsRef, sanitizeTtsText, splitIntoWindows, buildWindowOffsets, chunkText, scrollToWindow, speakChunk, stopSpeak]);
 
   const handleCopyResponse = () => {
     if (!msg || !msg.text) return;
@@ -1164,6 +1312,34 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
           expanded={metricsExpanded}
           setExpanded={setMetricsExpanded}
         />
+
+        {/* ── TTS Window Progress Bar — visible only while speaking ── */}
+        {isSpeaking && ttsWindowCount > 1 && (
+          <View style={s.ttsWindowBar}>
+            <View style={s.ttsWindowBarHeader}>
+              <SpeakIcon color="#A78BFA" size={11} active={true} />
+              <Text style={s.ttsWindowBarLabel}>
+                Reading {ttsWindowIndex + 1} / {ttsWindowCount}
+              </Text>
+            </View>
+            <View style={s.ttsWindowTrack}>
+              {Array.from({ length: ttsWindowCount }).map((_, i) => (
+                <View
+                  key={i}
+                  style={[
+                    s.ttsWindowSegment,
+                    i < ttsWindowIndex
+                      ? s.ttsWindowSegmentDone
+                      : i === ttsWindowIndex
+                        ? s.ttsWindowSegmentActive
+                        : s.ttsWindowSegmentPending,
+                    i < ttsWindowCount - 1 && { marginRight: 3 },
+                  ]}
+                />
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* ── Inside-bubble bottom row: token pill left, timestamp right ── */}
         <View style={s.bubbleBottomRow}>
@@ -1897,6 +2073,47 @@ const s = StyleSheet.create({
   cellTotalFinal: {
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+
+  // ─── TTS Window Progress Bar ──────────────────────
+  ttsWindowBar: {
+    marginTop: 10,
+    marginBottom: 2,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(167,139,250,0.12)',
+  },
+  ttsWindowBarHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 6,
+  },
+  ttsWindowBarLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#A78BFA',
+    letterSpacing: 0.3,
+  },
+  ttsWindowTrack: {
+    flexDirection: 'row',
+    height: 4,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  ttsWindowSegment: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
+  },
+  ttsWindowSegmentDone: {
+    backgroundColor: 'rgba(167,139,250,0.35)',
+  },
+  ttsWindowSegmentActive: {
+    backgroundColor: '#A78BFA',
+  },
+  ttsWindowSegmentPending: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
 
 });
