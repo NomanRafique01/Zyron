@@ -354,6 +354,29 @@ export function RefreshIcon({ color = '#8A8A9D', size = 15 }) {
   );
 }
 
+export function SpeakIcon({ color = '#6A6A82', size = 18, active = false }) {
+  const iconColor = active ? '#A78BFA' : color;
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M11 5L6 9H3a1 1 0 00-1 1v4a1 1 0 001 1h3l5 4V5z"
+        fill={iconColor}
+      />
+      {active ? (
+        <>
+          <Path d="M15.5 8.5a5 5 0 010 7" stroke="#A78BFA" strokeWidth={1.8} strokeLinecap="round" />
+          <Path d="M18.5 6a9 9 0 010 12" stroke="#A78BFA" strokeWidth={1.8} strokeLinecap="round" />
+        </>
+      ) : (
+        <>
+          <Path d="M17 9l-6 6" stroke={iconColor} strokeWidth={1.8} strokeLinecap="round" />
+          <Path d="M11 9l6 6" stroke={iconColor} strokeWidth={1.8} strokeLinecap="round" />
+        </>
+      )}
+    </Svg>
+  );
+}
+
 export function MicIcon({ active = false, size = 18 }) {
   const color = active ? '#7B2FFF' : '#6B6B7A';
   return (

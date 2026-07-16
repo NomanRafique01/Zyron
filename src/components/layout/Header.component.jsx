@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, Animated } from 'react-native';
+import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
 import C from '../../config/colors.config';
 import { SidebarIcon, GearIcon } from '../shared/Icons';
 
@@ -7,33 +7,16 @@ export default function Header({
   onToggleSidebar,
   onOpenSettings,
   isOffline = false,
-  glowAnim,        // Animated.Value 0→1→0 looping — drives glow line opacity pulse
-  offlineGlowAnim, // Animated.Value 0→1 transition — drives glow line colour shift to red
 }) {
-  // Glow line beneath the header bar — pulse + colour animation
-  const glowLineOpacity = glowAnim
-    ? glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0.28, 0.82] })
-    : 0.45;
-
-  const glowLineColor = offlineGlowAnim
-    ? offlineGlowAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['rgba(123, 47, 255, 0.65)', 'rgba(239, 68, 68, 0.75)'],
-      })
-    : 'rgba(123, 47, 255, 0.65)';
-
-  const glowLineShadowColor = offlineGlowAnim
-    ? offlineGlowAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [C.purple, '#EF4444'],
-      })
-    : C.purple;
+  // Static glow line colour — purple normally, red when offline
+  const glowLineColor = isOffline ? 'rgba(239, 68, 68, 0.75)' : 'rgba(123, 47, 255, 0.65)';
+  const glowLineShadowColor = isOffline ? '#EF4444' : C.purple;
 
   return (
     <View style={s.headerShell}>
       <View style={s.headerBar}>
         <View style={s.headerLeft}>
-          {/* Logo border is fully static purple — no animation */}
+          {/* Logo border — static purple, no animation */}
           <View style={s.appLogoContainer}>
             <Image
               source={require('../../../assets/images/logo.png')}
@@ -55,12 +38,11 @@ export default function Header({
         </TouchableOpacity>
       </View>
 
-      {/* Animated glow line beneath the header */}
-      <Animated.View
+      {/* Static glow line beneath the header */}
+      <View
         style={[
           s.glowLine,
           {
-            opacity: glowLineOpacity,
             backgroundColor: glowLineColor,
             shadowColor: glowLineShadowColor,
             pointerEvents: 'none',

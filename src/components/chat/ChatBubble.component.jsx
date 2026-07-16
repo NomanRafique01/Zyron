@@ -4,7 +4,8 @@ import C from '../../config/colors.config';
 import SyntaxCode from './SyntaxCode.component.jsx';
 import AgentPanel from '../agent/AgentPanel.component.jsx';
 import Svg, { Path, Circle } from 'react-native-svg';
-import { InfoIcon, CopyIcon, ThreeDotIcon, CrossIcon, EyeIcon, RefreshIcon } from '../shared/Icons';
+import { InfoIcon, CopyIcon, ThreeDotIcon, CrossIcon, EyeIcon, RefreshIcon, SpeakIcon } from '../shared/Icons';
+import * as Speech from 'expo-speech';
 import MathFormula from '../math/MathFormula.component.jsx';
 import { splitInlineMath, splitByDisplayMath } from '../../utils/mathParser.utils';
 import { getTeamById } from '../../agents/teams';
@@ -776,6 +777,25 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
   const [menuOpen, setMenuOpen] = useState(false);
   const [visualMode, setVisualMode] = useState(false);
   const [metricsExpanded, setMetricsExpanded] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const handleSpeak = () => {
+    if (!msg?.text) return;
+    if (isSpeaking) {
+      Speech.stop();
+      setIsSpeaking(false);
+    } else {
+      setIsSpeaking(true);
+      Speech.speak(msg.text, {
+        language: 'en',
+        pitch: 1.0,
+        rate: 0.95,
+        onDone: () => setIsSpeaking(false),
+        onError: () => setIsSpeaking(false),
+        onStopped: () => setIsSpeaking(false),
+      });
+    }
+  };
 
   const handleCopyResponse = () => {
     if (!msg || !msg.text) return;
@@ -1061,6 +1081,14 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
               <RefreshIcon color="#6A6A82" size={18} />
             </TouchableOpacity>
           )}
+          {/* Speak / Stop TTS */}
+          <TouchableOpacity
+            style={s.outsideActionBtn}
+            onPress={handleSpeak}
+            activeOpacity={0.7}
+          >
+            <SpeakIcon color="#6A6A82" size={18} active={isSpeaking} />
+          </TouchableOpacity>
         </View>
       </View>
     </View>

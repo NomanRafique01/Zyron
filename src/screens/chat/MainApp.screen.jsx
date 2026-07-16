@@ -125,9 +125,7 @@ export default function MainApp({ splashVisible = true }) {
 
   const contentBottomClearance = spacing(12);
 
-  // ── Header animations ────────────────────────────────────────────────────
-  const headerGlowAnim = useRef(new Animated.Value(0)).current;
-  const offlineGlowAnim = useRef(new Animated.Value(0)).current;
+  // ── Socket-live border animation value ───────────────────────────────────
   const socketLiveBorderAnim = useRef(new Animated.Value(0)).current;
 
   // ── Keyboard layout hook (isolated keyboard module) ──────────────────────
@@ -295,30 +293,6 @@ export default function MainApp({ splashVisible = true }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [insets.bottom]);
-
-  // ── Header glow loop ─────────────────────────────────────────────────────
-  // Delay start until splash is dismissed — on low-RAM devices (Huawei Y7 etc.)
-  // starting a JS-thread animation loop during boot blocks the splash timer.
-  useEffect(() => {
-    if (splashVisible) return;
-    const headerGlowLoop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(headerGlowAnim, { toValue: 1, duration: 2800, useNativeDriver: false }),
-        Animated.timing(headerGlowAnim, { toValue: 0, duration: 2800, useNativeDriver: false }),
-      ])
-    );
-    headerGlowLoop.start();
-    return () => headerGlowLoop.stop();
-  }, [splashVisible, headerGlowAnim]);
-
-  // ── Offline glow ─────────────────────────────────────────────────────────
-  useEffect(() => {
-    Animated.timing(offlineGlowAnim, {
-      toValue: isOffline ? 1 : 0,
-      duration: 600,
-      useNativeDriver: false,
-    }).start();
-  }, [isOffline, offlineGlowAnim]);
 
   // ── Socket-live border animation ─────────────────────────────────────────
   useEffect(() => {
@@ -596,8 +570,6 @@ export default function MainApp({ splashVisible = true }) {
         <Header
           onToggleSidebar={() => { Keyboard.dismiss(); setSidebarOpen(!sidebarOpen); }}
           isOffline={isOffline}
-          glowAnim={headerGlowAnim}
-          offlineGlowAnim={offlineGlowAnim}
           onOpenSettings={() => {
             settings.settingsScrollOffsetRef.current = 0;
             settings.setApiPanelOpen(false);
