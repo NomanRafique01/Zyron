@@ -46,6 +46,7 @@ const PHASE_COLOR = {
   listening: C.purpleSoft,   // #A78BFA
   thinking:  '#C084FC',      // lighter purple
   speaking:  '#D946EF',      // fuchsia-purple
+  waiting:   '#60A5FA',      // soft blue — standby
   error:     '#EF4444',
 };
 
@@ -54,6 +55,7 @@ const PHASE_LABEL = {
   listening: 'Listening',
   thinking:  'Thinking',
   speaking:  'Speaking',
+  waiting:   'Waiting',
   error:     'Error',
 };
 
@@ -287,6 +289,7 @@ export default function LiveTalkModal({
   volumeRef,
   transcript,
   errorMsg,
+  waitCountdown,
   onStop,
   onInterrupt,
 }) {
@@ -322,6 +325,7 @@ export default function LiveTalkModal({
   const isAISpeaking = phase === 'speaking';
   const isListening  = phase === 'listening';
   const isThinking   = phase === 'thinking';
+  const isWaiting    = phase === 'waiting';
   const isError      = phase === 'error';
 
   const phaseColor = PHASE_COLOR[phase] || PHASE_COLOR.idle;
@@ -418,6 +422,10 @@ export default function LiveTalkModal({
             >
               <Text style={styles.hintClose}>Tap × to close</Text>
             </TouchableOpacity>
+          ) : isWaiting ? (
+            <Text style={styles.hintText}>
+              {`Speak to continue… closing in ${waitCountdown}s`}
+            </Text>
           ) : (
             <Text style={styles.hintText}>
               {isListening ? 'Speak now — I\'m listening…'

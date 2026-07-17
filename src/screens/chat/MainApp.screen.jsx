@@ -233,6 +233,9 @@ export default function MainApp({ splashVisible = true }) {
   // ── Live Talk hook ───────────────────────────────────────────────────────
   const liveTalk = useLiveTalk({
     agentConfigs: sockets.agentConfigs,
+    onClose: useCallback(() => {
+      setLiveTalkVisible(false);
+    }, []),
   });
 
   const handleOpenLiveTalk = useCallback(() => {
@@ -849,6 +852,7 @@ export default function MainApp({ splashVisible = true }) {
         volumeRef={liveTalk.volumeRef}
         transcript={liveTalk.transcript}
         errorMsg={liveTalk.errorMsg}
+        waitCountdown={liveTalk.waitCountdown}
         onStop={handleCloseLiveTalkWithSession}
         onInterrupt={liveTalk.interruptAI}
       />
