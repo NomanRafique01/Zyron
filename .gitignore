@@ -49,3 +49,4 @@ yarn-error.*
 src/agents
 src/hooks
 src/settings
+src/components/modals
