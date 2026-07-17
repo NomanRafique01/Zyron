@@ -1,24 +1,22 @@
 /**
- * LiveTalkModal.component.jsx
+ * LiveTalkModal.component.jsx  — Premium Edition
  * ─────────────────────────────────────────────────────────────────────────────
  * Full-screen overlay for Zyron Live Talk Mode.
  *
- * Displays:
- *  • Phase-aware label  (Listening / Thinking / Speaking / Error)
- *  • Lightweight audio-reactive waveform animation (6 bars, rAF-driven)
- *  • Live transcript of user speech
- *  • Streaming AI text (word by word)
- *  • Tap-to-interrupt while AI is speaking
- *  • Close (X) button to end session
+ * Features:
+ *  • Slide-up entrance / fade-out exit animation
+ *  • Central glowing ORB with breathing pulse per phase
+ *  • Three layered orbital rings with staggered pulse
+ *  • Phase label pill with cross-fade transition
+ *  • User transcript card — shown only while listening, hidden when Zyron speaks
+ *  • Small "Speaking" toggle pill (tap to interrupt) replaces the big panel
  *
- * Animation strategy:
- *  - All bar animations use Animated API with useNativeDriver:true → GPU-free
- *  - Volume data comes from a plain ref (zero setState / re-renders)
- *  - rAF loop runs at ~30 fps — light on CPU and battery
+ * Animation rules:
+ *  - All Animated transforms use useNativeDriver:true → 60 fps GPU thread
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -27,145 +25,258 @@ import {
   Animated,
   StyleSheet,
   StatusBar,
+  Easing,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import C from '../../config/colors.config';
 import { CrossIcon } from '../shared/Icons';
 import {
-  scale, verticalScale, fontScale, spacing, radius,
+  scale, verticalScale, fontScale, spacing, radius, screenHeight,
 } from '../../utils/responsive.utils';
 
-// ─── Waveform constants ───────────────────────────────────────────────────────
-const BAR_COUNT  = 7;
-const BAR_SHAPE  = [0.4, 0.65, 0.85, 1.0, 0.85, 0.65, 0.4];   // arch
-const BAR_MIN    = 0.06;
-const BAR_MAX    = 1.0;
-const BAR_H      = verticalScale(52);
-const BAR_W      = scale(5);
-const BAR_GAP    = scale(5);
-const WAVE_W     = BAR_COUNT * BAR_W + (BAR_COUNT - 1) * BAR_GAP;
+// ORB sizes (responsive)
+const ORB_SIZE   = scale(120);
+const RING1_SIZE = scale(168);
+const RING2_SIZE = scale(228);
+const RING3_SIZE = scale(300);
 
-// Phase-specific waveform colours
+// Phase accent colours — purple-only palette
 const PHASE_COLOR = {
-  idle:      '#3B3B5A',
-  listening: C.purpleSoft,      // #A78BFA
-  thinking:  C.cyan,            // #00D4FF
-  speaking:  C.cyan,
+  idle:      '#2A2A40',
+  listening: C.purpleSoft,   // #A78BFA
+  thinking:  '#C084FC',      // lighter purple
+  speaking:  '#D946EF',      // fuchsia-purple
   error:     '#EF4444',
 };
 
-// Phase label text
 const PHASE_LABEL = {
   idle:      '',
-  listening: 'Listening…',
-  thinking:  'Thinking…',
-  speaking:  'Speaking…',
+  listening: 'Listening',
+  thinking:  'Thinking',
+  speaking:  'Speaking',
   error:     'Error',
 };
 
-// ─── LiveWaveform ─────────────────────────────────────────────────────────────
-// Reads `volumeRef` at ~30 fps. Never causes a React re-render.
-function LiveWaveform({ volumeRef, phase }) {
-  const bars = useRef(
-    Array.from({ length: BAR_COUNT }, () => new Animated.Value(BAR_MIN))
-  ).current;
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const hex2rgba = (hex, alpha) => {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+};
 
-  const idleLoopRef  = useRef(null);
-  const phaseRef     = useRef(phase);
+// ─── OrbCore ─────────────────────────────────────────────────────────────────
+// Central glowing orb that breathes per phase. Pure Animated, no re-renders.
+function OrbCore({ phase }) {
+  const scaleAnim  = useRef(new Animated.Value(1)).current;
+  const glowAnim   = useRef(new Animated.Value(0.55)).current;
+  const phaseRef   = useRef(phase);
   useEffect(() => { phaseRef.current = phase; }, [phase]);
 
+  useEffect(() => {
+    let loop;
+    const base   = phase === 'idle' || phase === 'error' ? 0.9  : 1.0;
+    const peak   = phase === 'speaking'                   ? 1.10 :
+                   phase === 'listening'                  ? 1.07 :
+                   phase === 'thinking'                   ? 1.05 : 0.94;
+    const dur    = phase === 'thinking'  ? 900 :
+                   phase === 'speaking'  ? 650 :
+                   phase === 'listening' ? 750 : 1200;
+    const glowLo = phase === 'idle' ? 0.10 : 0.30;
+    const glowHi = phase === 'speaking' ? 0.80 :
+                   phase === 'listening' ? 0.65 :
+                   phase === 'thinking'  ? 0.55 : 0.15;
+
+    loop = Animated.loop(
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(scaleAnim, { toValue: peak, duration: dur, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          Animated.timing(glowAnim,  { toValue: glowHi, duration: dur, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        ]),
+        Animated.parallel([
+          Animated.timing(scaleAnim, { toValue: base, duration: dur, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          Animated.timing(glowAnim,  { toValue: glowLo, duration: dur, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        ]),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [phase, scaleAnim, glowAnim]);
+
   const color = PHASE_COLOR[phase] || PHASE_COLOR.idle;
+  const orbBg = phase === 'idle' || phase === 'error'
+    ? 'rgba(20,20,35,0.95)'
+    : phase === 'listening'
+      ? 'rgba(80,40,180,0.60)'
+      : phase === 'speaking'
+        ? 'rgba(140,30,160,0.52)'
+        : 'rgba(100,40,200,0.50)';
 
-  const stopIdle = useCallback(() => {
-    if (idleLoopRef.current) {
-      idleLoopRef.current.stop();
-      idleLoopRef.current = null;
-    }
-  }, []);
+  return (
+    <Animated.View
+      style={[
+        styles.orbWrap,
+        { transform: [{ scale: scaleAnim }] },
+      ]}
+      pointerEvents="none"
+    >
+      {/* Outer glow halo */}
+      <Animated.View
+        style={[
+          styles.orbGlow,
+          {
+            backgroundColor: hex2rgba(color === '#2A2A40' ? '#7B2FFF' : color, 0),
+            shadowColor: color,
+            shadowOpacity: glowAnim,
+          },
+        ]}
+      />
+      {/* Solid orb core */}
+      <View style={[styles.orbCore, { backgroundColor: orbBg, borderColor: hex2rgba(color, 0.55) }]}>
+        {/* Inner highlight ring */}
+        <View style={[styles.orbInner, { borderColor: hex2rgba(color, 0.35) }]} />
+      </View>
+    </Animated.View>
+  );
+}
 
-  const startIdle = useCallback(() => {
-    if (idleLoopRef.current) return;
-    const seqs = bars.map((bar, i) =>
+// ─── OrbRings ─────────────────────────────────────────────────────────────────
+// Three concentric orbital rings with staggered pulse animations.
+function OrbRings({ phase }) {
+  const rings = useRef([
+    new Animated.Value(0.55),
+    new Animated.Value(0.30),
+    new Animated.Value(0.18),
+  ]).current;
+
+  useEffect(() => {
+    const durations = [1600, 2200, 3000];
+    const peaks = phase === 'idle' || phase === 'error'
+      ? [0.20, 0.10, 0.06]
+      : phase === 'speaking'
+        ? [0.90, 0.55, 0.28]
+        : phase === 'listening'
+          ? [0.75, 0.42, 0.22]
+          : [0.55, 0.32, 0.16];  // thinking
+
+    const loops = rings.map((ring, i) =>
       Animated.loop(
         Animated.sequence([
-          Animated.timing(bar, {
-            toValue: BAR_MIN + 0.18 * BAR_SHAPE[i],
-            duration: 480 + i * 60,
-            useNativeDriver: true,
-          }),
-          Animated.timing(bar, {
-            toValue: BAR_MIN,
-            duration: 480 + i * 60,
-            useNativeDriver: true,
-          }),
+          Animated.timing(ring, { toValue: peaks[i], duration: durations[i], easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+          Animated.timing(ring, { toValue: peaks[i] * 0.25, duration: durations[i], easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
         ])
       )
     );
-    idleLoopRef.current = Animated.parallel(seqs);
-    idleLoopRef.current.start();
-  }, [bars]);
+    const parallel = Animated.parallel(loops);
+    parallel.start();
+    return () => parallel.stop();
+  }, [phase, rings]);
 
-  const driveFromAmplitude = useCallback((amp) => {
-    stopIdle();
-    bars.forEach((bar, i) => {
-      Animated.timing(bar, {
-        toValue: Math.max(BAR_MIN, BAR_MIN + (BAR_MAX - BAR_MIN) * amp * BAR_SHAPE[i]),
-        duration: 70,
-        useNativeDriver: true,
-      }).start();
-    });
-  }, [bars, stopIdle]);
+  const color = PHASE_COLOR[phase] || PHASE_COLOR.idle;
+  const ringColor = color === '#2A2A40' ? '#7B2FFF' : color;
 
-  useEffect(() => {
-    startIdle();
-    let rafId;
-    let lastAt = 0;
-
-    const tick = () => {
-      const vol = volumeRef.current;
-      const now = Date.now();
-      if (now - lastAt > 33) {
-        lastAt = now;
-        const p = phaseRef.current;
-        if ((p === 'listening' || p === 'speaking') && vol !== null && vol !== undefined) {
-          const amp = Math.min(1, Math.max(0, (vol / 10)));
-          if (amp > 0.03) driveFromAmplitude(amp);
-          else startIdle();
-        } else if (p === 'thinking') {
-          // Gentle pulse while thinking
-          const t = (now / 800) % 1;
-          const amp = 0.25 + 0.25 * Math.sin(t * Math.PI * 2);
-          driveFromAmplitude(amp);
-        } else {
-          startIdle();
-        }
-      }
-      rafId = requestAnimationFrame(tick);
-    };
-
-    rafId = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(rafId);
-      stopIdle();
-    };
-  }, [volumeRef, driveFromAmplitude, startIdle, stopIdle]);
+  const sizes = [RING1_SIZE, RING2_SIZE, RING3_SIZE];
 
   return (
-    <View style={styles.waveRow} pointerEvents="none">
-      {bars.map((bar, i) => (
+    <>
+      {rings.map((ring, i) => (
         <Animated.View
           key={i}
+          pointerEvents="none"
           style={[
-            styles.waveBar,
+            styles.orbRingBase,
             {
-              backgroundColor: color,
-              transform: [{ scaleY: bar }],
-              marginLeft: i === 0 ? 0 : BAR_GAP,
+              width: sizes[i],
+              height: sizes[i],
+              borderRadius: sizes[i] / 2,
+              borderColor: hex2rgba(ringColor, 0.6),
+              opacity: ring,
             },
           ]}
         />
       ))}
-    </View>
+    </>
+  );
+}
+
+// ─── PhasePill ────────────────────────────────────────────────────────────────
+// Small pill with label + animated dot. Fades in/out on phase change.
+function PhasePill({ phase }) {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const label    = PHASE_LABEL[phase] || '';
+  const color    = PHASE_COLOR[phase] || PHASE_COLOR.idle;
+
+  const dotPulse = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(fadeAnim, { toValue: 0, duration: 120, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 220, useNativeDriver: true }),
+    ]).start();
+  }, [phase, fadeAnim]);
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(dotPulse, { toValue: 0.25, duration: 600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(dotPulse, { toValue: 1,    duration: 600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [dotPulse]);
+
+  if (!label) return null;
+
+  return (
+    <Animated.View style={[styles.phasePill, { borderColor: hex2rgba(color, 0.35), backgroundColor: hex2rgba(color, 0.10), opacity: fadeAnim }]}>
+      <Animated.View style={[styles.phaseDot, { backgroundColor: color, opacity: dotPulse }]} />
+      <Text style={[styles.phasePillText, { color }]}>{label}</Text>
+    </Animated.View>
+  );
+}
+
+// ─── SpeakingToggle ───────────────────────────────────────────────────────────
+// Small professional pill that shows while Zyron is speaking. Tap to interrupt.
+function SpeakingToggle({ onPress }) {
+  const dotOpacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(dotOpacity, { toValue: 0.2, duration: 550, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(dotOpacity, { toValue: 1,   duration: 550, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [dotOpacity]);
+
+  return (
+    <TouchableOpacity
+      style={styles.speakingToggle}
+      onPress={onPress}
+      activeOpacity={0.7}
+      hitSlop={{ top: 10, bottom: 10, left: 16, right: 16 }}
+    >
+      <Animated.View style={[styles.speakingDot, { opacity: dotOpacity }]} />
+      <Text style={styles.speakingToggleText}>Speaking</Text>
+      <Text style={styles.speakingToggleSub}>  ·  tap to interrupt</Text>
+    </TouchableOpacity>
+  );
+}
+
+// ─── FadeCard ─────────────────────────────────────────────────────────────────
+// Wrapper that fades in a card on mount.
+function FadeCard({ children, style }) {
+  const fade = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(fade, { toValue: 1, duration: 280, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
+  }, [fade]);
+  return (
+    <Animated.View style={[style, { opacity: fade }]}>
+      {children}
+    </Animated.View>
   );
 }
 
@@ -175,137 +286,143 @@ export default function LiveTalkModal({
   phase,
   volumeRef,
   transcript,
-  aiText,
   errorMsg,
-  onStop,          // close + stop session
-  onInterrupt,     // interrupt AI mid-speech
+  onStop,
+  onInterrupt,
 }) {
   const insets = useSafeAreaInsets();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  // Fade in/out the overlay
+  // Slide-up entrance
+  const slideAnim = useRef(new Animated.Value(screenHeight)).current;
+  const bgOpacity = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: visible ? 1 : 0,
-      duration: 220,
-      useNativeDriver: true,
-    }).start();
-  }, [visible, fadeAnim]);
+    if (visible) {
+      Animated.parallel([
+        Animated.spring(slideAnim, {
+          toValue: 0,
+          damping: 22,
+          stiffness: 180,
+          mass: 1,
+          useNativeDriver: true,
+        }),
+        Animated.timing(bgOpacity, {
+          toValue: 1,
+          duration: 280,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      slideAnim.setValue(screenHeight);
+      bgOpacity.setValue(0);
+    }
+  }, [visible, slideAnim, bgOpacity]);
 
-  const isAISpeaking  = phase === 'speaking';
-  const isListening   = phase === 'listening';
-  const isThinking    = phase === 'thinking';
-  const isError       = phase === 'error';
+  const isAISpeaking = phase === 'speaking';
+  const isListening  = phase === 'listening';
+  const isThinking   = phase === 'thinking';
+  const isError      = phase === 'error';
 
-  const phaseLabel   = PHASE_LABEL[phase] || '';
-  const phaseColor   = PHASE_COLOR[phase] || PHASE_COLOR.idle;
-
-  // Pulsing dot for thinking state
-  const dotPulse = useRef(new Animated.Value(0.5)).current;
-  useEffect(() => {
-    if (!isThinking) { dotPulse.setValue(0.5); return; }
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(dotPulse, { toValue: 1, duration: 500, useNativeDriver: true }),
-        Animated.timing(dotPulse, { toValue: 0.3, duration: 500, useNativeDriver: true }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [isThinking, dotPulse]);
+  const phaseColor = PHASE_COLOR[phase] || PHASE_COLOR.idle;
 
   return (
     <Modal
       visible={visible}
       animationType="none"
-      transparent={false}
+      transparent={true}
       statusBarTranslucent
       onRequestClose={onStop}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#07070F" />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
+      {/* Dim background */}
+      <Animated.View style={[styles.backdrop, { opacity: bgOpacity }]} />
 
-        {/* ── Top bar ── */}
-        <View style={[styles.topBar, { paddingTop: insets.top + spacing(12) }]}>
-          <View style={styles.topBarLeft}>
-            <View style={[styles.liveDot, { backgroundColor: phaseColor }]} />
-            <Text style={[styles.topLabel, { color: phaseColor }]}>LIVE TALK</Text>
+      {/* Slide-up sheet */}
+      <Animated.View
+        style={[
+          styles.sheet,
+          {
+            paddingTop:    insets.top + spacing(14),
+            paddingBottom: insets.bottom + spacing(20),
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
+      >
+
+        {/* ── Top bar ─────────────────────────────────────── */}
+        <View style={styles.topBar}>
+          {/* Live badge */}
+          <View style={styles.liveBadge}>
+            <View style={[styles.liveBadgeDot, { backgroundColor: phaseColor }]} />
+            <Text style={[styles.liveBadgeText, { color: phaseColor }]}>LIVE TALK</Text>
           </View>
+
+          {/* Close */}
           <TouchableOpacity
             style={styles.closeBtn}
             onPress={onStop}
-            activeOpacity={0.75}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            activeOpacity={0.7}
+            hitSlop={{ top: 14, bottom: 14, left: 14, right: 14 }}
           >
-            <CrossIcon color="#8A8A9D" />
+            <CrossIcon color="#7A7A94" />
           </TouchableOpacity>
         </View>
 
-        {/* ── Main waveform area ── */}
-        <View style={styles.waveArea}>
-          {/* Orbital rings — purely decorative, CSS-only, no GPU cost */}
-          <View style={styles.ring1} pointerEvents="none" />
-          <View style={styles.ring2} pointerEvents="none" />
+        {/* ── Orb + rings area ─────────────────────────────── */}
+        <View style={styles.orbArea}>
+          {/* Rings behind orb */}
+          <OrbRings phase={phase} />
 
-          {/* Waveform */}
-          <LiveWaveform volumeRef={volumeRef} phase={phase} />
-
-          {/* Phase label with pulsing indicator */}
-          <View style={styles.phaseLabelRow}>
-            {isThinking && (
-              <Animated.View style={[styles.thinkingDot, { opacity: dotPulse, backgroundColor: C.cyan }]} />
-            )}
-            <Text style={[styles.phaseLabel, { color: phaseColor }]}>{phaseLabel}</Text>
-          </View>
+          {/* ORB */}
+          <OrbCore phase={phase} />
         </View>
 
-        {/* ── Text area ── */}
+        {/* Phase pill — hidden when AI is speaking (SpeakingToggle already labels it) */}
+        {!isAISpeaking && (
+          <View style={styles.pillRow}>
+            <PhasePill phase={phase} />
+          </View>
+        )}
+
+        {/* ── Text cards ──────────────────────────────────── */}
         <View style={styles.textArea}>
-          {/* User transcript */}
-          {(isListening || transcript) && !isError && (
-            <View style={styles.transcriptBlock}>
-              <Text style={styles.transcriptLabel}>You</Text>
+          {/* User transcript — only visible while actively listening */}
+          {isListening && transcript ? (
+            <FadeCard style={styles.transcriptCard} key={`tr-${transcript?.slice(0, 8)}`}>
+              <Text style={styles.cardLabel}>YOU</Text>
               <Text style={styles.transcriptText} numberOfLines={3}>
-                {transcript || '…'}
+                {transcript}
               </Text>
-            </View>
-          )}
+            </FadeCard>
+          ) : null}
 
-          {/* AI text stream */}
-          {(isThinking || isAISpeaking || aiText) && !isError && (
-            <View style={styles.aiBlock}>
-              <Text style={styles.aiLabel}>Zyron</Text>
-              <Text style={styles.aiText} numberOfLines={6}>
-                {aiText || '…'}
-              </Text>
-            </View>
-          )}
-
-          {/* Error state */}
           {isError && (
-            <View style={styles.errorBlock}>
+            <FadeCard style={styles.errorCard}>
               <Text style={styles.errorTitle}>Something went wrong</Text>
               <Text style={styles.errorMsg}>{errorMsg}</Text>
-            </View>
+            </FadeCard>
           )}
         </View>
 
-        {/* ── Bottom action ── */}
-        <View style={[styles.bottomBar, { paddingBottom: insets.bottom + spacing(16) }]}>
+        {/* ── Bottom action ─────────────────────────────── */}
+        <View style={styles.bottomBar}>
           {isAISpeaking ? (
-            // Tap anywhere to interrupt
+            <SpeakingToggle onPress={onInterrupt} />
+          ) : isError ? (
             <TouchableOpacity
-              style={styles.interruptBtn}
-              onPress={onInterrupt}
-              activeOpacity={0.8}
+              onPress={onStop}
+              activeOpacity={0.75}
+              hitSlop={{ top: 16, bottom: 16, left: 32, right: 32 }}
             >
-              <View style={[styles.interruptDot, { backgroundColor: C.cyan }]} />
-              <Text style={styles.interruptBtnText}>Tap to interrupt</Text>
+              <Text style={styles.hintClose}>Tap × to close</Text>
             </TouchableOpacity>
           ) : (
             <Text style={styles.hintText}>
-              {isListening ? 'Speak now…' : isThinking ? 'Processing your message…' : isError ? 'Tap × to close' : ''}
+              {isListening ? 'Speak now — I\'m listening…'
+                : isThinking ? 'Processing your message…'
+                : ''}
             </Text>
           )}
         </View>
@@ -317,149 +434,160 @@ export default function LiveTalkModal({
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: '#07070F',
-    justifyContent: 'space-between',
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(4,4,12,0.88)',
   },
 
-  // Top bar
+  sheet: {
+    flex: 1,
+    backgroundColor: '#07070F',
+    borderTopLeftRadius: radius(28),
+    borderTopRightRadius: radius(28),
+    overflow: 'hidden',
+    // Top separator glow line
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(123,47,255,0.22)',
+  },
+
+  // ── Top bar ──
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing(20),
+    paddingHorizontal: spacing(22),
+    marginBottom: spacing(4),
   },
-  topBarLeft: {
+  liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing(7),
+    backgroundColor: 'rgba(123,47,255,0.10)',
+    borderRadius: radius(20),
+    borderWidth: 1,
+    borderColor: 'rgba(123,47,255,0.20)',
+    paddingHorizontal: spacing(12),
+    paddingVertical: spacing(5),
   },
-  liveDot: {
-    width: scale(8),
-    height: scale(8),
+  liveBadgeDot: {
+    width: scale(7),
+    height: scale(7),
     borderRadius: scale(4),
   },
-  topLabel: {
-    fontSize: fontScale(11),
+  liveBadgeText: {
+    fontSize: fontScale(10),
     fontWeight: '800',
-    letterSpacing: 1.4,
+    letterSpacing: 1.6,
   },
   closeBtn: {
-    width: scale(32),
-    height: scale(32),
-    borderRadius: scale(16),
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    width: scale(34),
+    height: scale(34),
+    borderRadius: scale(17),
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
 
-  // Waveform area
-  waveArea: {
+  // ── Orb + rings ──
+  orbArea: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // Decorative rings — border-only circles, no shadows = zero GPU cost
-  ring1: {
+  orbRingBase: {
     position: 'absolute',
-    width: scale(180),
-    height: scale(180),
-    borderRadius: scale(90),
     borderWidth: 1,
-    borderColor: 'rgba(123,47,255,0.12)',
   },
-  ring2: {
-    position: 'absolute',
-    width: scale(280),
-    height: scale(280),
-    borderRadius: scale(140),
-    borderWidth: 1,
-    borderColor: 'rgba(123,47,255,0.06)',
-  },
-  waveRow: {
-    flexDirection: 'row',
+  orbWrap: {
+    width: ORB_SIZE,
+    height: ORB_SIZE,
     alignItems: 'center',
-    height: BAR_H,
-    width: WAVE_W,
-    marginBottom: spacing(20),
+    justifyContent: 'center',
   },
-  waveBar: {
-    width: BAR_W,
-    height: BAR_H,
-    borderRadius: BAR_W / 2,
+  orbGlow: {
+    position: 'absolute',
+    width: ORB_SIZE * 1.55,
+    height: ORB_SIZE * 1.55,
+    borderRadius: (ORB_SIZE * 1.55) / 2,
+    shadowRadius: scale(42),
+    shadowOffset: { width: 0, height: 0 },
+  },
+  orbCore: {
+    width: ORB_SIZE,
+    height: ORB_SIZE,
+    borderRadius: ORB_SIZE / 2,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  orbInner: {
+    width: ORB_SIZE * 0.6,
+    height: ORB_SIZE * 0.6,
+    borderRadius: (ORB_SIZE * 0.6) / 2,
+    borderWidth: 1,
   },
 
-  // Phase label
-  phaseLabelRow: {
+  // ── Phase pill ──
+  pillRow: {
+    alignItems: 'center',
+    marginTop: verticalScale(20),
+    marginBottom: verticalScale(6),
+    minHeight: verticalScale(28),
+  },
+  phasePill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing(6),
+    borderRadius: radius(20),
+    borderWidth: 1,
+    paddingHorizontal: spacing(14),
+    paddingVertical: spacing(5),
   },
-  thinkingDot: {
+  phaseDot: {
     width: scale(6),
     height: scale(6),
     borderRadius: scale(3),
   },
-  phaseLabel: {
-    fontSize: fontScale(14),
-    fontWeight: '600',
-    letterSpacing: 0.3,
+  phasePillText: {
+    fontSize: fontScale(12),
+    fontWeight: '700',
+    letterSpacing: 0.8,
   },
 
-  // Text area
+  // ── Text cards ──
   textArea: {
-    paddingHorizontal: spacing(24),
-    gap: spacing(12),
-    paddingBottom: spacing(8),
+    paddingHorizontal: spacing(20),
+    gap: spacing(10),
+    paddingBottom: spacing(10),
   },
-  transcriptBlock: {
-    backgroundColor: 'rgba(123,47,255,0.1)',
-    borderRadius: radius(12),
+  transcriptCard: {
+    backgroundColor: 'rgba(123,47,255,0.09)',
+    borderRadius: radius(14),
     borderWidth: 1,
-    borderColor: 'rgba(123,47,255,0.25)',
-    padding: spacing(12),
+    borderColor: 'rgba(123,47,255,0.22)',
+    padding: spacing(14),
   },
-  transcriptLabel: {
-    fontSize: fontScale(10),
-    fontWeight: '700',
+  errorCard: {
+    backgroundColor: 'rgba(239,68,68,0.09)',
+    borderRadius: radius(14),
+    borderWidth: 1,
+    borderColor: 'rgba(239,68,68,0.28)',
+    padding: spacing(16),
+    alignItems: 'center',
+  },
+  cardLabel: {
+    fontSize: fontScale(9),
+    fontWeight: '800',
     color: C.purpleSoft,
-    letterSpacing: 0.8,
-    marginBottom: spacing(4),
+    letterSpacing: 1.2,
+    marginBottom: spacing(5),
   },
   transcriptText: {
-    color: '#D8D8F0',
+    color: '#CCC8EC',
     fontSize: fontScale(14),
-    lineHeight: fontScale(20),
-    fontWeight: '400',
-  },
-  aiBlock: {
-    backgroundColor: 'rgba(0,212,255,0.07)',
-    borderRadius: radius(12),
-    borderWidth: 1,
-    borderColor: 'rgba(0,212,255,0.2)',
-    padding: spacing(12),
-  },
-  aiLabel: {
-    fontSize: fontScale(10),
-    fontWeight: '700',
-    color: C.cyan,
-    letterSpacing: 0.8,
-    marginBottom: spacing(4),
-  },
-  aiText: {
-    color: '#D8F4FF',
-    fontSize: fontScale(14),
-    lineHeight: fontScale(20),
-    fontWeight: '400',
-  },
-  errorBlock: {
-    backgroundColor: 'rgba(239,68,68,0.1)',
-    borderRadius: radius(12),
-    borderWidth: 1,
-    borderColor: 'rgba(239,68,68,0.3)',
-    padding: spacing(14),
-    alignItems: 'center',
+    lineHeight: fontScale(21),
   },
   errorTitle: {
     color: '#EF4444',
@@ -468,45 +596,59 @@ const styles = StyleSheet.create({
     marginBottom: spacing(4),
   },
   errorMsg: {
-    color: '#F8C0C0',
+    color: '#F5ADAD',
     fontSize: fontScale(12),
-    lineHeight: fontScale(17),
+    lineHeight: fontScale(18),
     textAlign: 'center',
   },
 
-  // Bottom bar
+  // ── Bottom bar ──
   bottomBar: {
     paddingHorizontal: spacing(24),
     alignItems: 'center',
-    minHeight: verticalScale(64),
+    minHeight: verticalScale(56),
     justifyContent: 'center',
   },
-  interruptBtn: {
+  // Speaking toggle pill
+  speakingToggle: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing(8),
-    backgroundColor: 'rgba(0,212,255,0.12)',
-    borderRadius: radius(24),
+    gap: spacing(6),
+    backgroundColor: 'rgba(167,139,250,0.08)',
+    borderRadius: radius(20),
     borderWidth: 1,
-    borderColor: 'rgba(0,212,255,0.35)',
-    paddingHorizontal: spacing(20),
-    paddingVertical: spacing(12),
+    borderColor: 'rgba(167,139,250,0.25)',
+    paddingHorizontal: spacing(14),
+    paddingVertical: spacing(7),
   },
-  interruptDot: {
-    width: scale(8),
-    height: scale(8),
-    borderRadius: scale(4),
+  speakingDot: {
+    width: scale(6),
+    height: scale(6),
+    borderRadius: scale(3),
+    backgroundColor: C.purpleSoft,
   },
-  interruptBtnText: {
-    color: C.cyan,
-    fontSize: fontScale(13),
+  speakingToggleText: {
+    color: C.purpleSoft,
+    fontSize: fontScale(12),
     fontWeight: '600',
     letterSpacing: 0.3,
   },
+  speakingToggleSub: {
+    color: '#6B5EA8',
+    fontSize: fontScale(11),
+    fontWeight: '400',
+    letterSpacing: 0.2,
+  },
   hintText: {
-    color: '#4E4E62',
+    color: '#3E3E58',
     fontSize: fontScale(12),
     fontWeight: '500',
+    letterSpacing: 0.2,
+  },
+  hintClose: {
+    color: '#EF4444',
+    fontSize: fontScale(12),
+    fontWeight: '600',
     letterSpacing: 0.2,
   },
 });

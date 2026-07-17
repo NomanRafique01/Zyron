@@ -34,7 +34,7 @@ export function VisualLegend({ onClose }) {
 // ─── Token Usage Expandable Panel ────────────────────
 export function TokenUsagePanel({ tokenUsage, mode, expanded, setExpanded }) {
   const isAgents = mode === 'agents';
-  const themeColor = isAgents ? C.purpleSoft : C.cyan;
+  const themeColor = isAgents ? C.purpleSoft : C.purple;
   const metrics = tokenUsage || getDemoTokens(mode);
 
   const rows = Object.entries(metrics).map(([agentName, usage]) => ({

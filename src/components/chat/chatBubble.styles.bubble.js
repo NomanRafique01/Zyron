@@ -40,9 +40,9 @@ export const bubbleStyles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#050508',
     borderWidth: 1,
-    borderColor: 'rgba(0, 212, 255, 0.22)',
+    borderColor: 'rgba(123, 47, 255, 0.28)',
     overflow: 'hidden',
-    shadowColor: C.cyan,
+    shadowColor: C.purple,
     shadowOpacity: 0.26,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 0 },
@@ -90,8 +90,8 @@ export const bubbleStyles = StyleSheet.create({
     backgroundColor: 'rgba(123, 47, 255, 0.1)',
   },
   modeBadgeFast: {
-    borderColor: 'rgba(0, 212, 255, 0.35)',
-    backgroundColor: 'rgba(0, 212, 255, 0.1)',
+    borderColor: 'rgba(123, 47, 255, 0.35)',
+    backgroundColor: 'rgba(123, 47, 255, 0.1)',
   },
   modeBadgeText: {
     fontSize: 9,
@@ -176,7 +176,7 @@ export const bubbleStyles = StyleSheet.create({
     borderColor: 'rgba(123, 47, 255, 0.2)',
   },
   bubbleBorderFast: {
-    borderColor: 'rgba(0, 212, 255, 0.2)',
+    borderColor: 'rgba(123, 47, 255, 0.22)',
   },
 
   // ─── Text ─────────────────────────────────────────
@@ -224,7 +224,7 @@ export const bubbleStyles = StyleSheet.create({
     borderRadius: 3.5,
   },
   pulsingDotCyan: {
-    backgroundColor: C.cyan,
+    backgroundColor: C.purpleSoft,
   },
 
   // ─── Markdown Text Styles ─────────────────────────
@@ -251,8 +251,8 @@ export const bubbleStyles = StyleSheet.create({
   mdInlineCode: {
     fontFamily: 'monospace',
     fontSize: 13,
-    color: C.cyan,
-    backgroundColor: 'rgba(0, 212, 255, 0.08)',
+    color: C.purpleSoft,
+    backgroundColor: 'rgba(167, 139, 250, 0.09)',
     paddingHorizontal: 4,
     paddingVertical: 1,
     borderRadius: 3,

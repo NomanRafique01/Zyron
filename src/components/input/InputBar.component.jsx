@@ -215,17 +215,18 @@ export default function InputBar({
   keyboardVisible,
   simulatedAgents,
   offline,
-  loading       = false,
-  floating      = false,
-  docked        = false,
-  chatMode      = false,
+  loading         = false,
+  floating        = false,
+  docked          = false,
+  chatMode        = false,
   onInputPressIn,
-  placeholder   = 'Message Zyron',
+  placeholder     = 'Message Zyron',
   inputRef,
-  onLiveTalk,   // () => void — opens the Live Talk overlay
+  onLiveTalk,     // () => void — opens the Live Talk overlay
+  liveTalkActive  = false,  // true while Live Talk modal is open — suppress mic events
 }) {
   const hasText     = inputText.trim().length > 0;
-  const sendBtnSize = verticalScale(32);
+  const sendBtnSize = verticalScale(36);
   const blocked     = isTyping || offline || loading;
 
   const [isListening, setIsListening] = useState(false);
@@ -262,6 +263,7 @@ export default function InputBar({
     if (!ExpoSpeechRecognitionModule) return;   // not available (Expo Go)
     setMicError(false);
     volumeRef.current = null;
+    setInputText('');  // always start fresh — no leftover transcript
 
     try {
       // Step 1 — Android runtime permission
@@ -302,22 +304,28 @@ export default function InputBar({
   }, []);
 
   // ── Events ────────────────────────────────────────────────────────────────
+  // Guard all handlers: when Live Talk is active, its own hook owns the
+  // speech-recognition session — InputBar must not touch inputText or its state.
   useSpeechRecognitionEvent('result', (e) => {
+    if (liveTalkActive) return;
     if (e?.results?.[0]?.transcript) setInputText(e.results[0].transcript);
   });
 
   useSpeechRecognitionEvent('end', () => {
+    if (liveTalkActive) return;
     volumeRef.current = null;
     setIsListening(false);
   });
 
   useSpeechRecognitionEvent('error', () => {
+    if (liveTalkActive) return;
     volumeRef.current = null;
     setIsListening(false);
   });
 
   // Volume: value is in [-2, 10].  Store in ref — VoiceWaveform reads via rAF.
   useSpeechRecognitionEvent('volumechange', (e) => {
+    if (liveTalkActive) return;
     if (e?.value !== undefined) volumeRef.current = e.value;
   });
 
@@ -381,8 +389,42 @@ export default function InputBar({
           blurOnSubmit={false}
         />
 
-        {/* ── Mic + Live buttons — hidden when text is present ──── */}
-        {!hasText && (
+        {/* ── Right-side action buttons ───────────────────────────────
+             Empty input  → Mic (left of Live) + Live (rightmost)
+             Text typed   → Send only (rightmost)
+             AI typing    → Stop only (rightmost)                    ── */}
+
+        {isTyping ? (
+          /* ── Stop button (AI is generating) ── */
+          <TouchableOpacity
+            style={[s.actionBtn, s.stopBtnActive,
+              { width: sendBtnSize, height: sendBtnSize, borderRadius: sendBtnSize / 2 }]}
+            onPress={onStop}
+            activeOpacity={0.85}
+          >
+            <StopIcon color="#FFFFFF" />
+          </TouchableOpacity>
+
+        ) : hasText ? (
+          /* ── Send button (user has typed something) ── */
+          <TouchableOpacity
+            style={[
+              s.actionBtn,
+              { width: sendBtnSize, height: sendBtnSize, borderRadius: sendBtnSize / 2 },
+              !offline && !loading ? s.sendBtnActive : s.sendBtnInactive,
+            ]}
+            onPress={handleSend}
+            activeOpacity={0.85}
+            disabled={offline || loading}
+          >
+            <SendIcon
+              isActive={!offline && !loading}
+              color={!offline && !loading ? '#0E0E18' : '#6B6B7A'}
+            />
+          </TouchableOpacity>
+
+        ) : (
+          /* ── Empty input: Mic (left) + Live (right, at Send position) ── */
           <>
             <TouchableOpacity
               style={[
@@ -391,51 +433,26 @@ export default function InputBar({
                 micError    && s.micBtnError,
               ]}
               onPress={isListening ? stopVoice : startVoice}
-              disabled={isTyping || offline || loading}
+              disabled={offline || loading}
               activeOpacity={0.75}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <MicIcon active={isListening} />
+              <MicIcon active={isListening} size={20} />
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={s.liveBtn}
+              style={[s.actionBtn,
+                { width: sendBtnSize, height: sendBtnSize, borderRadius: sendBtnSize / 2 },
+                s.liveBtnIdle,
+              ]}
               onPress={onLiveTalk}
-              disabled={isTyping || offline || loading}
+              disabled={offline || loading}
               activeOpacity={0.75}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <LiveIcon active={false} />
+              <LiveIcon active={false} size={19} />
             </TouchableOpacity>
           </>
-        )}
-
-        {/* ── Send / Stop button ─────────────────────────────────────── */}
-        {isTyping ? (
-          <TouchableOpacity
-            style={[s.sendBtn, s.stopBtnActive,
-              { width: sendBtnSize, height: sendBtnSize, borderRadius: sendBtnSize / 2 }]}
-            onPress={onStop}
-            activeOpacity={0.85}
-          >
-            <StopIcon color="#FFFFFF" />
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            style={[
-              s.sendBtn,
-              { width: sendBtnSize, height: sendBtnSize, borderRadius: sendBtnSize / 2 },
-              hasText && !offline && !loading ? s.sendBtnActive : s.sendBtnInactive,
-            ]}
-            onPress={handleSend}
-            activeOpacity={0.85}
-            disabled={!hasText || offline || loading}
-          >
-            <SendIcon
-              isActive={hasText && !offline && !loading}
-              color={hasText && !offline && !loading ? '#0E0E18' : '#6B6B7A'}
-            />
-          </TouchableOpacity>
         )}
       </View>
 
@@ -505,7 +522,7 @@ const s = StyleSheet.create({
     borderColor: 'rgba(123,47,255,0.45)',
     borderRadius: radius(26),
     paddingLeft: spacing(16),
-    paddingRight: spacing(6),
+    paddingRight: spacing(14),
     paddingVertical: spacing(6),
     minHeight: verticalScale(48),
     maxHeight: verticalScale(140),
@@ -580,20 +597,35 @@ const s = StyleSheet.create({
     flexShrink: 1,
   },
 
-  // Buttons
-  sendBtn: { alignItems: 'center', justifyContent: 'center', marginBottom: spacing(2) },
-  sendBtnActive: { backgroundColor: '#FFFFFF' },
+  // Buttons — shared base for the rightmost circular action slot
+  actionBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing(2),
+  },
+  sendBtnActive:   { backgroundColor: '#FFFFFF' },
   sendBtnInactive: { backgroundColor: 'rgba(255,255,255,0.08)' },
-  stopBtnActive: { backgroundColor: '#EF4444' },
+  stopBtnActive:   { backgroundColor: '#EF4444' },
+
+  // Live button idle state — purple circle border, no fill
+  liveBtnIdle: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: 'rgba(123,47,255,0.45)',
+  },
+
+  // Mic button
   micBtn: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: verticalScale(32),
-    height: verticalScale(32),
-    borderRadius: verticalScale(16),
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    width: verticalScale(36),
+    height: verticalScale(36),
+    borderRadius: verticalScale(18),
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: 'rgba(123,47,255,0.45)',
     marginBottom: spacing(2),
-    marginRight: spacing(4),
+    marginRight: spacing(10),
   },
   micBtnActive: {
     backgroundColor: 'rgba(123,47,255,0.35)',
@@ -604,18 +636,6 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(239,68,68,0.25)',
     borderWidth: 1,
     borderColor: 'rgba(239,68,68,0.5)',
-  },
-  liveBtn: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: verticalScale(32),
-    height: verticalScale(32),
-    borderRadius: verticalScale(16),
-    backgroundColor: 'rgba(0,212,255,0.07)',
-    borderWidth: 1,
-    borderColor: 'rgba(0,212,255,0.22)',
-    marginBottom: spacing(2),
-    marginRight: spacing(4),
   },
 
   // Loading scrim

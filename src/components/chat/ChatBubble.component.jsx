@@ -162,7 +162,7 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
           <AiAvatar />
           <Text style={s.senderName}>ZYNOR</Text>
           <View style={[s.modeBadge, isAgentsMode ? s.modeBadgeAgents : s.modeBadgeFast]}>
-            <Text style={[s.modeBadgeText, { color: isAgentsMode ? C.purpleSoft : C.cyan }]}>
+            <Text style={[s.modeBadgeText, { color: isAgentsMode ? C.purpleSoft : C.purple }]}>
               {isAgentsMode ? (getTeamById(msg?.teamId)?.name || 'AGENTS') : 'FAST'}
             </Text>
           </View>
@@ -217,9 +217,13 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
     );
   }
 
+  // ─── LIVE TALK: skip AI bubble entirely (voice-only output) ──────────────
+  if (msg.mode === 'live' && msg.sender === 'ai') return null;
+
   // ─── AI MESSAGE BUBBLE ────────────────────────────────
   const isAgents   = msg.mode === 'agents';
-  const themeColor = isAgents ? C.purpleSoft : C.cyan;
+  // Fast mode now uses purple shades to match the existing purple palette
+  const themeColor = isAgents ? C.purpleSoft : C.purple;
   const blocks     = parseMarkdown(msg.text);
 
   return (
@@ -229,7 +233,7 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
         <AiAvatar />
         <Text style={s.senderName}>ZYNOR</Text>
         <View style={[s.modeBadge, isAgents ? s.modeBadgeAgents : s.modeBadgeFast]}>
-          <Text style={[s.modeBadgeText, { color: isAgents ? C.purpleSoft : C.cyan }]}>
+          <Text style={[s.modeBadgeText, { color: isAgents ? C.purpleSoft : C.purple }]}>
             {isAgents ? (getTeamById(msg.teamId)?.name || 'AGENTS') : 'FAST'}
           </Text>
         </View>

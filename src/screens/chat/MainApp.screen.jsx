@@ -39,7 +39,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
-import { initDb, deleteAllMessages } from '../../database/db.init';
+import { initDb, deleteAllMessages, loadMessages } from '../../database/db.init';
 import * as SecureStore from 'expo-secure-store';
 
 import C from '../../config/colors.config';
@@ -220,27 +220,6 @@ export default function MainApp({ splashVisible = true }) {
     scrollRef.current?.scrollToEnd({ animated: false });
   }, []);
 
-  // ── Live Talk hook ───────────────────────────────────────────────────────
-  const liveTalk = useLiveTalk({ agentConfigs: sockets.agentConfigs });
-
-  const handleOpenLiveTalk = useCallback(() => {
-    setLiveTalkVisible(true);
-  }, []);
-
-  const handleCloseLiveTalk = useCallback(() => {
-    liveTalk.stop();
-    setLiveTalkVisible(false);
-  }, [liveTalk]);
-
-  // Auto-start listening when the modal opens
-  const prevLiveTalkVisible = useRef(false);
-  useEffect(() => {
-    if (liveTalkVisible && !prevLiveTalkVisible.current) {
-      liveTalk.start();
-    }
-    prevLiveTalkVisible.current = liveTalkVisible;
-  }, [liveTalkVisible, liveTalk]);
-
   // ── Conversations hook ───────────────────────────────────────────────────
   const conversations = useConversations({
     showConfirmDialog: (opts) => setConfirmDialog(opts),
@@ -250,6 +229,24 @@ export default function MainApp({ splashVisible = true }) {
     scrollConversationToEnd,
     autoFocusedRef,
   });
+
+  // ── Live Talk hook ───────────────────────────────────────────────────────
+  const liveTalk = useLiveTalk({
+    agentConfigs: sockets.agentConfigs,
+  });
+
+  const handleOpenLiveTalk = useCallback(() => {
+    setLiveTalkVisible(true);
+  }, []);
+
+  // Auto-start listening when the modal opens
+  const prevLiveTalkVisible = useRef(false);
+  useEffect(() => {
+    if (liveTalkVisible && !prevLiveTalkVisible.current) {
+      liveTalk.start();
+    }
+    prevLiveTalkVisible.current = liveTalkVisible;
+  }, [liveTalkVisible, liveTalk]);
 
   // ── Agent execution hook ─────────────────────────────────────────────────
   const agentExec = useAgentExecution({
@@ -270,6 +267,15 @@ export default function MainApp({ splashVisible = true }) {
     chatShouldStickToBottomRef,
     latestAnswerFocusPendingRef,
   });
+
+  // ── Close live talk: clear input bar ────────────────────────────────────
+  const handleCloseLiveTalkWithSession = useCallback(() => {
+    liveTalk.stop();
+    setLiveTalkVisible(false);
+    // Clear any text sitting in the main input bar — voice input is
+    // independent and should not bleed into the composer.
+    agentExec.setInputText('');
+  }, [liveTalk, agentExec]);
 
   // ── Bootstrap ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -317,6 +323,17 @@ export default function MainApp({ splashVisible = true }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [insets.bottom]);
+
+  // ── Auto-activate coordination when all agents become active ─────────────
+  useEffect(() => {
+    if (isEngineActive && !isEngineLive) {
+      setIsEngineLive(true);
+      AsyncStorage.setItem('zyron_ENGINE_LIVE', 'true').catch((err) =>
+        console.warn('[auto-coordination] persist failed:', err)
+      );
+      showToast('Coordination Active', 'All agents are live — coordination started automatically.', 'success');
+    }
+  }, [isEngineActive, isEngineLive]);
 
   // ── Socket-live border animation ─────────────────────────────────────────
   useEffect(() => {
@@ -755,6 +772,7 @@ export default function MainApp({ splashVisible = true }) {
                 docked
                 placeholder={conversations.messages.length === 0 ? 'Ask anything' : 'Ask Zyron'}
                 onLiveTalk={handleOpenLiveTalk}
+                liveTalkActive={liveTalkVisible}
               />
             </View>
 
@@ -830,9 +848,8 @@ export default function MainApp({ splashVisible = true }) {
         phase={liveTalk.phase}
         volumeRef={liveTalk.volumeRef}
         transcript={liveTalk.transcript}
-        aiText={liveTalk.aiText}
         errorMsg={liveTalk.errorMsg}
-        onStop={handleCloseLiveTalk}
+        onStop={handleCloseLiveTalkWithSession}
         onInterrupt={liveTalk.interruptAI}
       />
     </View>

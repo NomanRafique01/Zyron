@@ -375,7 +375,7 @@ export function SpeakIcon({ color = '#6A6A82', size = 18, active = false }) {
 }
 
 export function MicIcon({ active = false, size = 18 }) {
-  const color = active ? '#7B2FFF' : '#6B6B7A';
+  const color = '#7B2FFF';
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" fill={color} />
@@ -386,7 +386,7 @@ export function MicIcon({ active = false, size = 18 }) {
 }
 
 export function LiveIcon({ active = false, size = 18 }) {
-  const color = active ? '#00D4FF' : '#6B6B7A';
+  const color = '#7B2FFF';
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       {/* Centre mic dot */}
