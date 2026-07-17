@@ -34,7 +34,7 @@ export default function Header({
           onPress={onOpenSettings}
           activeOpacity={0.7}
         >
-          <GearIcon color="#A8A8B8" />
+          <GearIcon color="#7B2FFF" />
         </TouchableOpacity>
       </View>
 
@@ -121,9 +121,9 @@ const s = StyleSheet.create({
     borderRadius: 19,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.055)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: 'rgba(167, 139, 250, 0.14)',
+    borderColor: 'rgba(123,47,255,0.45)',
   },
   sidebarToggleBtn: {
     position: 'absolute',
@@ -133,9 +133,9 @@ const s = StyleSheet.create({
     height: 32,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(123, 47, 255, 0.08)',
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: 'rgba(123, 47, 255, 0.25)',
+    borderColor: 'rgba(123,47,255,0.45)',
     borderRadius: 8,
     shadowColor: C.purple,
     shadowOpacity: 0.28,
