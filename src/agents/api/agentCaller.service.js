@@ -57,7 +57,6 @@ const invokeWithRetry = async (provider, model, key, messages, signal, cache) =>
 
       // Exponential backoff: 3s, 6s, 12s — with ±500 ms jitter to avoid thundering herd
       const delay = BASE_BACKOFF_MS * Math.pow(2, attempt) + Math.random() * 500;
-      console.warn(`[callAgent] transient error on ${provider} (attempt ${attempt + 1}/${MAX_RETRIES}) — retrying in ${Math.round(delay / 1000)}s:`, err.message);
       await sleep(delay);
     }
   }

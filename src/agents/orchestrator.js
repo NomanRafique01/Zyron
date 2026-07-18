@@ -63,6 +63,8 @@ export const runAgentsOrchestrator = async (
   onSocketStatusChange,
   onStreamDelta = null       // optional — if not provided, falls back to blocking mode
 ) => {
+  const _orchestratorStart = Date.now();
+  console.log('[Zyron Local] 🧠 Local orchestration engine active');
   const analysis = analyzeQuery(userText);
   analysis.coordinationMode = COORDINATION_MODES.FULL;
   const phases = getPipelinePhases();
@@ -108,7 +110,6 @@ export const runAgentsOrchestrator = async (
         // The writer still receives all outputs and assembles the full answer.
         if (useChunking) {
           promptChunks = chunkPromptForRoles(userText, roles);
-          console.log(`[Agents] Large prompt on weak model — chunking into ${roles.length} slices for: ${roles.join(', ')}`);
         }
 
         if (typeof onStreamDelta === 'function') {
@@ -179,7 +180,6 @@ export const runAgentsOrchestrator = async (
                 // will fire a blocking retry for any role whose output is too short.
                 progress.markRetrying(role);
               }
-              console.warn(`[Agents] ${role} stream ${isTimeout ? 'timed out' : 'failed'} — retrying (${partial.length} partial chars):`, err.message);
             },
             signal
           );
@@ -192,7 +192,6 @@ export const runAgentsOrchestrator = async (
             );
             if (emptyRoles.length > 0) {
               const roleNumberMap = { reasoner: 'Agent 1', coder: 'Agent 2', vision: 'Agent 3', writer: 'Agent 4' };
-              console.warn(`[Agents] Thin outputs for [${emptyRoles.map(r => roleNumberMap[r] || r).join(', ')}] — blocking retry`);
               await Promise.allSettled(
                 emptyRoles.map(async (role) => {
                   if (signal?.aborted) return;
@@ -211,7 +210,6 @@ export const runAgentsOrchestrator = async (
                       // Retry succeeded — mark done so UI goes straight from working → complete
                       progress.markDone(role);
                       onSocketStatusChange?.(role, 'active', '');
-                      console.log(`[Agents] ${roleNumberMap[role] || role} (${agentName}) — retry ok (${res.text.length} chars)`);
                     } else {
                       // Retry returned but output is too short — treat as a real failure now
                       progress.markFailed(role, new Error('Empty response after retry'), false);
@@ -222,7 +220,6 @@ export const runAgentsOrchestrator = async (
                     // Retry also failed — only NOW show the error state in the UI
                     progress.markFailed(role, retryErr, isKeyExhaustedError(retryErr));
                     onSocketStatusChange?.(role, isKeyExhaustedError(retryErr) ? 'exhausted' : 'error', retryErr.message);
-                    console.warn(`[Agents] ${roleNumberMap[role] || role} (${agentName}) — retry failed:`, retryErr.message);
                   }
                 })
               );
@@ -253,7 +250,6 @@ export const runAgentsOrchestrator = async (
                 // Only re-throw on explicit user cancel — timeouts and API errors are recoverable per-agent.
                 if (signal?.aborted || err.message === 'Aborted') throw err;
                 progress.markFailed(role, err, isKeyExhaustedError(err));
-                console.warn(`[Agents] ${role} failed (${err.isAgentTimeout ? 'timeout' : 'error'}):`, err.message);
                 return { role, text: '', usage: { prompt_tokens: 0, completion_tokens: 0 }, error: err };
               }
             })
@@ -268,16 +264,12 @@ export const runAgentsOrchestrator = async (
           });
         }
 
-        if (__DEV__) {
-          const _rMap = { reasoner: 'Agent 1', coder: 'Agent 2', vision: 'Agent 3', writer: 'Agent 4' };
-          const summary = Object.entries(specialistOutputs)
-            .map(([r, t]) => {
-              const label = `${_rMap[r] || r} (${agentConfigs[r]?.name || r})`;
-              return `${label}: ${t ? t.length + ' chars' : 'EMPTY'}`;
-            })
-            .join(', ');
-          console.log(`[Agents] Specialist outputs — ${summary}`);
-        }
+        // Log per-specialist char counts
+        Object.entries(specialistOutputs).forEach(([role, text]) => {
+          const name = agentConfigs[role]?.name || role.charAt(0).toUpperCase() + role.slice(1);
+          console.log(`[Zyron Local] 👤 ${name} → ${text ? text.length : 0} chars`);
+        });
+
       }
 
       // ── Synthesis phase ──────────────────────────────────────────────────────
@@ -364,13 +356,11 @@ export const runAgentsOrchestrator = async (
                   writerDone = true;
                   progress.markDone('writer');
                   onSocketStatusChange?.('writer', 'active', '');
-                  console.log(`[Agents] Agent 4 (${agentConfigs.writer?.name || 'Writer'}) — writer retry ok (${writerText.length} chars)`);
                 }
               } catch (retryErr) {
                 if (signal?.aborted || retryErr.name === 'AbortError' || retryErr.message === 'Aborted') {
                   throw new Error('Aborted');
                 }
-                console.warn(`[Agents] Agent 4 (${agentConfigs.writer?.name || 'Writer'}) — writer retry failed:`, retryErr.message);
               }
             }
 
@@ -387,6 +377,7 @@ export const runAgentsOrchestrator = async (
           }
 
           const agents = progress.agents();
+          console.log(`[Zyron Local] ✅ Response ready in ${Date.now() - _orchestratorStart}ms`);
           return {
             text: writerText,
             agents,
@@ -404,6 +395,7 @@ export const runAgentsOrchestrator = async (
 
         usageByRole.writer = synthesis.usage;
         const agents = progress.agents();
+        console.log(`[Zyron Local] ✅ Response ready in ${Date.now() - _orchestratorStart}ms`);
         return {
           text: synthesis.text,
           agents,

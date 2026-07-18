@@ -466,7 +466,6 @@ export const streamAgent = async (
         // Retry transient errors (429 + 5xx overloaded); hard errors throw now
         if (!_isTransientError(streamErr) || attempt === MAX_STREAM_RETRIES) throw streamErr;
         const delay = BASE_STREAM_BACKOFF * Math.pow(2, attempt) + Math.random() * 500;
-        console.warn(`[streamAgent] transient error on ${provider} (attempt ${attempt + 1}) — retrying in ${Math.round(delay / 1000)}s:`, streamErr.message);
         await _sleep(delay);
       }
     }

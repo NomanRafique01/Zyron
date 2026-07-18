@@ -91,7 +91,7 @@ export const runOrchestration = async (
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
-        console.log('[Zyron] ⏱️ Backend timeout — falling back to local');
+        console.log('[Zyron Backend] ⏱️ Request timed out — switching to local engine');
         controller.abort();
       }, BACKEND_TIMEOUT_MS);
 
@@ -101,8 +101,9 @@ export const runOrchestration = async (
         ? anyAbort([signal, controller.signal])
         : controller.signal;
 
-      console.log('[Zyron] 🚀 Trying backend...');
+      console.log('[Zyron Backend] ⚡ Routing to Railway orchestration engine...');
       const activeTeam = getActiveTeam();
+      const _t0 = Date.now();
       const response = await fetch(`${BACKEND_URL}/orchestrate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -117,11 +118,17 @@ export const runOrchestration = async (
       });
 
       clearTimeout(timeoutId);
-      console.log('[Zyron] Backend response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log('[Zyron] ✅ Response from BACKEND');
+        const _elapsed = Date.now() - _t0;
+        console.log(`[Zyron Backend] ✅ Backend response received in ${_elapsed}ms`);
+        // Log per-agent char counts
+        if (Array.isArray(data.agents)) {
+          data.agents.forEach((a) => {
+            console.log(`[Zyron Backend] 👤 ${a.name} → ${(a.output ?? '').length} chars`);
+          });
+        }
         // Remap agents to the active team's UI metadata (name, icon, colours)
         // so the coordination panel reflects the correct team — not the backend default.
         return {
@@ -130,18 +137,16 @@ export const runOrchestration = async (
         };
       }
       // Non-200 → fall through to local fallback silently
-      console.log('[Zyron] Backend error body:', await response.text());
     } catch (e) {
       // Network error, timeout (AbortError), or any other fetch failure →
       // fall through to local fallback silently.
       // Re-throw only if the caller explicitly cancelled (user pressed Stop).
-      console.log('[Zyron] Backend fetch error:', e.message);
       if (signal?.aborted) throw new Error('Aborted');
+      console.log('[Zyron Backend] ❌ Backend unavailable — switching to local engine');
     }
   }
 
   // ── Local fallback ────────────────────────────────────────────────────────
-  console.log('[Zyron] ⚠️ Falling back to LOCAL orchestration');
   return runAgentsOrchestrator(
     userText,
     agentConfigs,
