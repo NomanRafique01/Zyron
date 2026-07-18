@@ -1,0 +1,34 @@
+# ─── Render Infrastructure-as-Code ────────────────────────────────────────────
+# Docs: https://render.com/docs/render-yaml-reference
+#
+# Drop this file anywhere in your repo.  On Render, point the "root directory"
+# to  backend/  so the Docker build context resolves correctly.
+
+services:
+  - type: web                  # Render web service (HTTP, auto-TLS, public URL)
+    name: zyron-backend        # Display name in the Render dashboard
+    runtime: docker            # Use our own Dockerfile instead of a buildpack
+    dockerContext: .           # Build context = backend/ (set root dir on Render)
+    dockerfilePath: ./Dockerfile
+
+    # ── Scaling & region ────────────────────────────────────────────────────
+    plan: free                 # Change to "starter" or higher for production SLA
+    region: oregon             # us-west-2; change to "frankfurt" / "singapore" etc.
+    numInstances: 1
+
+    # ── Health check ────────────────────────────────────────────────────────
+    healthCheckPath: /health   # GET /health must return 2xx for the deploy to go live
+
+    # ── Environment ─────────────────────────────────────────────────────────
+    envVars:
+      - key: PYTHON_ENV
+        value: production
+      # Add your secret keys here using Render's secret management:
+      #   - key: OPENAI_API_KEY
+      #     sync: false          ← "sync: false" means you set the value in the dashboard
+      #   - key: GEMINI_API_KEY
+      #     sync: false
+
+    # ── Auto-deploy ─────────────────────────────────────────────────────────
+    # Every push to the connected branch triggers a new deploy automatically.
+    autoDeploy: true
