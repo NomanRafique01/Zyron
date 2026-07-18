@@ -20,6 +20,7 @@ import { runAgentsOrchestrator } from './orchestrator';
 import { getActiveTeam } from './teams/teamRuntime';
 import { getTeamRoleInfo } from './teams';
 import { getAgentMeta, AGENT_STATUS_COLORS } from './registry/agentRegistry';
+import { getModelDisplayName } from './api/providers.service';
 
 // ── Backend endpoint ──────────────────────────────────────────────────────────
 // Set to the Railway deployment URL once available. Leave as an empty string
@@ -66,12 +67,20 @@ export const setForceLocal = (v) => { _forceLocal = v; };
  * @param {object}   team           — result of getActiveTeam()
  * @returns {object[]}
  */
-function remapAgentsToActiveTeam(backendAgents, team) {
+function remapAgentsToActiveTeam(backendAgents, team, agentConfigs = {}) {
   if (!backendAgents?.length || !team?.agents) return backendAgents ?? [];
   const roleInfo = getTeamRoleInfo(team);
   return backendAgents.map((agent) => {
     const meta = roleInfo[agent.role];
-    if (!meta) return agent;
+    const agentMeta = getAgentMeta(agent.role);
+    const config = agentConfigs[agent.role] || {};
+    if (!meta) return {
+      ...agent,
+      model: getModelDisplayName(config, agentMeta?.defaultDisplayName || agent.role),
+      progress: 100,
+      status: 'done',
+      statusColor: AGENT_STATUS_COLORS.done,
+    };
     const teamAgent = team.agents[agent.role];
     return {
       ...agent,
@@ -80,6 +89,13 @@ function remapAgentsToActiveTeam(backendAgents, team) {
       accent: teamAgent?.accent ?? agent.accent,
       accentDim: teamAgent?.accentDim ?? agent.accentDim,
       accentGlow: teamAgent?.accentGlow ?? agent.accentGlow,
+      model: getModelDisplayName(config, agentMeta?.defaultDisplayName || agent.role),
+      // Always mark agents as fully complete so the coordination panel in the
+      // stored message shows filled progress bars and "DONE" badges — matching
+      // the local-orchestrator behaviour.
+      progress: 100,
+      status: 'done',
+      statusColor: AGENT_STATUS_COLORS.done,
     };
   });
 }
@@ -139,7 +155,7 @@ export const runOrchestration = async (
           return {
             role,
             name:        config.name || meta.defaultDisplayName || role,
-            model:       config.model || '',
+            model:       getModelDisplayName(config, meta.defaultDisplayName || role),
             progress:    progressFn(role),
             status,
             statusColor: status === 'queued'
@@ -226,7 +242,7 @@ export const runOrchestration = async (
         // so the coordination panel reflects the correct team — not the backend default.
         return {
           ...data,
-          agents: remapAgentsToActiveTeam(data.agents, activeTeam),
+          agents: remapAgentsToActiveTeam(data.agents, activeTeam, agentConfigs),
         };
       }
       // Non-200 → fall through to local fallback silently
