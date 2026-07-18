@@ -170,10 +170,10 @@ class OrchestrateResponse(BaseModel):
         default_factory=list,
         description="Per-specialist results (reasoner, coder, vision, writer).",
     )
-    token_usage: Optional[Dict[str, int]] = Field(
+    token_usage: Optional[Dict[str, Dict[str, int]]] = Field(
         default=None,
         alias="tokenUsage",
-        description="Aggregate token counts across all agents.",
+        description='Per-role token counts, e.g. {"Reasoner": {"prompt_tokens": n, ...}}.',
     )
     meta: Optional[Dict[str, Any]] = Field(
         default=None,
