@@ -66,6 +66,7 @@ export const runOrchestration = async (
         ? anyAbort([signal, controller.signal])
         : controller.signal;
 
+      console.log('[Zyron] 🚀 Trying backend...');
       const response = await fetch(`${BACKEND_URL}/orchestrate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -79,6 +80,7 @@ export const runOrchestration = async (
       });
 
       clearTimeout(timeoutId);
+      console.log('[Zyron] Backend response status:', response.status);
 
       if (response.ok) {
         const data = await response.json();
@@ -86,10 +88,12 @@ export const runOrchestration = async (
         return data;
       }
       // Non-200 → fall through to local fallback silently
-    } catch (_err) {
+      console.log('[Zyron] Backend error body:', await response.text());
+    } catch (e) {
       // Network error, timeout (AbortError), or any other fetch failure →
       // fall through to local fallback silently.
       // Re-throw only if the caller explicitly cancelled (user pressed Stop).
+      console.log('[Zyron] Backend fetch error:', e.message);
       if (signal?.aborted) throw new Error('Aborted');
     }
   }
