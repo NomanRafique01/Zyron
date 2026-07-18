@@ -3,6 +3,7 @@
     "name": "Zyron",
     "slug": "zyron",
     "version": "1.0.0",
+    "scheme": "com.nomanrafique.zyron",
     "orientation": "portrait",
     "icon": "./assets/splash/icon.png",
     "userInterfaceStyle": "dark",

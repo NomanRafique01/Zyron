@@ -31,7 +31,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import s from '../../styles/app.styles';
 import C from '../../config/colors.config';
-import { GearIcon, CrossIcon, KeyIcon, ShieldIcon, InfoIcon, UserIcon, BoltIcon, TrashIcon, LockIcon } from '../../components/shared/Icons';
+import { GearIcon, CrossIcon, KeyIcon, ShieldIcon, InfoIcon, UserIcon, BoltIcon, TrashIcon, LockIcon, WorkshopIcon } from '../../components/shared/Icons';
 
 // ── Sub-panel components ─────────────────────────────────────────────────────
 import ProfilePanel from './panels/ProfilePanel.component.jsx';
@@ -41,6 +41,7 @@ import PasswordManagerPanel from './auth/PasswordManager.component.jsx';
 import PrivacyPanel from './panels/PrivacyPanel.component.jsx';
 import AboutPanel from './panels/AboutPanel.component.jsx';
 import ResetPanel from './panels/ResetPanel.component.jsx';
+import AgentsWorkshopPanel from './panels/AgentsWorkshopPanel.component.jsx';
 import ApiLockGate from './auth/ApiLockGate.component.jsx';
 import RemoveLockBanner from './auth/RemoveLockBanner.component.jsx';
 import ResetAuthOverlay from './auth/ResetAuthOverlay.component.jsx';
@@ -87,6 +88,7 @@ export default function SettingsModal({
     passwordPanelOpen,
     profilePanelOpen,
     agentLibraryPanelOpen,
+    workshopPanelOpen,
     privacyPanelOpen,
     aboutPanelOpen,
     resetPanelOpen,
@@ -222,7 +224,7 @@ export default function SettingsModal({
                 </Text>
               </View>
 
-              {/* ── Profile ── */}
+              {/* ── Account ── */}
               <TouchableOpacity
                 style={panelToggleStyle(profilePanelOpen, s.profilePanelToggleOpen)}
                 onPress={() => handleTogglePanel('profile')}
@@ -234,7 +236,7 @@ export default function SettingsModal({
                   <View style={[s.apiPanelIconBox, s.profileIconBox]}><UserIcon color={C.purpleSoft || C.purple} /></View>
                   <View style={{ flex: 1, justifyContent: 'center' }}>
                     <Text style={s.apiPanelTitle}>Profile</Text>
-                    <Text style={s.apiPanelSub} numberOfLines={1}>Workspace identity and personalization controls</Text>
+                    <Text style={s.apiPanelSub} numberOfLines={1}>Workspace identity, preferences and personalisation</Text>
                   </View>
                 </View>
               </TouchableOpacity>
@@ -273,6 +275,31 @@ export default function SettingsModal({
                   teamLayoutRef={teamLayoutRef}
                   onToggleTeam={handleToggleTeamPanel}
                   onSelectTeam={(teamId) => sockets.handleSelectTeam(teamId, scrollTeamIntoView)}
+                />
+              )}
+
+              {/* ── Agents Workshop ── */}
+              <TouchableOpacity
+                style={panelToggleStyle(workshopPanelOpen, s.workshopPanelToggleOpen)}
+                onPress={() => handleTogglePanel('workshop')}
+                activeOpacity={0.82}
+                ref={(node) => { if (node) settingsPanelNodeRef.current.workshop = node; }}
+                onLayout={(e) => { settingsPanelLayoutRef.current.workshop = e.nativeEvent.layout; }}
+              >
+                <View style={s.apiPanelToggleLeft}>
+                  <View style={[s.apiPanelIconBox, s.workshopIconBox]}>
+                    <WorkshopIcon color={C.purpleSoft || C.purple} />
+                  </View>
+                  <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <Text style={s.apiPanelTitle}>Agents Workshop</Text>
+                    <Text style={s.apiPanelSub} numberOfLines={1}>Build custom agents and compose custom teams</Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+              {workshopPanelOpen && (
+                <AgentsWorkshopPanel
+                  isPremium={false}
+                  showToast={showToast}
                 />
               )}
 
@@ -415,7 +442,7 @@ export default function SettingsModal({
                   onDeleteAllChats={handleDeleteAllChats}
                   onDeleteSavedApiKeys={handleDeleteSavedApiKeys}
                   onClearAllData={handleClearAllData}
-                  onRequestReset={(opts) => requestResetConfirmation(opts, settings.showConfirmDialog || (() => {}))}
+                  onRequestReset={(opts) => requestResetConfirmation(opts, showConfirmDialog)}
                 />
               )}
             </ScrollView>

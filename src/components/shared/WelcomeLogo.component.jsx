@@ -16,17 +16,19 @@ import { scale, spacing, radius } from '../../utils/responsive.utils';
  * @param {boolean} [isOffline=false] — When true, renders the offline (red)
  *                                      border/glow instead of the default purple.
  */
-export default function WelcomeLogo({ isOffline = false }) {
-  const logoSize = scale(80);
+export default function WelcomeLogo({ isOffline = false, size }) {
+  const logoSize = size ?? scale(80);
 
   const borderColor = isOffline ? 'rgba(239, 68, 68, 0.55)' : 'rgba(123, 47, 255, 0.55)';
   const bgColor = isOffline ? 'rgba(239, 68, 68, 0.07)' : 'rgba(123, 47, 255, 0.07)';
 
+  const br = Math.round(logoSize * 0.22);
+
   return (
-    <View style={{ alignItems: 'center', marginBottom: spacing(18) }}>
+    <View style={{ alignItems: 'center', marginBottom: spacing(size ? 12 : 18) }}>
       <View
         style={{
-          borderRadius: radius(20),
+          borderRadius: br + 2,
           padding: 3,
           borderWidth: 1.5,
           borderColor,
@@ -38,7 +40,7 @@ export default function WelcomeLogo({ isOffline = false }) {
           style={{
             width: logoSize,
             height: logoSize,
-            borderRadius: radius(18),
+            borderRadius: br,
             backgroundColor: '#050508',
           }}
           resizeMode="cover"

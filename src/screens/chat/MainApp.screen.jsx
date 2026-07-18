@@ -78,6 +78,7 @@ import useConversations from '../../hooks/useConversations.hook.js';
 import useAgentExecution from '../../hooks/useAgentExecution.hook.js';
 import useAgentSockets from '../../hooks/useAgentSockets.hook.js';
 import useSettings from '../../hooks/useSettings.hook.js';
+import { bootstrapCustomTeams } from '../../agents/workshop/customTeamRegistry';
 
 // ── Extracted components ─────────────────────────────────────────────────────
 import WelcomeLogo from '../../components/shared/WelcomeLogo.component.jsx';
@@ -95,7 +96,6 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 
 export default function MainApp({ splashVisible = true }) {
   const insets = useSafeAreaInsets();
-  const safeBottom = Platform.OS === 'android' ? Math.max(insets.bottom, navBarHeightRef?.current ?? 0) : insets.bottom;
 
   // ── Shared cross-subsystem refs ──────────────────────────────────────────
   const scrollRef = useRef(null);
@@ -151,6 +151,8 @@ export default function MainApp({ splashVisible = true }) {
     adjustResizeFailed,
     keyboardAvoidingPadding,
   } = useKeyboardLayout(insets.bottom, inputRef);
+
+  const safeBottom = Platform.OS === 'android' ? Math.max(insets.bottom, navBarHeightRef?.current ?? 0) : insets.bottom;
 
   // ── Toast hook ───────────────────────────────────────────────────────────
   const {
@@ -298,6 +300,8 @@ export default function MainApp({ splashVisible = true }) {
         } catch (err) {
           console.warn('[db] initDb error:', err);
         }
+        // Pre-load custom teams into registry cache so getTeamById works synchronously
+        bootstrapCustomTeams().catch(() => {});
         // DB is ready — load everything else in parallel
         conversations.loadConversationsIndex();
         sockets.loadActiveTeamFromStorage()
@@ -717,7 +721,7 @@ export default function MainApp({ splashVisible = true }) {
               {conversations.chatLoading && (
                 <View style={[s.chatLoadingOverlay, { pointerEvents: 'box-none' }]}>
                   <View style={[s.chatLoadingCard, { pointerEvents: 'none' }]}>
-                    <ActivityIndicator size="large" color="#A78BFA" />
+                    <ActivityIndicator size="large" color="#7B2FFF" />
                     <Text style={s.chatLoadingText}>Loading conversation…</Text>
                   </View>
                 </View>
@@ -785,7 +789,7 @@ export default function MainApp({ splashVisible = true }) {
             {conversations.chatLoading && (
               <View style={[s.chatLoadingOverlay, { pointerEvents: 'box-none' }]}>
                 <View style={[s.chatLoadingCard, { pointerEvents: 'none' }]}>
-                  <ActivityIndicator size="large" color="#A78BFA" />
+                  <ActivityIndicator size="large" color="#7B2FFF" />
                   <Text style={s.chatLoadingText}>Loading conversation…</Text>
                 </View>
               </View>
@@ -834,7 +838,7 @@ export default function MainApp({ splashVisible = true }) {
           setShowSetupGuideModal(false);
           settings.setSettingsVisible(true);
           setTimeout(() => {
-            settings.handleToggleSettingsPanel('api');
+            settings.handleToggleSettingsPanel('agentLibrary');
           }, 300);
         }}
       />

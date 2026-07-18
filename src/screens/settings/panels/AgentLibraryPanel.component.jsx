@@ -2,17 +2,18 @@
  * AgentLibraryPanel.component.jsx
  * ─────────────────────────────────────────────────────────────────────────────
  * Agent Team Library panel inside Settings.
- * Renders the accordion list of all AGENTS_TEAMS — each card shows the team
- * name, tagline, agent roster, and a toggle switch to activate/deactivate it.
- * Expanding a card reveals the detailed agent role breakdown and features.
+ * Renders the accordion list of all teams (built-in + custom) — each card
+ * shows the team name, tagline, agent roster, and a toggle switch to
+ * activate/deactivate it.  Custom teams are tagged with a CUSTOM badge.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import s from '../../../styles/app.styles';
 import C from '../../../config/colors.config';
 import { AGENTS_TEAMS } from '../../../utils/agentLogic.utils';
+import { getAllTeams } from '../../../agents/workshop/customTeamRegistry';
 import { BoltIcon } from '../../../components/shared/Icons';
 
 export default function AgentLibraryPanel({
@@ -25,6 +26,12 @@ export default function AgentLibraryPanel({
   onSelectTeam,     // (teamId) => void
 }) {
   const roster = ['reasoner', 'coder', 'vision', 'writer'];
+
+  // Merge built-in + custom teams; re-render when custom teams change
+  const [allTeams, setAllTeams] = useState(() => getAllTeams());
+  useEffect(() => {
+    setAllTeams(getAllTeams());
+  }, []);
 
   return (
     <View style={s.agentLibraryPanel}>
@@ -46,7 +53,7 @@ export default function AgentLibraryPanel({
 
       {/* Team accordion grid */}
       <View style={s.agentLibraryGrid}>
-        {AGENTS_TEAMS.map((team) => {
+        {allTeams.map((team) => {
           const isTeamActive = team.id === activeTeamId;
           const isExpanded = expandedTeamId === team.id;
           const teamIcon = team.teamIcon || team.agents.reasoner.icon;
@@ -82,7 +89,14 @@ export default function AgentLibraryPanel({
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
                       <Text style={s.teamAccordionIcon}>{teamIcon}</Text>
                       <View style={{ flex: 1 }}>
-                        <Text style={s.teamAccordionTitle}>{team.name}</Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={s.teamAccordionTitle}>{team.name}</Text>
+                          {team.badge === 'CUSTOM' && (
+                            <View style={{ backgroundColor: `${team.accent}22`, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1, borderWidth: 1, borderColor: `${team.accent}55` }}>
+                              <Text style={{ color: team.accent, fontSize: 7, fontWeight: '900', letterSpacing: 0.4 }}>CUSTOM</Text>
+                            </View>
+                          )}
+                        </View>
                         <Text style={s.teamAccordionSub} numberOfLines={1}>
                           {isTeamActive
                             ? `Active · ${team.agents.writer.name} synthesizes`

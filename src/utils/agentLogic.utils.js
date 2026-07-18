@@ -25,6 +25,8 @@ export {
   initActiveTeam,
 } from '../agents';
 
+export { getAllTeams, bootstrapCustomTeams, invalidateCustomTeams } from '../agents/workshop/customTeamRegistry';
+
 import { runAgentsOrchestrator } from '../agents';
 
 export const runAgentsPipeline = (
