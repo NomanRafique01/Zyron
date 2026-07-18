@@ -2,7 +2,6 @@
  * Backward-compatible facade — implementation lives in src/agents/
  */
 export {
-  runAgentsOrchestrator,
   verifyAgentKey,
   validateApiKeyFormat,
   sanitizeErrorMessage,
@@ -33,7 +32,7 @@ export {
   invalidateCustomTeams,
 } from '../agents/workshop/customTeamRegistry';
 
-import { runAgentsOrchestrator } from '../agents';
+import { runOrchestration as runAgentsOrchestrator } from '../agents/backendBridge';
 
 export const runAgentsPipeline = (
   userText,
