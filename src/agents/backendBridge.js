@@ -17,6 +17,8 @@
  */
 
 import { runAgentsOrchestrator } from './orchestrator';
+import { getActiveTeam } from './teams/teamRuntime';
+import { getTeamRoleInfo } from './teams';
 
 // ── Backend endpoint ──────────────────────────────────────────────────────────
 // Set to the Railway deployment URL once available. Leave as an empty string
@@ -44,6 +46,36 @@ const BACKEND_TIMEOUT_MS = 30000;
  * @param {function}    [onStreamDelta]      — (role, chunk) => void
  * @returns {Promise<object>}  Same shape as runAgentsOrchestrator result
  */
+
+/**
+ * Remaps the `agents` array returned by the backend so every entry carries
+ * the display metadata (name, icon, accent colours) of the *active* team
+ * rather than whatever team the backend resolved internally.
+ *
+ * The backend drives the prompt/logic side; the frontend owns the visual identity.
+ *
+ * @param {object[]} backendAgents  — agents[] from the backend response
+ * @param {object}   team           — result of getActiveTeam()
+ * @returns {object[]}
+ */
+function remapAgentsToActiveTeam(backendAgents, team) {
+  if (!backendAgents?.length || !team?.agents) return backendAgents ?? [];
+  const roleInfo = getTeamRoleInfo(team);
+  return backendAgents.map((agent) => {
+    const meta = roleInfo[agent.role];
+    if (!meta) return agent;
+    const teamAgent = team.agents[agent.role];
+    return {
+      ...agent,
+      name: meta.name,
+      icon: meta.icon,
+      accent: teamAgent?.accent ?? agent.accent,
+      accentDim: teamAgent?.accentDim ?? agent.accentDim,
+      accentGlow: teamAgent?.accentGlow ?? agent.accentGlow,
+    };
+  });
+}
+
 export const runOrchestration = async (
   userText,
   agentConfigs,
@@ -70,12 +102,14 @@ export const runOrchestration = async (
         : controller.signal;
 
       console.log('[Zyron] 🚀 Trying backend...');
+      const activeTeam = getActiveTeam();
       const response = await fetch(`${BACKEND_URL}/orchestrate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query: userText,
           agentConfigs,
+          team: activeTeam,
           persona,
           userProfile,
         }),
@@ -88,7 +122,12 @@ export const runOrchestration = async (
       if (response.ok) {
         const data = await response.json();
         console.log('[Zyron] ✅ Response from BACKEND');
-        return data;
+        // Remap agents to the active team's UI metadata (name, icon, colours)
+        // so the coordination panel reflects the correct team — not the backend default.
+        return {
+          ...data,
+          agents: remapAgentsToActiveTeam(data.agents, activeTeam),
+        };
       }
       // Non-200 → fall through to local fallback silently
       console.log('[Zyron] Backend error body:', await response.text());
