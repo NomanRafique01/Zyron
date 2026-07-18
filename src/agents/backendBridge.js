@@ -21,7 +21,7 @@ import { runAgentsOrchestrator } from './orchestrator';
 // ── Backend endpoint ──────────────────────────────────────────────────────────
 // Set to the Railway deployment URL once available. Leave as an empty string
 // or null to skip the backend attempt entirely and always use local fallback.
-const BACKEND_URL = '';
+const BACKEND_URL = 'https://zyron-production-7af1.up.railway.app';
 
 // Milliseconds to wait for the backend before giving up and falling back.
 const BACKEND_TIMEOUT_MS = 8000;
@@ -82,6 +82,7 @@ export const runOrchestration = async (
 
       if (response.ok) {
         const data = await response.json();
+        console.log('[Zyron] ✅ Response from BACKEND');
         return data;
       }
       // Non-200 → fall through to local fallback silently
@@ -94,6 +95,7 @@ export const runOrchestration = async (
   }
 
   // ── Local fallback ────────────────────────────────────────────────────────
+  console.log('[Zyron] ⚠️ Falling back to LOCAL orchestration');
   return runAgentsOrchestrator(
     userText,
     agentConfigs,
