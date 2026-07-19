@@ -9,5 +9,7 @@ module.exports = ({ config }) => ({
     ...config.extra,
     githubClientId:     process.env.GITHUB_CLIENT_ID     ?? '',
     githubClientSecret: process.env.GITHUB_CLIENT_SECRET ?? '',
+    tavilyApiKey:       process.env.TAVILY_API_KEY        ?? '',
+    serperApiKey:       process.env.SERPER_API_KEY        ?? '',
   },
 });

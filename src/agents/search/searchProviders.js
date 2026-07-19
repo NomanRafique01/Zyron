@@ -4,12 +4,16 @@
  * Individual search provider implementations.
  * Both return a clean structured result or null — never throw.
  *
- * Keys are read at call-time from keyGuard (encrypted storage).
+ * Keys are injected at build-time via app.config.js (process.env → extra),
+ * and accessed through expo-constants at runtime.
  * Provider-specific timeouts default to 3 000 ms per spec.
  */
 
-import { getKey } from '../security/keyGuard';
+import Constants from 'expo-constants';
 import { formatTavilyResult, formatSerperResult } from './searchResultFormatter';
+
+const TAVILY_KEY = Constants.expoConfig?.extra?.tavilyApiKey || null;
+const SERPER_KEY = Constants.expoConfig?.extra?.serperApiKey || null;
 
 const SEARCH_TIMEOUT_MS = 3000;
 
@@ -33,7 +37,7 @@ const fetchWithTimeout = async (url, options, timeoutMs = SEARCH_TIMEOUT_MS) => 
  */
 export const searchTavily = async (query) => {
   try {
-    const apiKey = await getKey('tavily');
+    const apiKey = TAVILY_KEY;
     if (!apiKey) return null;
 
     const res = await fetchWithTimeout(
@@ -72,7 +76,7 @@ export const searchTavily = async (query) => {
  */
 export const searchSerper = async (query) => {
   try {
-    const apiKey = await getKey('serper');
+    const apiKey = SERPER_KEY;
     if (!apiKey) return null;
 
     const res = await fetchWithTimeout(

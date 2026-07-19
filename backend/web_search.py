@@ -25,6 +25,9 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 import httpx
+from dotenv import load_dotenv
+
+load_dotenv()
 
 log = logging.getLogger("zyron.web_search")
 
