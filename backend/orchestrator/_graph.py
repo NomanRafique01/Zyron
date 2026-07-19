@@ -12,13 +12,13 @@ Graph topology
                   │  │  │
          ┌────────┘  │  └────────┐
          ▼           ▼           ▼
-  reasoner_node  coder_node  vision_node   (run in parallel via asyncio.gather)
+     agent1 node agent2 node   agent3 node   (run in parallel via asyncio.gather)
          │           │           │
-         └─────┬─────┘───────────┘
-               ▼
-          writer_node
-               │
-              END
+         └───── ─────┘───────────┘
+                     ▼
+                 agent4 node
+                     │
+                    END
 
 LangGraph parallel execution:
   We add a direct edge from START to a "fan_out" node which uses asyncio.gather

@@ -102,6 +102,21 @@ _TABULAR = re.compile(
     re.IGNORECASE,
 )
 
+_WEB_SEARCH = re.compile(
+    r"\b(latest|current|today|tonight|this week|this month|right now"
+    r"|just released|just launched|recently|new release|breaking|live|now"
+    r"|2024|2025|2026|price|prices|cost|stock|crypto|bitcoin|ethereum|btc|eth"
+    r"|exchange rate|weather|forecast|score|scores|result|results|standings"
+    r"|match|game|news|update|updates|trending|viral|who won|who is winning"
+    r"|released|available now|out now|just dropped)\b",
+    re.IGNORECASE,
+)
+
+_FILLER_WORDS = re.compile(
+    r"\b(bro|man|dude|yo|hey|like|um|uh|just|rn|lol|omg|wtf|tbh|ngl)\b",
+    re.IGNORECASE,
+)
+
 
 # ─── Complexity classifier ─────────────────────────────────────────────────────
 
@@ -317,6 +332,16 @@ def analyze_query(text: str, analysis_bias: Optional[dict] = None) -> dict:
     needs_table       = bool(_TABULAR.search(lower))
     verbosity_level   = "detailed" if _VERBOSITY.search(text) else "simple"  # original case
 
+    # ── Web search detection ──────────────────────────────────────────────────
+    needs_web_search = bool(_WEB_SEARCH.search(lower))
+    # Clean and optimise the query for the search engine.
+    web_search_query = (
+        _FILLER_WORDS.sub("", text).strip()
+        if needs_web_search else ""
+    )
+    # Collapse double spaces left by filler removal.
+    web_search_query = re.sub(r"\s{2,}", " ", web_search_query).strip()
+
     # ── Primary type (priority cascade) ──────────────────────────────────────
     if is_agents_meta:
         primary_type = "swarm_meta"
@@ -362,6 +387,8 @@ def analyze_query(text: str, analysis_bias: Optional[dict] = None) -> dict:
         "word_count":        word_count,
         "coordination_mode": coordination_mode,
         "verbosity_level":   verbosity_level,
+        "needs_web_search":  needs_web_search,
+        "web_search_query":  web_search_query,
         "complexity":        "",   # filled below
     }
 

@@ -3,6 +3,10 @@ import { getActiveTeam } from '../teams/teamRuntime';
 
 // ─── Pattern bank ─────────────────────────────────────────────────────────────
 const PATTERNS = {
+  // Signals the query needs real-time web data to answer well
+  webSearch:
+    /\b(latest|current|today|tonight|this week|this month|right now|just released|just launched|recently|new release|breaking|live|now|2024|2025|2026|price|prices|cost|stock|crypto|bitcoin|ethereum|btc|eth|exchange rate|weather|forecast|score|scores|result|results|standings|match|game|news|update|updates|trending|viral|who won|who is winning|released|available now|out now|just dropped)\b/i,
+
   agentsMeta:
     /how (does|do) (zyron|you|the swarm|this) work|what (did )?(each )?agent (do|say|contribute)|show .*(collaboration|contribution|process)|your architecture|multi.?agent|swarm (system|pipeline|mode)|explain.*agents/i,
 
@@ -148,6 +152,17 @@ export const analyzeQuery = (userText = '') => {
   const isFinancial    = PATTERNS.financial.test(lower);
   const isLegal        = PATTERNS.legal.test(lower);
 
+  // ── Web search detection ──
+  const needsWebSearch = PATTERNS.webSearch.test(lower);
+  // Produce a clean, optimized search query from the raw text:
+  // strip filler words and slang so the search engine gets a precise query.
+  const webSearchQuery = needsWebSearch
+    ? text
+        .replace(/\b(bro|man|dude|yo|hey|like|um|uh|just|rn|lol|omg|wtf|tbh|ngl)\b/gi, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim()
+    : '';
+
   // ── Verbosity level: 'detailed' when user explicitly asks for depth/research language ──
   // Everything else defaults to 'simple' — plain language, short paragraphs, bullets where useful.
   const verbosityLevel = PATTERNS.detailedMode.test(text) ? 'detailed' : 'simple';
@@ -178,6 +193,7 @@ export const analyzeQuery = (userText = '') => {
     primaryType, needsCode, needsDesign, needsMath, isWriting, isAnalytical,
     isConversational, isCreative, needsTable, isFinancial, isLegal, isAgentsMeta,
     isSimple, wordCount, coordinationMode, verbosityLevel,
+    needsWebSearch, webSearchQuery,
     complexity: classifyComplexity(text, wordCount, { needsCode, needsMath, isAgentsMeta, isAnalytical, isWriting, needsDesign }),
   };
 

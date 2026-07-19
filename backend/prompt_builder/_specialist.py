@@ -472,6 +472,43 @@ def _build_specialist_base(
     return static_prefix, dynamic_suffix
 
 
+# ─── Web search context block ─────────────────────────────────────────────────
+
+def _build_web_search_context_block(search_results: Optional[dict]) -> str:
+    """
+    Build the injected context block from a web search result dict.
+    Returns empty string when search_results is None.
+    """
+    if not search_results:
+        return ""
+
+    summary   = search_results.get("summary", "")
+    key_facts = search_results.get("key_facts", []) or []
+    sources   = search_results.get("sources",   []) or []
+
+    facts_text = "\n".join(f"- {f}" for f in key_facts[:3]) if key_facts else ""
+    sources_text = "\n".join(
+        f"{s.get('title', '')} ({s.get('url', '')})"
+        for s in sources[:3]
+        if s.get("title") or s.get("url")
+    )
+
+    lines = [
+        "[WEB SEARCH CONTEXT — Real-time data retrieved]",
+        f"Summary: {summary}" if summary else "",
+        f"Key Facts:\n{facts_text}" if facts_text else "",
+        f"Sources: {sources_text}" if sources_text else "",
+        "",
+        (
+            "Use this information naturally in your response. "
+            "Do not say \"according to web search\" or \"based on search results\" — "
+            "just respond as if you know this information. "
+            "Keep your response smooth, natural, and conversational."
+        ),
+    ]
+    return "\n".join(line for line in lines if line is not None and line != "")
+
+
 # ─── Public: build_specialist_prompt ─────────────────────────────────────────
 
 def build_specialist_prompt(
@@ -481,18 +518,20 @@ def build_specialist_prompt(
     analysis: dict,
     team: Optional[dict] = None,
     user_profile: Optional[dict] = None,
+    search_results: Optional[dict] = None,
 ) -> Dict[str, Any]:
     """
     Build the full messages list for a specialist agent.
 
     Parameters
     ----------
-    role         : "reasoner" | "coder" | "vision"
-    agent_meta   : dict — name, specialist_directive, contribution_lens
-    user_text    : raw user query string
-    analysis     : result of analyze_query()
-    team         : Team dict from models.Team (optional)
-    user_profile : UserProfile dict (optional)
+    role           : "reasoner" | "coder" | "vision"
+    agent_meta     : dict — name, specialist_directive, contribution_lens
+    user_text      : raw user query string
+    analysis       : result of analyze_query()
+    team           : Team dict from models.Team (optional)
+    user_profile   : UserProfile dict (optional)
+    search_results : clean web search result dict (optional)
 
     Returns
     -------
@@ -508,7 +547,13 @@ def build_specialist_prompt(
         role, agent_meta, analysis, team, user_profile_instruction
     )
 
-    system = static_prefix + "\n\n" + dynamic_suffix
+    web_search_block = _build_web_search_context_block(search_results)
+    system = (
+        (web_search_block + "\n\n" if web_search_block else "")
+        + static_prefix
+        + "\n\n"
+        + dynamic_suffix
+    )
 
     return {
         "messages": [

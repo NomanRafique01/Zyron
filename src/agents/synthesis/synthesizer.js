@@ -21,6 +21,8 @@ export const runSynthesisPhase = async ({
   embedConfig = null,
   // true when specialists each handled a different slice of the prompt
   chunkingActive = false,
+  // optional web search result to inject into writer prompt
+  searchResults = null,
 }) => {
   const personaInstruction = getPersonaInstruction(persona);
 
@@ -62,6 +64,7 @@ export const runSynthesisPhase = async ({
     agentLabels,
     qualityReport,
     chunkingActive,
+    searchResults,
   });
 
   try {

@@ -10,6 +10,7 @@ import { streamSpecialists } from './streaming/streamManager';
 import { getPersonaInstruction } from './registry/teamMetadata';
 import { deduplicateOutputs, trimOutput, buildQualityReport, buildFallbackAnswer } from './utils/outputFormatter.utils';
 import { shouldChunkPrompt, chunkPromptForRoles, buildChunkedUserMessage } from './utils/promptChunker';
+import { runWebSearch } from './search/webSearch';
 
 // Note: deduplicateOutputs is now a pass-through (no suppression) — see outputUtils.js.
 // All specialist outputs reach the writer's context unchanged.
@@ -68,6 +69,14 @@ export const runAgentsOrchestrator = async (
   const analysis = analyzeQuery(userText);
   analysis.coordinationMode = COORDINATION_MODES.FULL;
   const phases = getPipelinePhases();
+
+  // ── Web search (fires before specialist pipeline) ──────────────────────────
+  // Runs only when analysis detects a real-time-data need.
+  // Fallback chain: Tavily → Serper → null (silent).
+  let _searchResults = null;
+  if (analysis.needsWebSearch && analysis.webSearchQuery) {
+    _searchResults = await runWebSearch(analysis.webSearchQuery).catch(() => null);
+  }
 
   let latestMeta = { coordinationMode: analysis.coordinationMode, analysis };
 
@@ -131,7 +140,7 @@ export const runAgentsOrchestrator = async (
               ? buildChunkedUserMessage(promptChunks[role], agentName)
               : userText;
             const { messages } = buildSpecialistPrompt(
-              role, agentName, effectiveUserText, analysis, userProfile
+              role, agentName, effectiveUserText, analysis, userProfile, _searchResults
             );
             return { role, agentConfig: config, messages };
           });
@@ -201,7 +210,7 @@ export const runAgentsOrchestrator = async (
                   const effectiveUserText = useChunking && promptChunks?.[role]
                     ? buildChunkedUserMessage(promptChunks[role], agentName)
                     : userText;
-                  const { messages } = buildSpecialistPrompt(role, agentName, effectiveUserText, analysis, userProfile);
+                  const { messages } = buildSpecialistPrompt(role, agentName, effectiveUserText, analysis, userProfile, _searchResults);
                   try {
                     const res = await callAgent(role, config, messages, signal, onSocketStatusChange);
                     if (res?.text?.trim().length >= MIN_SPECIALIST_CHARS) {
@@ -240,7 +249,7 @@ export const runAgentsOrchestrator = async (
                 ? buildChunkedUserMessage(promptChunks[role], agentName)
                 : userText;
               const { messages } = buildSpecialistPrompt(
-                role, agentName, effectiveUserText, analysis, userProfile
+                role, agentName, effectiveUserText, analysis, userProfile, _searchResults
               );
               try {
                 const res = await callAgent(role, config, messages, signal, onSocketStatusChange);
@@ -291,6 +300,7 @@ export const runAgentsOrchestrator = async (
             userText, analysis, personaInstruction, userProfile,
             specialistOutputs: trimmed, agentLabels, qualityReport,
             chunkingActive: useChunking,
+            searchResults: _searchResults,
           });
 
           let writerText = '';
@@ -391,6 +401,7 @@ export const runAgentsOrchestrator = async (
           userText, analysis, persona, userProfile, agentConfigs,
           specialistOutputs, agentLabels, signal, onSocketStatusChange,
           progress, chunkingActive: useChunking,
+          searchResults: _searchResults,
         });
 
         usageByRole.writer = synthesis.usage;

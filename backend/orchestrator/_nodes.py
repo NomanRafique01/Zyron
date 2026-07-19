@@ -234,6 +234,7 @@ async def writer_node(state: Dict[str, Any]) -> Dict[str, Any]:
     team             = _team_dict(state.get("team"))
     user_profile     = _profile_dict(state.get("user_profile"))
     persona          = state.get("persona")
+    search_results   = state.get("search_results")
     specialist_outputs: Dict[str, str] = state.get("specialist_outputs", {})
     usage_by_role    = dict(state.get("usage_by_role", {}))
 
@@ -262,6 +263,7 @@ async def writer_node(state: Dict[str, Any]) -> Dict[str, Any]:
         team               = team,
         persona            = persona,
         user_profile       = user_profile,
+        search_results     = search_results,
     )
     messages = prompt["messages"]
 

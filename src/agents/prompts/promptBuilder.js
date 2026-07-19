@@ -466,11 +466,33 @@ const buildSpecialistBase = (role, agentName, analysis, userProfileInstruction) 
 };
 
 // ─── Specialist prompt (exported) ─────────────────────────────────────────────
-export const buildSpecialistPrompt = (role, agentName, userText, analysis, userProfile) => {
+// ─── Web search context block injector ───────────────────────────────────────
+const buildWebSearchContextBlock = (searchResults) => {
+  if (!searchResults) return '';
+  const { summary, keyFacts, sources } = searchResults;
+  const factsText = Array.isArray(keyFacts) && keyFacts.length
+    ? keyFacts.slice(0, 3).map(f => `- ${f}`).join('\n')
+    : '';
+  const sourcesText = Array.isArray(sources) && sources.length
+    ? sources.slice(0, 3).map(s => `${s.title} (${s.url})`).join('\n')
+    : '';
+
+  return [
+    `[WEB SEARCH CONTEXT — Real-time data retrieved]`,
+    summary ? `Summary: ${summary}` : '',
+    factsText ? `Key Facts:\n${factsText}` : '',
+    sourcesText ? `Sources: ${sourcesText}` : '',
+    ``,
+    `Use this information naturally in your response. Do not say "according to web search" or "based on search results" — just respond as if you know this information. Keep your response smooth, natural, and conversational.`,
+  ].filter(Boolean).join('\n');
+};
+
+export const buildSpecialistPrompt = (role, agentName, userText, analysis, userProfile, searchResults = null) => {
   const userProfileInstruction = buildUserProfileInstruction(userProfile);
   const { staticPrefix, dynamicSuffix } = buildSpecialistBase(role, agentName, analysis, userProfileInstruction);
 
-  const system = staticPrefix + '\n\n' + dynamicSuffix;
+  const webSearchBlock = buildWebSearchContextBlock(searchResults);
+  const system = (webSearchBlock ? webSearchBlock + '\n\n' : '') + staticPrefix + '\n\n' + dynamicSuffix;
 
   return {
     messages: [
@@ -492,6 +514,7 @@ export const buildWriterPrompt = ({
   agentLabels,
   qualityReport,
   chunkingActive = false,   // true when specialists each handled a different slice of the prompt
+  searchResults  = null,    // optional web search result from runWebSearch()
 }) => {
   const userProfileInstruction = buildUserProfileInstruction(userProfile);
   const team = getActiveTeam();
@@ -565,7 +588,9 @@ export const buildWriterPrompt = ({
 
   const teamWriterRules = team?.writerRules ? `\n\n## Team Synthesis Style\n${team.writerRules}` : '';
 
-  const system = `You are **${agentLabels.writer || 'Writer'}**, the final synthesizer for the **"${team?.name || 'Zyron'}"** team. Your job is to write one clear, complete answer that a real human can read and immediately understand.
+  const webSearchBlock = buildWebSearchContextBlock(searchResults);
+
+  const system = `${webSearchBlock ? webSearchBlock + '\n\n' : ''}You are **${agentLabels.writer || 'Writer'}**, the final synthesizer for the **"${team?.name || 'Zyron'}"** team. Your job is to write one clear, complete answer that a real human can read and immediately understand.
 
 ## User's Question
 "${userText}"

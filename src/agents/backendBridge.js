@@ -21,6 +21,8 @@ import { getActiveTeam } from './teams/teamRuntime';
 import { getTeamRoleInfo } from './teams';
 import { getAgentMeta, AGENT_STATUS_COLORS } from './registry/agentRegistry';
 import { getModelDisplayName } from './api/providers.service';
+import { runWebSearch } from './search/webSearch';
+import { analyzeQuery } from './analysis/queryAnalyzer';
 
 // ── Backend endpoint ──────────────────────────────────────────────────────────
 // Set to the Railway deployment URL once available. Leave as an empty string
@@ -182,6 +184,17 @@ export const runOrchestration = async (
             );
           }, 350);
         }, 0);
+      }
+
+      // ── Web search before backend call ────────────────────────────────────
+      // Run analysis to detect if this query needs real-time data, then
+      // kick off the search so results are ready to send to the backend.
+      // The backend also runs search independently; sending the result here
+      // lets it skip a redundant round-trip if it already has data.
+      const _analysis = analyzeQuery(userText);
+      let _searchResults = null;
+      if (_analysis.needsWebSearch && _analysis.webSearchQuery) {
+        _searchResults = await runWebSearch(_analysis.webSearchQuery).catch(() => null);
       }
 
       const _t0 = Date.now();

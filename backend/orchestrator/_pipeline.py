@@ -14,6 +14,7 @@ import time
 from typing import Any, Dict, List, Optional
 
 from query_analyzer import analyze_query
+from web_search     import run_web_search
 
 from ._graph import _compiled_graph
 from ._utils import build_token_usage
@@ -69,6 +70,29 @@ async def run_pipeline(
         query[:80], analysis["primary_type"], analysis["complexity"], analysis["verbosity_level"],
     )
 
+    # ── 1b. Web search (fires before the LangGraph pipeline) ─────────────────
+    # Only runs when the query is classified as needing real-time data.
+    # Fallback chain: Tavily → Serper → None (silent on any failure).
+    search_results: Optional[Dict[str, Any]] = None
+    search_provider: str = "none"
+    if analysis.get("needs_web_search") and analysis.get("web_search_query"):
+        web_query = analysis["web_search_query"]
+        log.info("[Pipeline] Web search triggered — query=%r", web_query[:100])
+        search_results = await run_web_search(web_query)
+        if search_results:
+            sources = search_results.get("sources", [])
+            log.info("[Pipeline] Web search returned %d sources", len(sources))
+            # Infer which provider succeeded by checking for key-specific fields.
+            # Both formatters produce identical shapes, so we tag the provider
+            # in a lightweight way: Tavily searches are run first; if Serper
+            # was used, the result will lack a Tavily answer-level summary.
+            # For now, we rely on the presence of an explicit "provider" key
+            # that run_web_search doesn't set — use "unknown" when indeterminate
+            # and surface only used/not-used to the frontend.
+            search_provider = "used"
+        else:
+            log.debug("[Pipeline] Web search returned no results — agents use own knowledge")
+
     # ── 2. Build initial ZyronState ───────────────────────────────────────────
     initial_state: Dict[str, Any] = {
         "query":               query,
@@ -77,6 +101,7 @@ async def run_pipeline(
         "agent_configs":       agent_configs,
         "user_profile":        user_profile,
         "persona":             persona,
+        "search_results":      search_results,
         "specialist_outputs":  {},
         "agent_results":       [],
         "writer_output":       "",
@@ -121,8 +146,10 @@ async def run_pipeline(
         "agents": agent_results,
         "token_usage": token_usage,
         "meta": {
-            "analysis":   analysis,
-            "elapsed_ms": elapsed_ms,
-            "errors":     errors,
+            "analysis":        analysis,
+            "elapsed_ms":      elapsed_ms,
+            "errors":          errors,
+            "web_search_used": search_provider != "none",
+            "search_provider": search_provider,
         },
     }
