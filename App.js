@@ -1,8 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Image } from 'react-native';
 import * as ExpoSplashScreen from 'expo-splash-screen';
 import SplashScreen from './src/screens/splash/SplashScreen.screen.jsx';
 import MainApp from './src/screens/chat/MainApp.screen.jsx';
+
+// Pre-resolve and cache all agent icon PNGs so they are in memory before
+// the Agent Library panel scrolls. resolveAssetSource turns the static
+// require() number into a URI that Image.prefetch can load immediately.
+const AGENT_ICON_SOURCES = [
+  require('./assets/agent-icons/analyst.png'),
+  require('./assets/agent-icons/archivist.png'),
+  require('./assets/agent-icons/biographer.png'),
+  require('./assets/agent-icons/cartographer.png'),
+  require('./assets/agent-icons/coder.png'),
+  require('./assets/agent-icons/contextualist.png'),
+  require('./assets/agent-icons/creator.png'),
+  require('./assets/agent-icons/curator.png'),
+  require('./assets/agent-icons/debugger.png'),
+  require('./assets/agent-icons/designer.png'),
+  require('./assets/agent-icons/editor.png'),
+  require('./assets/agent-icons/executor.png'),
+  require('./assets/agent-icons/experimenter.png'),
+  require('./assets/agent-icons/modeler.png'),
+  require('./assets/agent-icons/narrator.png'),
+  require('./assets/agent-icons/programmer.png'),
+  require('./assets/agent-icons/reasoner.png'),
+  require('./assets/agent-icons/reporter.png'),
+  require('./assets/agent-icons/scholar.png'),
+  require('./assets/agent-icons/strategist.png'),
+  require('./assets/agent-icons/synthesizer.png'),
+  require('./assets/agent-icons/theorist.png'),
+  require('./assets/agent-icons/vision.png'),
+  require('./assets/agent-icons/writer.png'),
+];
+
+AGENT_ICON_SOURCES.forEach((src) => {
+  const resolved = Image.resolveAssetSource(src);
+  if (resolved?.uri) Image.prefetch(resolved.uri);
+});
 
 // Hold the native splash until our custom one is painted.
 ExpoSplashScreen.preventAutoHideAsync();

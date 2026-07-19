@@ -48,13 +48,13 @@ Rules:
  * science explanation, financial, legal, general).
  *
  * Only injected when the query is NOT a coding task and the team is NOT
- * the Coders or Dev Core engineering teams.
+ * the Coders or Financers teams.
  */
 const buildNonTechDiscipline = (analysis, teamId) => {
   const { needsCode, needsMath, primaryType } = analysis;
 
-  // Coding and Dev-Core teams always write code — no guard needed
-  const isCodingTeam = teamId === 'coders' || teamId === 'dev-core';
+  // Coders and Financers teams always write code — no guard needed
+  const isCodingTeam = teamId === 'coders' || teamId === 'financers';
   if (isCodingTeam || needsCode) return '';
 
   // Math/science: allow equations but never code
@@ -528,7 +528,7 @@ export const buildWriterPrompt = ({
     ? 'Where tabular comparison genuinely helps, use a markdown table with | pipes and --- separators. Label all columns.'
     : 'Do NOT add markdown tables unless the user explicitly requested tabular comparison.';
 
-  const isCodingTeam = team?.id === 'coders' || team?.id === 'dev-core';
+  const isCodingTeam = team?.id === 'coders' || team?.id === 'financers';
   const codeRule = analysis.needsCode
     ? 'All code MUST appear in properly labeled fenced blocks (```language). Preserve ALL code from the Coder — never paraphrase it.'
     : isCodingTeam

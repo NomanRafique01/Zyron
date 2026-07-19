@@ -15,7 +15,7 @@ import { getTeamById, AGENTS_TEAMS } from '../teams';
 // ─── Team × query type affinity map ──────────────────────────────────────────
 // Higher score = better fit. Built from each team's category and analysisBias.
 const TEAM_AFFINITY = {
-  'dev-core':          { coding: 9, analytical: 7, general: 7, stem: 5, writing: 4, creative: 3 },
+  'financers':         { analytical: 9, general: 8, writing: 6, coding: 2, stem: 4, creative: 3 },
   'coders':            { coding: 10, analytical: 6, general: 5, stem: 6, writing: 2, creative: 2 },
   'mega-minds':        { analytical: 10, general: 9, writing: 7, coding: 5, stem: 7, creative: 6 },
   'creative-thinkers': { creative: 10, writing: 10, analytical: 5, general: 6, coding: 2, stem: 2 },
@@ -81,5 +81,5 @@ export const getBestTeamForType = (primaryType) => {
       best = team;
     }
   }
-  return best ?? getTeamById('dev-core');
+  return best ?? getTeamById('financers');
 };

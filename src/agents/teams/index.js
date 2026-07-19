@@ -1,16 +1,16 @@
-import teamDevCore from './teamDevCore';
+import teamFinancers from './teamFinancers';
 import teamCoders from './teamCoders';
 import teamKnowledgeNexus from './teamMegaMinds';
 import teamCreativeStudio from './teamCreativeThinkers';
 import teamScienceLab from './teamScientists.js';
 import teamHistorians from './teamHistorians';
 
-export const DEFAULT_TEAM_ID = 'dev-core';
+export const DEFAULT_TEAM_ID = 'financers';
 export const ACTIVE_TEAM_STORAGE_KEY = 'zyron_ACTIVE_TEAM';
 
 /** All registered teams — add new team files here */
 export const AGENTS_TEAMS = [
-  teamDevCore,
+  teamFinancers,
   teamCoders,
   teamKnowledgeNexus,
   teamCreativeStudio,
@@ -19,9 +19,9 @@ export const AGENTS_TEAMS = [
 ];
 
 export const getTeamById = (teamId) =>
-  AGENTS_TEAMS.find((team) => team.id === teamId) || teamDevCore;
+  AGENTS_TEAMS.find((team) => team.id === teamId) || teamFinancers;
 
-export const getDefaultTeam = () => teamDevCore;
+export const getDefaultTeam = () => teamFinancers;
 
 export const SOCKET_ROLES = ['reasoner', 'coder', 'vision', 'writer'];
 

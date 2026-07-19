@@ -153,7 +153,7 @@ def build_writer_prompt(
     # ── Style / format rules ──────────────────────────────────────────────────
     style_instruction = build_style_instruction(analysis.get("verbosity_level", "simple"))
 
-    is_coding_team = team_id in ("coders", "dev-core")
+    is_coding_team = team_id in ("coders", "financers")
     needs_code  = analysis.get("needs_code", False)
     needs_math  = analysis.get("needs_math", False)
     needs_table = analysis.get("needs_table", False)

@@ -208,7 +208,7 @@ function AgentRow({ agent, index, activeTeam }) {
             ]}
           >
             <Animated.View style={{ opacity: isActive ? pulseAnim : 1 }}>
-              <AgentIcon icon={config.icon} size={28} />
+              <AgentIcon icon={config.icon} size={22} />
             </Animated.View>
           </Animated.View>
           {/* Thin glow border — only visible when done, loops continuously */}

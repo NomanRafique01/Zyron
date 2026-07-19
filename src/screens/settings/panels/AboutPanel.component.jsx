@@ -22,7 +22,7 @@ export default function AboutPanel() {
       <Text style={s.infoPanelTitle}>Multi-Agent Coordination</Text>
       <Text style={s.infoPanelText}>
         Zyron's agent coordination system distributes cognitive work across 24 specialized agents organized into 6 teams. Each team brings a distinct area of expertise to every response:{'\n\n'}
-        Dev Core — Reasoner, Coder, Vision, Writer: the default general-purpose team covering reasoning, implementation, visual context, and synthesis.{'\n\n'}
+        Financers — Analyst, Adviser, Auditor, Reporter: the default finance team covering financial analysis, strategic advice, audit & compliance, and structured financial reporting.{'\n\n'}
         Code Forge — Architect, Engineer, Debugger, Technical Writer: a deep-focus engineering team built for software design, code quality, and technical documentation.{'\n\n'}
         Mega Minds — Scholar, Analyst, Synthesizer, Editor: a knowledge team that researches, analyses, and distils complex information into precise, well-structured answers.{'\n\n'}
         Creative Thinkers — Strategist, Creator, Curator, Narrator: an ideation team that drives strategy, originality, content curation, and compelling storytelling.{'\n\n'}

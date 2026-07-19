@@ -169,7 +169,7 @@ function AgentRow({ role, name, model, progress, status, statusColor, variant = 
             },
           ]}
         >
-          <AgentIcon icon={config.icon} size={28} />
+          <AgentIcon icon={config.icon} size={18} />
         </Animated.View>
         {/* Thin glow border — only visible when done, loops continuously */}
         {isDone && (

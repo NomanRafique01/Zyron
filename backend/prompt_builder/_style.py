@@ -55,14 +55,14 @@ def build_non_tech_discipline(analysis: dict, team_id: str) -> str:
     operating in domains where code is irrelevant.
 
     Only injected when the query is NOT a coding task and the team is NOT
-    the Coders or Dev Core engineering teams.
+    the Coders or Financers teams.
     """
     needs_code   = analysis.get("needs_code", False)
     needs_math   = analysis.get("needs_math", False)
     primary_type = analysis.get("primary_type", "general")
 
-    # Coding and Dev-Core teams always write code — no guard needed
-    is_coding_team = team_id in ("coders", "dev-core")
+    # Coders and Financers teams always write code — no guard needed
+    is_coding_team = team_id in ("coders", "financers")
     if is_coding_team or needs_code:
         return ""
 

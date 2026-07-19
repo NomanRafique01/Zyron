@@ -24,8 +24,8 @@ const fs = require('fs');
 
 // Stub team runtime so we don't need React Native at eval time
 const STUB_TEAM = {
-  id: 'dev-core',
-  name: 'Dev Core',
+  id: 'financers',
+  name: 'Financers',
   analysisBias: {},
   agents: {},
 };

@@ -14,6 +14,7 @@ import React from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ActivityIndicator
 } from 'react-native';
+import AgentIcon from '../../../components/agent/AgentIcon.component';
 import s from '../../../styles/app.styles';
 import C from '../../../config/colors.config';
 import {
@@ -123,7 +124,7 @@ export default function AgentSocketRow({
       >
         <View style={s.apiPanelToggleLeft}>
           <View style={[s.apiPanelIconBox, { backgroundColor: isSocketActive ? (isEngineLive ? accentColor + '28' : accentColor + '15') : 'rgba(255,255,255,0.03)', borderColor: isSocketActive ? (isEngineLive ? accentColor + 'AA' : accentColor + '55') : '#242436', shadowColor: isSocketActive && isEngineLive ? accentColor : 'transparent', shadowOffset: { width: 0, height: 0 }, shadowOpacity: isSocketActive && isEngineLive ? 0.7 : 0, shadowRadius: isSocketActive && isEngineLive ? 6 : 0, elevation: isSocketActive && isEngineLive ? 4 : 0 }]}>
-            <Text style={{ fontSize: 18 }}>{roleInfo.icon}</Text>
+            <AgentIcon icon={roleInfo.icon} size={28} />
           </View>
           <View style={{ flex: 1, justifyContent: 'center' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>

@@ -13,7 +13,7 @@ const _getUnifiedTeam = (teamId) => {
   }
 };
 
-// _activeTeam starts as Dev Core but is overwritten once storage is loaded.
+// _activeTeam starts as Financers but is overwritten once storage is loaded.
 // Do NOT call applyTeamToRegistry here — that must only happen after the
 // persisted team id is read from AsyncStorage (see MainApp.js bootstrap).
 // The module-level value is a safe default so getActiveTeam() is never null.
@@ -33,6 +33,6 @@ export const setActiveTeamById = (teamId) => initActiveTeam(teamId);
 
 // ── NO module-level bootstrap call ─────────────────────────────────────────
 // Previously `initActiveTeam(DEFAULT_TEAM_ID)` was called here at import time,
-// which locked the registry to Dev Core before AsyncStorage was read.
+// which locked the registry to Financers before AsyncStorage was read.
 // The real bootstrap now happens in MainApp.js:loadActiveTeamFromStorage()
 // which calls initActiveTeam(storedTeamId) with the user's saved team.

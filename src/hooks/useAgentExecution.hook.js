@@ -228,7 +228,12 @@ export default function useAgentExecution({
         streaming: false,
       };
 
-      // Replace streaming placeholder (if any) with finalized message, or append
+      // Replace streaming placeholder (if any) with finalized message, or append.
+      // When there is no streaming placeholder (backend path — no writer streaming),
+      // collapse the live coordination footer BEFORE inserting the final message so
+      // the AgentCoordinationTable and the AgentPanel inside the bubble are never
+      // visible at the same time (which caused a layout expansion jump).
+      const hadStreamingPlaceholder = streamingInsertedRef.current;
       setMessages((prev) => {
         const idx = prev.findIndex((m) => m.id === STREAMING_MSG_ID);
         if (idx >= 0) {
@@ -238,6 +243,14 @@ export default function useAgentExecution({
         }
         return [...prev, newAiMsg];
       });
+      // Backend path: no writer streaming was ever inserted, so the live
+      // AgentCoordinationTable footer is still visible. Tear it down immediately
+      // (same render cycle as the message insert) so the footer and the in-bubble
+      // AgentPanel summary are never shown at the same time.
+      if (!hadStreamingPlaceholder) {
+        clearSimulatedAgents();
+        setIsTyping(false);
+      }
 
       latestAnswerFocusPendingRef.current = true;
       // Read current messages for persistence — use a ref snapshot

@@ -181,7 +181,7 @@ export default function useAgentSockets({
         initActiveTeam(storedTeamId);
         setActiveTeamId(storedTeamId);
       } else {
-        // No saved team — seed registry with Dev Core so getActiveTeam()
+        // No saved team — seed registry with Financers so getActiveTeam()
         // never returns a team whose directives haven't been applied yet.
         initActiveTeam(DEFAULT_TEAM_ID);
         setActiveTeamId(DEFAULT_TEAM_ID);
@@ -197,7 +197,7 @@ export default function useAgentSockets({
   // ── Select / deactivate team ─────────────────────────────────────────────
   const handleSelectTeam = async (teamId, scrollTeamIntoView) => {
     if (teamId === activeTeamId) {
-      // Deactivate — fall back to Dev Core so the registry is never left in
+      // Deactivate — fall back to Financers so the registry is never left in
       // a stale state pointing at the old team's directives.
       initActiveTeam(DEFAULT_TEAM_ID);
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);

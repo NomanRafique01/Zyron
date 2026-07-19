@@ -7,7 +7,9 @@ const AgentIcon = ({ icon, size = 28, style }) => {
       <Image
         source={icon}
         style={[{ width: size, height: size }, style]}
-        resizeMode="contain"
+        resizeMode="cover"
+        fadeDuration={0}
+        defaultSource={icon}
       />
     );
   }
@@ -18,4 +20,4 @@ const AgentIcon = ({ icon, size = 28, style }) => {
   );
 };
 
-export default AgentIcon;
+export default React.memo(AgentIcon);
