@@ -48,6 +48,10 @@
         "projectId": "48175bff-5435-47f5-a295-e541065dde2e"
       }
     },
+    "assetBundlePatterns": [
+      "**/*",
+      "assets/agent-icons/*"
+    ],
     "plugins": [
       "expo-secure-store",
       "expo-speech-recognition",
