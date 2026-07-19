@@ -22,6 +22,7 @@ import s from '../../../styles/app.styles';
 import C from '../../../config/colors.config';
 import { AGENTS_TEAMS } from '../../../utils/agentLogic.utils';
 import { BoltIcon, AgentBuilderIcon } from '../../../components/shared/Icons';
+import { renderTeamSvgIcon } from '../../../components/workshop/TeamBuilderPanel.component';
 import {
   loadCustomTeams,
   invalidateCustomTeamsCache,
@@ -70,11 +71,12 @@ const TeamAccordionCard = React.memo(function TeamAccordionCard({
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-              {teamIcon
-                ? (typeof teamIcon === 'string'
+              {(isCustom
+                  ? renderTeamSvgIcon(team.teamIcon, team.accent || '#A78BFA')
+                  : (typeof teamIcon !== 'string' ? teamIcon : null))
+                || (typeof teamIcon === 'string' && !isCustom
                     ? <Text style={s.teamAccordionIcon}>{teamIcon}</Text>
-                    : <View style={{ width: 28, alignItems: 'center' }}>{teamIcon}</View>)
-                : <AgentBuilderIcon color="#A78BFA" size={22} />}
+                    : <AgentBuilderIcon color="#A78BFA" size={22} />)}
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Text style={s.teamAccordionTitle}>{team.name}</Text>

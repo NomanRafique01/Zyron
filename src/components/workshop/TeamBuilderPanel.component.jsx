@@ -12,6 +12,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, Image } from 'react-native';
+import Svg, { Circle, Rect, Polygon, Path, Ellipse, Line, G } from 'react-native-svg';
 import C from '../../config/colors.config';
 import {
   saveCustomTeam,
@@ -27,6 +28,255 @@ const ROLE_LABELS = {
   vision:   'Agent 3',
   writer:   'Agent 4',
 };
+
+// ── 8 unique team SVG icons ───────────────────────────────────────────────────
+
+const TEAM_ICON_OPTIONS = [
+  {
+    key: 'shield',
+    render: (color) => (
+      <Svg width={20} height={20} viewBox="0 0 28 28">
+        <Path
+          d="M14 3L4 7v7c0 5.5 4.3 10.6 10 12 5.7-1.4 10-6.5 10-12V7L14 3z"
+          fill="none"
+          stroke={color}
+          strokeWidth={1.8}
+          strokeLinejoin="round"
+        />
+        <Path
+          d="M10 14l3 3 5-5"
+          stroke={color}
+          strokeWidth={1.8}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      </Svg>
+    ),
+  },
+  {
+    key: 'network',
+    render: (color) => (
+      <Svg width={20} height={20} viewBox="0 0 28 28">
+        <Circle cx={14} cy={14} r={3} fill={color} />
+        <Circle cx={5} cy={7} r={2.5} fill="none" stroke={color} strokeWidth={1.6} />
+        <Circle cx={23} cy={7} r={2.5} fill="none" stroke={color} strokeWidth={1.6} />
+        <Circle cx={5} cy={21} r={2.5} fill="none" stroke={color} strokeWidth={1.6} />
+        <Circle cx={23} cy={21} r={2.5} fill="none" stroke={color} strokeWidth={1.6} />
+        <Line x1={7} y1={8.5} x2={12} y2={13} stroke={color} strokeWidth={1.4} strokeLinecap="round" />
+        <Line x1={21} y1={8.5} x2={16} y2={13} stroke={color} strokeWidth={1.4} strokeLinecap="round" />
+        <Line x1={7} y1={19.5} x2={12} y2={15} stroke={color} strokeWidth={1.4} strokeLinecap="round" />
+        <Line x1={21} y1={19.5} x2={16} y2={15} stroke={color} strokeWidth={1.4} strokeLinecap="round" />
+      </Svg>
+    ),
+  },
+  {
+    key: 'rocket',
+    render: (color) => (
+      <Svg width={20} height={20} viewBox="0 0 28 28">
+        <Path
+          d="M14 4c0 0-6 4-6 11v1l2 2h8l2-2v-1c0-7-6-11-6-11z"
+          fill="none"
+          stroke={color}
+          strokeWidth={1.7}
+          strokeLinejoin="round"
+        />
+        <Path
+          d="M10 18l-2 4h12l-2-4"
+          fill="none"
+          stroke={color}
+          strokeWidth={1.5}
+          strokeLinejoin="round"
+        />
+        <Circle cx={14} cy={13} r={2} fill="none" stroke={color} strokeWidth={1.5} />
+      </Svg>
+    ),
+  },
+  {
+    key: 'hexagon',
+    render: (color) => (
+      <Svg width={20} height={20} viewBox="0 0 28 28">
+        <Polygon
+          points="14,3 24,8.5 24,19.5 14,25 4,19.5 4,8.5"
+          fill="none"
+          stroke={color}
+          strokeWidth={1.8}
+          strokeLinejoin="round"
+        />
+        <Polygon
+          points="14,8 19,10.8 19,17.2 14,20 9,17.2 9,10.8"
+          fill={color}
+          opacity={0.25}
+        />
+        <Polygon
+          points="14,8 19,10.8 19,17.2 14,20 9,17.2 9,10.8"
+          fill="none"
+          stroke={color}
+          strokeWidth={1.2}
+          strokeLinejoin="round"
+        />
+      </Svg>
+    ),
+  },
+  {
+    key: 'crown',
+    render: (color) => (
+      <Svg width={20} height={20} viewBox="0 0 28 28">
+        <Path
+          d="M4 20h20M4 20l3-10 7 6 7-6 3 10"
+          fill="none"
+          stroke={color}
+          strokeWidth={1.8}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+        <Circle cx={14} cy={8} r={2} fill={color} />
+        <Circle cx={4.5} cy={9.5} r={1.5} fill={color} />
+        <Circle cx={23.5} cy={9.5} r={1.5} fill={color} />
+      </Svg>
+    ),
+  },
+  {
+    key: 'atom',
+    render: (color) => (
+      <Svg width={20} height={20} viewBox="0 0 28 28">
+        <Circle cx={14} cy={14} r={2.5} fill={color} />
+        <Ellipse cx={14} cy={14} rx={10} ry={4} fill="none" stroke={color} strokeWidth={1.5} />
+        <Ellipse
+          cx={14} cy={14} rx={10} ry={4}
+          fill="none"
+          stroke={color}
+          strokeWidth={1.5}
+          transform="rotate(60 14 14)"
+        />
+        <Ellipse
+          cx={14} cy={14} rx={10} ry={4}
+          fill="none"
+          stroke={color}
+          strokeWidth={1.5}
+          transform="rotate(120 14 14)"
+        />
+      </Svg>
+    ),
+  },
+  {
+    key: 'lightning',
+    render: (color) => (
+      <Svg width={20} height={20} viewBox="0 0 28 28">
+        <Path
+          d="M16 3L7 16h8l-3 9 10-13h-8L16 3z"
+          fill="none"
+          stroke={color}
+          strokeWidth={1.8}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+      </Svg>
+    ),
+  },
+  {
+    key: 'diamond',
+    render: (color) => (
+      <Svg width={20} height={20} viewBox="0 0 28 28">
+        <Path
+          d="M14 3l10 8-10 14L4 11l10-8z"
+          fill="none"
+          stroke={color}
+          strokeWidth={1.8}
+          strokeLinejoin="round"
+        />
+        <Path
+          d="M4 11h20"
+          stroke={color}
+          strokeWidth={1.4}
+          strokeLinecap="round"
+        />
+        <Path
+          d="M9 11L14 3M19 11L14 3"
+          stroke={color}
+          strokeWidth={1.2}
+          strokeLinecap="round"
+        />
+      </Svg>
+    ),
+  },
+  {
+    key: 'target',
+    render: (color) => (
+      <Svg width={20} height={20} viewBox="0 0 28 28">
+        <Circle cx={14} cy={14} r={10} fill="none" stroke={color} strokeWidth={1.6} />
+        <Circle cx={14} cy={14} r={6} fill="none" stroke={color} strokeWidth={1.4} />
+        <Circle cx={14} cy={14} r={2.5} fill={color} />
+        <Line x1={14} y1={4} x2={14} y2={7} stroke={color} strokeWidth={1.4} strokeLinecap="round" />
+        <Line x1={14} y1={21} x2={14} y2={24} stroke={color} strokeWidth={1.4} strokeLinecap="round" />
+        <Line x1={4} y1={14} x2={7} y2={14} stroke={color} strokeWidth={1.4} strokeLinecap="round" />
+        <Line x1={21} y1={14} x2={24} y2={14} stroke={color} strokeWidth={1.4} strokeLinecap="round" />
+      </Svg>
+    ),
+  },
+  {
+    key: 'eye',
+    render: (color) => (
+      <Svg width={20} height={20} viewBox="0 0 28 28">
+        <Path
+          d="M3 14c0 0 4-8 11-8s11 8 11 8-4 8-11 8S3 14 3 14z"
+          fill="none"
+          stroke={color}
+          strokeWidth={1.7}
+          strokeLinejoin="round"
+        />
+        <Circle cx={14} cy={14} r={3.5} fill="none" stroke={color} strokeWidth={1.5} />
+        <Circle cx={14} cy={14} r={1.5} fill={color} />
+      </Svg>
+    ),
+  },
+  {
+    key: 'flask',
+    render: (color) => (
+      <Svg width={20} height={20} viewBox="0 0 28 28">
+        <Path
+          d="M10 4h8M11 4v8L5 22h18L17 12V4"
+          fill="none"
+          stroke={color}
+          strokeWidth={1.7}
+          strokeLinejoin="round"
+          strokeLinecap="round"
+        />
+        <Line x1={8} y1={18} x2={14} y2={18} stroke={color} strokeWidth={1.3} strokeLinecap="round" />
+        <Line x1={10} y1={21} x2={13} y2={21} stroke={color} strokeWidth={1.3} strokeLinecap="round" />
+      </Svg>
+    ),
+  },
+  {
+    key: 'compass',
+    render: (color) => (
+      <Svg width={20} height={20} viewBox="0 0 28 28">
+        <Circle cx={14} cy={14} r={10} fill="none" stroke={color} strokeWidth={1.6} />
+        <Polygon
+          points="14,6 16.5,13.5 14,12 11.5,13.5"
+          fill={color}
+          opacity={0.9}
+        />
+        <Polygon
+          points="14,22 11.5,14.5 14,16 16.5,14.5"
+          fill="none"
+          stroke={color}
+          strokeWidth={1.2}
+        />
+        <Circle cx={14} cy={14} r={1.5} fill={color} />
+      </Svg>
+    ),
+  },
+];
+
+/** Resolve a stored teamIcon key to an inline SVG element. Falls back to null. */
+export const renderTeamSvgIcon = (key, color = '#A78BFA') => {
+  const opt = TEAM_ICON_OPTIONS.find((o) => o.key === key);
+  if (!opt) return null;
+  return opt.render(color);
+};
+
+const DEFAULT_TEAM_ICON = 'shield';
 
 const TEAM_COLOR_PALETTE = [
   { accent: '#7B2FFF', dim: 'rgba(123, 47, 255, 0.12)' },
@@ -163,7 +413,7 @@ const buildTeamObject = (form, slots) => {
     accentDim,
     badge: 'CUSTOM',
     category: 'Custom',
-    teamIcon: slots.reasoner?.icon || '🤖',
+    teamIcon: form.teamIcon || DEFAULT_TEAM_ICON,
     agents,
     greetingReply: `Hi! I'm the ${form.name.trim()} team.\nHow can we help?`,
     writerRules: `${writerName} synthesizes all specialist insights into one clear, complete answer.`,
@@ -174,7 +424,7 @@ const buildTeamObject = (form, slots) => {
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function TeamBuilderPanel({ customAgents = [], onRegistered, onClose }) {
-  const [form, setForm] = useState({ name: '', tagline: '', description: '' });
+  const [form, setForm] = useState({ name: '', tagline: '', description: '', teamIcon: DEFAULT_TEAM_ICON });
   const [slots, setSlots] = useState({ reasoner: null, coder: null, vision: null, writer: null });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -260,6 +510,27 @@ export default function TeamBuilderPanel({ customAgents = [], onRegistered, onCl
         textAlignVertical="top"
         maxLength={300}
       />
+
+      {/* Team icon picker */}
+      <Text style={ts.fieldLabel}>TEAM ICON</Text>
+      <View style={ts.teamIconGrid}>
+        {TEAM_ICON_OPTIONS.map(({ key, render }) => {
+          const selected = form.teamIcon === key;
+          return (
+            <TouchableOpacity
+              key={key}
+              style={[
+                ts.teamIconBtn,
+                selected && { borderColor: `${accent}99`, backgroundColor: `${accent}18` },
+              ]}
+              onPress={() => setField('teamIcon', key)}
+              activeOpacity={0.75}
+            >
+              {render(selected ? accent : '#5A5A70')}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
 
       {/* Step 2: Slot assignment */}
       <View style={[ts.stepHeader, { borderLeftColor: accent }]}>
@@ -397,6 +668,23 @@ const ts = StyleSheet.create({
     marginBottom: 2,
   },
   multilineInput: { minHeight: 64, lineHeight: 17 },
+  teamIconGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 5,
+    marginTop: 2,
+    marginBottom: 4,
+  },
+  teamIconBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#11111A',
+    borderWidth: 1,
+    borderColor: '#242436',
+    borderRadius: 9,
+  },
   slotsGroup: { gap: 10 },
   slotGroup: { marginBottom: 2 },
   slotLabel: { fontSize: 9, fontWeight: '900', letterSpacing: 0.5, marginBottom: 3, textTransform: 'uppercase' },

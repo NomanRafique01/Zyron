@@ -17,6 +17,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { AgentsWorkshopIcon } from '../../../components/shared/Icons';
 import C from '../../../config/colors.config';
 import { ICON_OPTIONS } from '../../../components/workshop/AgentBuilderPanel.component';
+import { renderTeamSvgIcon } from '../../../components/workshop/TeamBuilderPanel.component';
 import {
   loadCustomAgents,
   deleteCustomAgent,
@@ -265,11 +266,8 @@ export default function AgentsWorkshopPanel({ showToast, scrollRef, scrollOffset
               {customTeams.map((team) => (
                 <View key={team.id} style={[ws.teamCard, { borderColor: `${team.accent}33` }]}>
                   <View style={ws.teamCardHeader}>
-                    {team.teamIcon
-                      ? (typeof team.teamIcon === 'string'
-                          ? <Text style={ws.teamCardIcon}>{team.teamIcon}</Text>
-                          : <View style={{ width: 26, alignItems: 'center' }}>{team.teamIcon}</View>)
-                      : <AgentsWorkshopIcon color="#A78BFA" size={20} />}
+                    {renderTeamSvgIcon(team.teamIcon, team.accent || '#A78BFA')
+                      || <AgentsWorkshopIcon color="#A78BFA" size={20} />}
                     <View style={{ flex: 1 }}>
                       <Text style={ws.teamCardName}>{team.name}</Text>
                       <Text style={ws.teamCardTagline} numberOfLines={1}>{team.tagline}</Text>
