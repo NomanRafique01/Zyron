@@ -11,93 +11,12 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
 import s from '../../../styles/app.styles';
 import C from '../../../config/colors.config';
 import { UserIcon } from '../../../components/shared/Icons';
 import AgentSocketRow from '../rows/AgentSocketRow.component.jsx';
-import { saveKey, getKey, deleteKey } from '../../../agents/security/keyGuard';
-
-// ─── Web Search Key Row ───────────────────────────────────────────────────────
-// Self-contained row for Tavily and Serper API keys.
-// Keys are stored and read via keyGuard (encrypted SecureStore).
-function WebSearchKeyRow({ provider, label, placeholder, storageKey }) {
-  const [value, setValue]     = useState('');
-  const [saved, setSaved]     = useState(false);
-  const [saving, setSaving]   = useState(false);
-  const [hasKey, setHasKey]   = useState(false);
-
-  // Check whether a key is already saved on mount.
-  useEffect(() => {
-    getKey(provider).then((k) => {
-      setHasKey(!!k);
-      setSaved(!!k);
-    });
-  }, [provider]);
-
-  const handleSave = useCallback(async () => {
-    if (!value.trim()) return;
-    setSaving(true);
-    await saveKey(provider, value.trim());
-    setValue('');
-    setSaved(true);
-    setHasKey(true);
-    setSaving(false);
-  }, [provider, value]);
-
-  const handleDelete = useCallback(async () => {
-    await deleteKey(provider);
-    setValue('');
-    setSaved(false);
-    setHasKey(false);
-  }, [provider]);
-
-  return (
-    <View style={{ marginBottom: 14 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-        <Text style={s.inputLabel}>{label}</Text>
-        {hasKey && (
-          <View style={[s.statusPill, s.statusVerified, { marginLeft: 8, paddingHorizontal: 8, paddingVertical: 2 }]}>
-            <Text style={[s.statusPillText, { color: '#10B981', fontSize: 10 }]}>SAVED</Text>
-          </View>
-        )}
-      </View>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <TextInput
-          style={[s.keyTextInput, { flex: 1, marginBottom: 0 }]}
-          placeholder={hasKey ? '••••••••••••  (tap Save to replace)' : placeholder}
-          placeholderTextColor="#5A5A70"
-          value={value}
-          onChangeText={setValue}
-          secureTextEntry
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        <TouchableOpacity
-          style={[s.activateEngineBtn, s.activateEngineBtnActive, { paddingHorizontal: 14, paddingVertical: 8, minWidth: 0 }]}
-          onPress={handleSave}
-          disabled={saving || !value.trim()}
-          activeOpacity={0.8}
-        >
-          {saving
-            ? <ActivityIndicator size="small" color="#fff" />
-            : <Text style={s.activateEngineBtnText}>SAVE</Text>
-          }
-        </TouchableOpacity>
-        {hasKey && (
-          <TouchableOpacity
-            style={[s.activateEngineBtn, { backgroundColor: '#1E1E2E', borderColor: '#3E3E52', paddingHorizontal: 14, paddingVertical: 8, minWidth: 0 }]}
-            onPress={handleDelete}
-            activeOpacity={0.8}
-          >
-            <Text style={[s.activateEngineBtnText, { color: '#EF4444' }]}>DEL</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
-  );
-}
 
 export default function ApiConfigPanel({
   // State
@@ -166,24 +85,6 @@ export default function ApiConfigPanel({
           ? `${activeTeam.name} are Active — Each agent handles a dedicated role. ${teamRoleInfo.writer.name} compiles and delivers the final response.`
           : 'Please select a team.'}
       </Text>
-
-      {/* ── Web Search Keys ────────────────────────────────────────────────── */}
-      <View style={{ marginTop: 12, marginBottom: 4, borderTopWidth: 1, borderTopColor: '#1E1E2E', paddingTop: 16 }}>
-        <Text style={s.sectionHeader}>Web Search Keys</Text>
-        <Text style={[s.sectionDesc, { marginBottom: 12 }]}>
-          Zyron automatically searches the web before agents respond when your query needs real-time data. Fallback chain: Tavily → Serper → model knowledge. Enter at least one key to enable live search.
-        </Text>
-        <WebSearchKeyRow
-          provider="tavily"
-          label="Tavily API Key"
-          placeholder="tvly-..."
-        />
-        <WebSearchKeyRow
-          provider="serper"
-          label="Serper API Key"
-          placeholder="Paste your Serper key..."
-        />
-      </View>
 
       {/* Agent socket rows */}
       {['reasoner', 'coder', 'vision', 'writer'].map((role, index) => {
