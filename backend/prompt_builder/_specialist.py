@@ -547,6 +547,7 @@ def build_specialist_prompt(
         role, agent_meta, analysis, team, user_profile_instruction
     )
 
+    print(f"[PromptBuilder] Injecting search context: {search_results is not None}")
     web_search_block = _build_web_search_context_block(search_results)
     system = (
         (web_search_block + "\n\n" if web_search_block else "")

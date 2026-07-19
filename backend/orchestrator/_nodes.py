@@ -147,11 +147,14 @@ async def _run_specialist(role: str, state: Dict[str, Any]) -> Dict[str, Any]:
     Shared implementation for all three specialist nodes.
     Returns a partial ZyronState update.
     """
-    query         = state["query"]
-    analysis      = state["analysis"]
-    agent_configs = state["agent_configs"]
-    team          = _team_dict(state.get("team"))
-    user_profile  = _profile_dict(state.get("user_profile"))
+    query          = state["query"]
+    analysis       = state["analysis"]
+    agent_configs  = state["agent_configs"]
+    team           = _team_dict(state.get("team"))
+    user_profile   = _profile_dict(state.get("user_profile"))
+    search_results = state.get("search_results")
+
+    print(f"[Node] search_results received in node: {search_results is not None}")
 
     agent_meta = _agent_meta_from_team(team, role)
     cfg        = _config_for_role(agent_configs, role)
@@ -169,12 +172,13 @@ async def _run_specialist(role: str, state: Dict[str, Any]) -> Dict[str, Any]:
         }
 
     prompt = build_specialist_prompt(
-        role         = role,
-        agent_meta   = agent_meta,
-        user_text    = query,
-        analysis     = analysis,
-        team         = team,
-        user_profile = user_profile,
+        role           = role,
+        agent_meta     = agent_meta,
+        user_text      = query,
+        analysis       = analysis,
+        team           = team,
+        user_profile   = user_profile,
+        search_results = search_results,
     )
     messages = prompt["messages"]
 

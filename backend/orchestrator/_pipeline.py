@@ -93,6 +93,8 @@ async def run_pipeline(
         else:
             log.debug("[Pipeline] Web search returned no results — agents use own knowledge")
 
+    print(f"[Pipeline] search_results being passed to state: {search_results is not None}")
+
     # ── 2. Build initial ZyronState ───────────────────────────────────────────
     initial_state: Dict[str, Any] = {
         "query":               query,
