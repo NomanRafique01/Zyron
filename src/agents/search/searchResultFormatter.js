@@ -6,11 +6,14 @@
  *
  * Output shape:
  * {
- *   summary:    string,              — 2-3 sentence overview
- *   keyFacts:   string[],            — up to 5 distilled facts
+ *   keyFacts:   string[],            — up to 5 distilled facts (primary source of truth)
  *   sources:    [{title, url, snippet}],
  *   searchedAt: string,              — ISO timestamp
  * }
+ *
+ * NOTE: Tavily's auto-generated `answer`/summary field is intentionally ignored —
+ * it can be inaccurate. keyFacts built from raw result content are the primary
+ * context injected into agent prompts.
  */
 
 // Max sources/results to surface to agents — keeps context tight.
@@ -26,8 +29,7 @@ export const formatTavilyResult = (raw) => {
 
   const results = Array.isArray(raw.results) ? raw.results.slice(0, MAX_SOURCES) : [];
 
-  // Tavily may return a top-level `answer` field — use it as the summary base.
-  const tavilyAnswer = raw.answer || '';
+  // Tavily's top-level `answer` field is intentionally ignored — it can be inaccurate.
 
   const sources = results.map((r) => ({
     title:   r.title   || '',
@@ -35,19 +37,15 @@ export const formatTavilyResult = (raw) => {
     snippet: r.content || r.snippet || '',
   })).filter((s) => s.title || s.url);
 
-  // Build key facts from individual result content snippets.
+  // keyFacts are the primary source of truth — built from raw result content.
   const keyFacts = results
     .map((r) => (r.content || '').trim())
     .filter(Boolean)
     .slice(0, 5);
 
-  // Summary: prefer Tavily's own synthesized answer; otherwise stitch top snippets.
-  const summary = tavilyAnswer.trim() || keyFacts.slice(0, 2).join(' ').slice(0, 400) || '';
-
-  if (!summary && sources.length === 0) return null;
+  if (keyFacts.length === 0 && sources.length === 0) return null;
 
   return {
-    summary,
     keyFacts,
     sources,
     searchedAt: new Date().toISOString(),
@@ -62,10 +60,8 @@ export const formatTavilyResult = (raw) => {
 export const formatSerperResult = (raw) => {
   if (!raw || typeof raw !== 'object') return null;
 
-  // Serper puts organic results under `organic`; knowledge graph under `knowledgeGraph`.
-  const organic    = Array.isArray(raw.organic)    ? raw.organic.slice(0, MAX_SOURCES)    : [];
-  const answerBox  = raw.answerBox  || null;
-  const kg         = raw.knowledgeGraph || null;
+  // Serper puts organic results under `organic`.
+  const organic = Array.isArray(raw.organic) ? raw.organic.slice(0, MAX_SOURCES) : [];
 
   const sources = organic.map((r) => ({
     title:   r.title   || '',
@@ -73,24 +69,15 @@ export const formatSerperResult = (raw) => {
     snippet: r.snippet || '',
   })).filter((s) => s.title || s.url);
 
+  // keyFacts are the primary source of truth — built from organic result snippets.
   const keyFacts = organic
     .map((r) => (r.snippet || '').trim())
     .filter(Boolean)
     .slice(0, 5);
 
-  // Summary priority: answerBox snippet > knowledge graph description > top snippets.
-  const summary = (
-    answerBox?.answer  ||
-    answerBox?.snippet ||
-    kg?.description    ||
-    keyFacts.slice(0, 2).join(' ').slice(0, 400) ||
-    ''
-  ).trim();
-
-  if (!summary && sources.length === 0) return null;
+  if (keyFacts.length === 0 && sources.length === 0) return null;
 
   return {
-    summary,
     keyFacts,
     sources,
     searchedAt: new Date().toISOString(),

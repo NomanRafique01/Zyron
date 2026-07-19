@@ -7,11 +7,14 @@ Called by main.py (via run_pipeline) before the LangGraph pipeline executes.
 
 Output shape (same as frontend):
 {
-  "summary":     str,              -- 2-3 sentence overview
-  "key_facts":   list[str],        -- up to 5 distilled facts
+  "key_facts":   list[str],        -- up to 5 distilled facts (primary source of truth)
   "sources":     list[{title, url, snippet}],
   "searched_at": str,              -- ISO 8601 timestamp
 }
+
+NOTE: Tavily's auto-generated `answer` field is intentionally ignored — it can
+be inaccurate. key_facts built from raw result content are the primary context
+injected into agent prompts.
 
 Returns None if both providers fail or return no results — completely silent.
 """
@@ -44,7 +47,7 @@ def _format_tavily(raw: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
     results: List[Dict] = raw.get("results", [])[:MAX_SOURCES]
 
-    tavily_answer: str = raw.get("answer", "")
+    # Tavily's top-level `answer` field is intentionally ignored — it can be inaccurate.
 
     sources = [
         {
@@ -56,23 +59,17 @@ def _format_tavily(raw: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         if r.get("title") or r.get("url")
     ]
 
+    # key_facts are the primary source of truth — built from raw result content.
     key_facts = [
         r.get("content", "").strip()
         for r in results
         if r.get("content", "").strip()
     ][:5]
 
-    summary = (
-        tavily_answer.strip()
-        or " ".join(key_facts[:2])[:400]
-        or ""
-    )
-
-    if not summary and not sources:
+    if not key_facts and not sources:
         return None
 
     return {
-        "summary":     summary,
         "key_facts":   key_facts,
         "sources":     sources,
         "searched_at": datetime.now(timezone.utc).isoformat(),
@@ -84,9 +81,7 @@ def _format_serper(raw: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     if not raw or not isinstance(raw, dict):
         return None
 
-    organic: List[Dict]   = raw.get("organic", [])[:MAX_SOURCES]
-    answer_box: Dict      = raw.get("answerBox", {}) or {}
-    kg: Dict              = raw.get("knowledgeGraph", {}) or {}
+    organic: List[Dict] = raw.get("organic", [])[:MAX_SOURCES]
 
     sources = [
         {
@@ -98,26 +93,17 @@ def _format_serper(raw: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         if r.get("title") or r.get("link")
     ]
 
+    # key_facts are the primary source of truth — built from organic result snippets.
     key_facts = [
         r.get("snippet", "").strip()
         for r in organic
         if r.get("snippet", "").strip()
     ][:5]
 
-    summary = (
-        answer_box.get("answer")
-        or answer_box.get("snippet")
-        or kg.get("description")
-        or " ".join(key_facts[:2])[:400]
-        or ""
-    )
-    summary = (summary or "").strip()
-
-    if not summary and not sources:
+    if not key_facts and not sources:
         return None
 
     return {
-        "summary":     summary,
         "key_facts":   key_facts,
         "sources":     sources,
         "searched_at": datetime.now(timezone.utc).isoformat(),

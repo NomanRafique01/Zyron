@@ -477,25 +477,34 @@ def _build_specialist_base(
 def _build_web_search_context_block(search_results: Optional[dict]) -> str:
     """
     Build the injected context block from a web search result dict.
+    keyFacts (or key_facts) are the primary source of truth — summary is ignored.
+    Reads both camelCase keyFacts (frontend path) and snake_case key_facts (backend path).
     Returns empty string when search_results is None.
     """
     if not search_results:
         return ""
 
-    summary   = search_results.get("summary", "")
-    key_facts = search_results.get("key_facts", []) or []
-    sources   = search_results.get("sources",   []) or []
+    # Accept both camelCase (JS frontend) and snake_case (Python backend) keys.
+    key_facts = (
+        search_results.get("keyFacts")
+        or search_results.get("key_facts")
+        or []
+    )
+    sources = search_results.get("sources", []) or []
 
-    facts_text = "\n".join(f"- {f}" for f in key_facts[:3]) if key_facts else ""
+    # Surface all key facts (up to 5) — these are the primary agent context.
+    facts_text = "\n".join(f"- {f}" for f in key_facts[:5]) if key_facts else ""
     sources_text = "\n".join(
         f"{s.get('title', '')} ({s.get('url', '')})"
         for s in sources[:3]
         if s.get("title") or s.get("url")
     )
 
+    if not facts_text and not sources_text:
+        return ""
+
     lines = [
         "[WEB SEARCH CONTEXT — Real-time data retrieved]",
-        f"Summary: {summary}" if summary else "",
         f"Key Facts:\n{facts_text}" if facts_text else "",
         f"Sources: {sources_text}" if sources_text else "",
         "",
