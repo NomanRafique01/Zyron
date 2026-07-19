@@ -1,0 +1,21 @@
+# GitHub Linguist — Python dominant, JavaScript visible
+# Python sources
+backend/*.py linguist-language=Python linguist-detectable=true linguist-vendored=false
+backend/**/*.py linguist-language=Python linguist-detectable=true linguist-vendored=false
+*.py linguist-language=Python linguist-detectable=true linguist-vendored=false
+
+# JavaScript / JSX sources
+src/**/*.js linguist-language=JavaScript linguist-detectable=true
+src/**/*.jsx linguist-language=JavaScript linguist-detectable=true
+
+# Exclude compiled Python bytecode from stats
+backend/**/*.pyc linguist-generated=true
+backend/__pycache__/** linguist-generated=true
+
+# Exclude generated/bundled JS from stats so it doesn't over-inflate JS
+dist/** linguist-generated=true
+node_modules/** linguist-vendored=true
+android/** linguist-vendored=true
+
+# Normalize line endings
+* text=auto
