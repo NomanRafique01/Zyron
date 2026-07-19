@@ -557,3 +557,126 @@ export function AgentBuilderIcon({ color = '#A78BFA', size = 18 }) {
     </Svg>
   );
 }
+
+// ── Team card icons ──────────────────────────────────────────────────────────
+
+export function BrainTeamIcon({ color = '#7B2FFF', size = 22 }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {/* Left lobe */}
+      <Path
+        d="M12 6C12 4.34 10.66 3 9 3C7.34 3 6 4.34 6 6C4.9 6 4 6.9 4 8C4 9.1 4.9 10 6 10C6 11.66 7.34 13 9 13H12"
+        stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"
+      />
+      {/* Right lobe */}
+      <Path
+        d="M12 6C12 4.34 13.34 3 15 3C16.66 3 18 4.34 18 6C19.1 6 20 6.9 20 8C20 9.1 19.1 10 18 10C18 11.66 16.66 13 15 13H12"
+        stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"
+      />
+      {/* Stem */}
+      <Path
+        d="M12 13V20M9 17h6"
+        stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"
+      />
+      {/* Center divider */}
+      <Path d="M12 6v7" stroke={color} strokeWidth={1.4} strokeLinecap="round" strokeDasharray="1.5 1.5" />
+    </Svg>
+  );
+}
+
+export function CodeTeamIcon({ color = '#7B2FFF', size = 22 }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M8 7L3 12L8 17"
+        stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+      />
+      <Path
+        d="M16 7L21 12L16 17"
+        stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+      />
+      <Path
+        d="M14 4L10 20"
+        stroke={color} strokeWidth={1.8} strokeLinecap="round"
+      />
+    </Svg>
+  );
+}
+
+export function LightbulbTeamIcon({ color = '#7B2FFF', size = 22 }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {/* Bulb */}
+      <Path
+        d="M9 21h6M10 17.5C10 17.5 7 14.5 7 10C7 7.24 9.24 5 12 5C14.76 5 17 7.24 17 10C17 14.5 14 17.5 14 17.5H10Z"
+        stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"
+      />
+      {/* Base segments */}
+      <Path d="M10 17.5h4M10.5 20h3" stroke={color} strokeWidth={1.6} strokeLinecap="round" />
+      {/* Shine */}
+      <Path d="M12 2V3.5M5.5 4.5L6.5 5.5M18.5 4.5L17.5 5.5" stroke={color} strokeWidth={1.6} strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+export function ChartTeamIcon({ color = '#7B2FFF', size = 22 }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {/* Axes */}
+      <Path
+        d="M4 20V4M4 20H20"
+        stroke={color} strokeWidth={1.8} strokeLinecap="round"
+      />
+      {/* Rising line */}
+      <Path
+        d="M6 16L10 11L14 13L19 7"
+        stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+      />
+      {/* Arrow tip */}
+      <Path
+        d="M15.5 7H19V10.5"
+        stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+export function MicroscopeTeamIcon({ color = '#7B2FFF', size = 22 }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {/* Eyepiece */}
+      <Rect x="9" y="2" width="5" height="3" rx="1" stroke={color} strokeWidth={1.7} />
+      {/* Body tube */}
+      <Path d="M11.5 5v5" stroke={color} strokeWidth={1.7} strokeLinecap="round" />
+      {/* Objective housing */}
+      <Rect x="8" y="10" width="7" height="4" rx="1.5" stroke={color} strokeWidth={1.7} />
+      {/* Arm/stage */}
+      <Path d="M11.5 14v2" stroke={color} strokeWidth={1.7} strokeLinecap="round" />
+      <Path d="M7 16h9" stroke={color} strokeWidth={1.7} strokeLinecap="round" />
+      {/* Base */}
+      <Path d="M6 19h12" stroke={color} strokeWidth={2} strokeLinecap="round" />
+      <Path d="M7 19v-1a1 1 0 011-1h8a1 1 0 011 1v1" stroke={color} strokeWidth={1.5} strokeLinecap="round" />
+      {/* Light beam */}
+      <Path d="M11.5 16v1.5" stroke={color} strokeWidth={1.4} strokeLinecap="round" strokeDasharray="1 1" />
+    </Svg>
+  );
+}
+
+export function ScrollTeamIcon({ color = '#7B2FFF', size = 22 }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {/* Scroll body */}
+      <Path
+        d="M6 4C6 4 4 4 4 6C4 8 6 8 6 8H18C18 8 20 8 20 10V18C20 20 18 20 18 20H6C6 20 4 20 4 18V6"
+        stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"
+      />
+      {/* Bottom roll */}
+      <Path
+        d="M6 20C6 20 4 20 4 18C4 16 6 16 6 16"
+        stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"
+      />
+      {/* Text lines */}
+      <Path d="M9 12h6M9 15h4" stroke={color} strokeWidth={1.6} strokeLinecap="round" />
+    </Svg>
+  );
+}

@@ -3,6 +3,9 @@
  * Historical analysis and narrative team.
  * Best for: historical events, era analysis, biographical research, comparative history, geopolitical context.
  */
+import React from 'react';
+import { ScrollTeamIcon } from '../../components/shared/Icons';
+
 export default {
   id: 'historians',
   name: 'Historians',
@@ -13,11 +16,11 @@ export default {
   accentDim: 'rgba(123, 47, 255, 0.12)',
   badge: 'HISTORY',
   category: 'Research',
-  teamIcon: '📜',
+  teamIcon: <ScrollTeamIcon color="#7B2FFF" size={22} />,
   agents: {
     reasoner: {
       name: 'Archivist',
-      icon: require('../../../assets/agent-icons/archivist.png'),
+      icon: require('../../../assets/agent-icons/historians/archivist.png'),
       features: [
         'Accurate facts with clear confident/uncertain distinction',
         'Key people and their roles explained simply',
@@ -42,7 +45,7 @@ Write clearly, in plain language. Use headings to organise the information. Cove
     },
     coder: {
       name: 'Contextualist',
-      icon: require('../../../assets/agent-icons/contextualist.png'),
+      icon: require('../../../assets/agent-icons/historians/contextualist.png'),
       features: [
         'Explains what was driving events beneath the surface',
         'Shows how trigger events connected to deeper causes',
@@ -68,7 +71,7 @@ Explain clearly and directly. Use headings. Write as much as the question needs 
     },
     vision: {
       name: 'Cartographer',
-      icon: require('../../../assets/agent-icons/cartographer.png'),
+      icon: require('../../../assets/agent-icons/historians/cartographer.png'),
       features: [
         'Timelines and comparison tables where they help',
         'Geographic and demographic context explained simply',
@@ -94,7 +97,7 @@ Keep it practical and clear. Use tables and lists where they genuinely help. Wri
     },
     writer: {
       name: 'Biographer',
-      icon: require('../../../assets/agent-icons/biographer.png'),
+      icon: require('../../../assets/agent-icons/historians/biographer.png'),
       features: [
         'Engaging narrative that tells the story clearly',
         'Honest about what is known vs. disputed',

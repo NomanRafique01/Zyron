@@ -2,6 +2,9 @@
  * Coders — Designer · Programmer · Debugger · Executor
  * Pure implementation team. Best for: new features, refactors, algorithm design, API development, debugging.
  */
+import React from 'react';
+import { CodeTeamIcon } from '../../components/shared/Icons';
+
 export default {
   id: 'coders',
   name: 'Coders',
@@ -12,11 +15,11 @@ export default {
   accentDim: 'rgba(123, 47, 255, 0.12)',
   badge: 'CODING',
   category: 'Development',
-  teamIcon: '💻',
+  teamIcon: <CodeTeamIcon color="#7B2FFF" size={22} />,
   agents: {
     reasoner: {
       name: 'Designer',
-      icon: require('../../../assets/agent-icons/designer.png'),
+      icon: require('../../../assets/agent-icons/coders/designer.png'),
       features: [
         'Clear system structure with module responsibilities explained',
         'Design choice with plain-English rationale',
@@ -42,7 +45,7 @@ Write clearly. Use headings and short paragraphs. Avoid jargon unless you explai
     },
     coder: {
       name: 'Programmer',
-      icon: require('../../../assets/agent-icons/programmer.png'),
+      icon: require('../../../assets/agent-icons/coders/programmer.png'),
       features: [
         'Complete working code — no placeholders, no TODOs',
         'Typed, error-handled, and production-ready',
@@ -69,7 +72,7 @@ Write as much code as the task genuinely needs. Don't cut the implementation sho
     },
     vision: {
       name: 'Debugger',
-      icon: require('../../../assets/agent-icons/debugger.png'),
+      icon: require('../../../assets/agent-icons/coders/debugger.png'),
       features: [
         'Spots bugs, null dereferences, and edge cases',
         'Flags security issues and performance traps',
@@ -95,7 +98,7 @@ Be specific and direct. Quote the problematic part, explain what's wrong, then s
     },
     writer: {
       name: 'Executor',
-      icon: require('../../../assets/agent-icons/executor.png'),
+      icon: require('../../../assets/agent-icons/coders/executor.png'),
       features: [
         'Clear developer reference: design → code → issues → usage',
         'All code blocks preserved exactly as written',

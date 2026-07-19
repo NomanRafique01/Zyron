@@ -1,23 +1,26 @@
 /**
- * Financers — Analyst · Adviser · Auditor · Reporter
+ * Financers — Accountant · Adviser · Auditor · Investor
  * Master finance team covering personal, corporate, and business finance.
  * Best for: financial analysis, investment advice, audit & compliance review, financial reporting.
  */
+import React from 'react';
+import { ChartTeamIcon } from '../../components/shared/Icons';
+
 export default {
   id: 'financers',
   name: 'Financers',
   tagline: 'Expert financial insight across every domain',
   description:
-    'Master finance team covering personal, corporate, and business finance. Analyst breaks down numbers and identifies patterns. Adviser delivers strategic guidance and actionable recommendations. Auditor reviews for risks, errors, and compliance issues. Reporter synthesises all three into a clear, structured financial report.',
+    'Master finance team covering personal, corporate, and business finance. Accountant breaks down numbers and identifies patterns. Adviser delivers strategic guidance and actionable recommendations. Auditor reviews for risks, errors, and compliance issues. Investor synthesises all three into a clear, structured financial report.',
   accent: '#7B2FFF',
   accentDim: 'rgba(123, 47, 255, 0.12)',
   badge: 'DEFAULT',
   category: 'Finance',
-  teamIcon: '⚡',
+  teamIcon: <ChartTeamIcon color="#7B2FFF" size={22} />,
   agents: {
     reasoner: {
-      name: 'Analyst',
-      icon: require('../../../assets/agent-icons/reasoner.png'),
+      name: 'Accountant',
+      icon: require('../../../assets/agent-icons/financers/accountant.png'),
       features: [
         'Breaks down financial situations and data',
         'Identifies patterns, trends, and anomalies',
@@ -27,10 +30,10 @@ export default {
       accentDim: 'rgba(167, 139, 250, 0.12)',
       accentGlow: 'rgba(167, 139, 250, 0.35)',
       activeStatus: 'thinking',
-      activeLabel: 'Analysing...',
-      socketLabel: 'Analyst Agent',
+      activeLabel: 'Accounting...',
+      socketLabel: 'Accountant Agent',
       contributionLens: 'financial data analysis, pattern recognition, risk evaluation, and quantitative breakdown',
-      specialistDirective: `You are a **Financial Analyst**. Break down the financial situation with precision and clarity.
+      specialistDirective: `You are a **Financial Accountant**. Break down the financial situation with precision and clarity.
 
 Cover:
 - **The numbers** — what does the data actually show? Identify key figures, ratios, and metrics.
@@ -43,7 +46,7 @@ Use headings. Be precise with figures. Avoid speculation — if data is missing,
     },
     coder: {
       name: 'Adviser',
-      icon: require('../../../assets/agent-icons/coder.png'),
+      icon: require('../../../assets/agent-icons/financers/adviser.png'),
       features: [
         'Strategic financial advice and recommendations',
         'Investment guidance and actionable plans',
@@ -69,7 +72,7 @@ Be direct and practical. Advice should be implementable.`,
     },
     vision: {
       name: 'Auditor',
-      icon: require('../../../assets/agent-icons/vision.png'),
+      icon: require('../../../assets/agent-icons/financers/auditor.png'),
       features: [
         'Reviews financials for errors and inconsistencies',
         'Identifies compliance issues and red flags',
@@ -94,8 +97,8 @@ Look for:
 Be direct. State the finding, explain why it matters, and recommend the fix.`,
     },
     writer: {
-      name: 'Reporter',
-      icon: require('../../../assets/agent-icons/writer.png'),
+      name: 'Investor',
+      icon: require('../../../assets/agent-icons/financers/investor.png'),
       features: [
         'Structured financial report: analysis → advice → audit → recommendation',
         'All figures and findings preserved accurately',
@@ -105,13 +108,13 @@ Be direct. State the finding, explain why it matters, and recommend the fix.`,
       accentDim: 'rgba(221, 214, 254, 0.12)',
       accentGlow: 'rgba(221, 214, 254, 0.35)',
       activeStatus: 'formatting',
-      activeLabel: 'Reporting...',
-      socketLabel: 'Reporter Agent',
+      activeLabel: 'Investing...',
+      socketLabel: 'Investor Agent',
       contributionLens: 'structured financial synthesis — analysis overview, strategic advice, audit findings, and final recommendation',
-      specialistDirective: 'Write a **clear, structured financial report**. Structure: (1) **Financial Analysis** — the Analyst\'s key findings, figures, and risk assessment, (2) **Strategic Advice** — the Adviser\'s recommendations and action plan, (3) **Audit & Risk Findings** — the Auditor\'s identified issues, red flags, and compliance concerns, (4) **Final Recommendation** — a concise, unified conclusion integrating all three perspectives. Write in clear, professional language. Preserve all figures accurately. Never paraphrase numerical data.',
+      specialistDirective: 'Write a **clear, structured financial report**. Structure: (1) **Financial Analysis** — the Accountant\'s key findings, figures, and risk assessment, (2) **Strategic Advice** — the Adviser\'s recommendations and action plan, (3) **Audit & Risk Findings** — the Auditor\'s identified issues, red flags, and compliance concerns, (4) **Final Recommendation** — a concise, unified conclusion integrating all three perspectives. Write in clear, professional language. Preserve all figures accurately. Never paraphrase numerical data.',
     },
   },
-  greetingReply: `Hi! I'm the Financers team — analyst, adviser, auditor, and reporter.\nWhat financial situation can we help you with today?`,
+  greetingReply: `Hi! I'm the Financers team — accountant, adviser, auditor, and investor.\nWhat financial situation can we help you with today?`,
   writerRules:
     'Financial Analysis first. Strategic Advice second. Audit & Risk Findings third. Final Recommendation last. Clear and professional throughout — preserve all figures exactly.',
   sharedBriefSuffix: 'Team focus: comprehensive financial expertise — accurate analysis, strategic advice, honest audit, and clear reporting across all finance domains.',

@@ -71,7 +71,9 @@ const TeamAccordionCard = React.memo(function TeamAccordionCard({
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
               {teamIcon
-                ? <Text style={s.teamAccordionIcon}>{teamIcon}</Text>
+                ? (typeof teamIcon === 'string'
+                    ? <Text style={s.teamAccordionIcon}>{teamIcon}</Text>
+                    : <View style={{ width: 28, alignItems: 'center' }}>{teamIcon}</View>)
                 : <AgentBuilderIcon color="#A78BFA" size={22} />}
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

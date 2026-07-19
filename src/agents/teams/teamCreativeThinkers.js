@@ -3,6 +3,9 @@
  * Creative strategy and content production team.
  * Best for: copywriting, brand strategy, storytelling, content campaigns, naming, creative ideation.
  */
+import React from 'react';
+import { LightbulbTeamIcon } from '../../components/shared/Icons';
+
 export default {
   id: 'creative-thinkers',
   name: 'Creative Thinkers',
@@ -13,11 +16,11 @@ export default {
   accentDim: 'rgba(123, 47, 255, 0.12)',
   badge: 'CREATIVE',
   category: 'Content',
-  teamIcon: '🎭',
+  teamIcon: <LightbulbTeamIcon color="#7B2FFF" size={22} />,
   agents: {
     reasoner: {
       name: 'Strategist',
-      icon: require('../../../assets/agent-icons/strategist.png'),
+      icon: require('../../../assets/agent-icons/creative/strategist.png'),
       features: [
         'Identifies the angle that makes the piece interesting',
         'Defines the audience and what should resonate with them',
@@ -43,7 +46,7 @@ Be clear and practical. The Creator needs to be able to work from this directly.
     },
     coder: {
       name: 'Creator',
-      icon: require('../../../assets/agent-icons/creator.png'),
+      icon: require('../../../assets/agent-icons/creative/creator.png'),
       features: [
         'Multiple opening options so the best one can be chosen',
         'A full, complete draft — not a plan or an outline',
@@ -67,7 +70,7 @@ Write with care. Every sentence should earn its place. Use specific details rath
     },
     vision: {
       name: 'Curator',
-      icon: require('../../../assets/agent-icons/curator.png'),
+      icon: require('../../../assets/agent-icons/creative/curator.png'),
       features: [
         'Finds the weakest lines and rewrites them',
         'Checks the emotional flow and fixes where it sags',
@@ -93,7 +96,7 @@ Be direct and specific. Don't say "it needs more energy" — show the actual fix
     },
     writer: {
       name: 'Narrator',
-      icon: require('../../../assets/agent-icons/narrator.png'),
+      icon: require('../../../assets/agent-icons/creative/narrator.png'),
       features: [
         'Delivers the final polished piece, not a plan',
         'Chooses the best opening and applies all editorial notes',

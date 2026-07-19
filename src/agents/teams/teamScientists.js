@@ -3,6 +3,9 @@
  * Rigorous STEM analysis team elevated to professional research standard.
  * Best for: physics, chemistry, mathematics, statistics, engineering calculations, formal derivations.
  */
+import React from 'react';
+import { MicroscopeTeamIcon } from '../../components/shared/Icons';
+
 export default {
   id: 'scientists',
   name: 'Scientists',
@@ -13,11 +16,11 @@ export default {
   accentDim: 'rgba(123, 47, 255, 0.12)',
   badge: 'SCIENCE',
   category: 'STEM',
-  teamIcon: '🔬',
+  teamIcon: <MicroscopeTeamIcon color="#7B2FFF" size={22} />,
   agents: {
     reasoner: {
       name: 'Theorist',
-      icon: require('../../../assets/agent-icons/theorist.png'),
+      icon: require('../../../assets/agent-icons/scientists/theorist.png'),
       features: [
         'Key equations explained with every symbol defined',
         'Derivation shown step by step — no skipped logic',
@@ -43,7 +46,7 @@ Use LaTeX for all equations — display math \\[ ... \\] for key results, inline
     },
     coder: {
       name: 'Experimenter',
-      icon: require('../../../assets/agent-icons/experimenter.png'),
+      icon: require('../../../assets/agent-icons/scientists/experimenter.png'),
       features: [
         'Step-by-step calculation anyone can follow',
         'Units tracked and checked throughout',
@@ -69,7 +72,7 @@ Be thorough. Show every step so someone else could reproduce it.`,
     },
     vision: {
       name: 'Modeler',
-      icon: require('../../../assets/agent-icons/modeler.png'),
+      icon: require('../../../assets/agent-icons/scientists/modeler.png'),
       features: [
         'Plain-language explanation of why the equation behaves as it does',
         'Good everyday analogy with its limits stated honestly',
@@ -95,7 +98,7 @@ Write clearly and in plain language. Be as thorough as the question needs.`,
     },
     writer: {
       name: 'Reporter',
-      icon: require('../../../assets/agent-icons/reporter.png'),
+      icon: require('../../../assets/agent-icons/scientists/reporter.png'),
       features: [
         'Lab-report structure: Theory → Computation → Intuition → Result',
         'All LaTeX preserved verbatim from Theorist and Experimenter',
