@@ -31,7 +31,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import s from '../../styles/app.styles';
 import C from '../../config/colors.config';
-import { GearIcon, CrossIcon, KeyIcon, ShieldIcon, InfoIcon, UserIcon, BoltIcon, TrashIcon, LockIcon } from '../../components/shared/Icons';
+import { GearIcon, CrossIcon, KeyIcon, ShieldIcon, InfoIcon, UserIcon, BoltIcon, TrashIcon, LockIcon, AgentsWorkshopIcon } from '../../components/shared/Icons';
 
 // ── Sub-panel components ─────────────────────────────────────────────────────
 import AccountPanel from './panels/ProfilePanel.component.jsx';
@@ -211,6 +211,9 @@ export default function SettingsModal({
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
               scrollEventThrottle={16}
+              removeClippedSubviews={true}
+              maxToRenderPerBatch={4}
+              windowSize={5}
               onScroll={(e) => { settingsScrollOffsetRef.current = e.nativeEvent.contentOffset.y; }}
               onLayout={(e) => {
                 const nextH = e.nativeEvent.layout.height;
@@ -411,7 +414,7 @@ export default function SettingsModal({
               >
                 <View style={s.apiPanelToggleLeft}>
                   <View style={[s.apiPanelIconBox, s.agentLibraryIconBox]}>
-                    <BoltIcon color={C.purpleSoft || C.purple} />
+                    <AgentsWorkshopIcon color={C.purpleSoft || C.purple} size={18} />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={s.apiPanelTitle}>Agents Workshop</Text>

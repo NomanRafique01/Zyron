@@ -14,6 +14,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { AgentsWorkshopIcon } from '../../../components/shared/Icons';
 import C from '../../../config/colors.config';
 import {
   loadCustomAgents,
@@ -109,7 +110,7 @@ export default function AgentsWorkshopPanel({ showToast }) {
       {/* Hero */}
       <View style={ws.hero}>
         <View style={ws.heroIconBox}>
-          <Text style={ws.heroIcon}>🏗️</Text>
+          <AgentsWorkshopIcon color="#A78BFA" size={22} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={ws.heroTitle}>Agents Workshop</Text>
@@ -185,7 +186,9 @@ export default function AgentsWorkshopPanel({ showToast }) {
               {customTeams.map((team) => (
                 <View key={team.id} style={[ws.teamCard, { borderColor: `${team.accent}33` }]}>
                   <View style={ws.teamCardHeader}>
-                    <Text style={ws.teamCardIcon}>{team.teamIcon || '🏗️'}</Text>
+                    {team.teamIcon
+                      ? <Text style={ws.teamCardIcon}>{team.teamIcon}</Text>
+                      : <AgentsWorkshopIcon color="#A78BFA" size={20} />}
                     <View style={{ flex: 1 }}>
                       <Text style={ws.teamCardName}>{team.name}</Text>
                       <Text style={ws.teamCardTagline} numberOfLines={1}>{team.tagline}</Text>

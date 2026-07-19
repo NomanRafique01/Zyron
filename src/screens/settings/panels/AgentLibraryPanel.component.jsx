@@ -21,7 +21,7 @@ import AgentIcon from '../../../components/agent/AgentIcon.component';
 import s from '../../../styles/app.styles';
 import C from '../../../config/colors.config';
 import { AGENTS_TEAMS } from '../../../utils/agentLogic.utils';
-import { BoltIcon } from '../../../components/shared/Icons';
+import { BoltIcon, AgentBuilderIcon } from '../../../components/shared/Icons';
 import {
   loadCustomTeams,
   invalidateCustomTeamsCache,
@@ -31,7 +31,7 @@ const ROSTER = ['reasoner', 'coder', 'vision', 'writer'];
 
 // ── Shared team accordion card ─────────────────────────────────────────────
 
-function TeamAccordionCard({
+const TeamAccordionCard = React.memo(function TeamAccordionCard({
   team,
   isTeamActive,
   isExpanded,
@@ -41,7 +41,7 @@ function TeamAccordionCard({
   onSelect,
   isCustom = false,
 }) {
-  const teamIcon = team.teamIcon || team.agents?.reasoner?.icon || '🤖';
+  const teamIcon = team.teamIcon || team.agents?.reasoner?.icon || null;
   const writerName = team.agents?.writer?.name || 'Writer';
 
   return (
@@ -70,7 +70,9 @@ function TeamAccordionCard({
         >
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
-              <Text style={s.teamAccordionIcon}>{teamIcon}</Text>
+              {teamIcon
+                ? <Text style={s.teamAccordionIcon}>{teamIcon}</Text>
+                : <AgentBuilderIcon color="#A78BFA" size={22} />}
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Text style={s.teamAccordionTitle}>{team.name}</Text>
@@ -201,7 +203,7 @@ function TeamAccordionCard({
       </View>
     </View>
   );
-}
+});
 
 // ── Section header ─────────────────────────────────────────────────────────
 

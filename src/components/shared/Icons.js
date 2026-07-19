@@ -494,3 +494,66 @@ export function AgentIcon({ color = '#A78BFA', size = 32 }) {
     </Svg>
   );
 }
+
+/**
+ * AgentsWorkshopIcon
+ * Hexagonal frame with three connected robot heads in a triangle formation.
+ * Used for the Agents Workshop settings row and panel hero.
+ */
+export function AgentsWorkshopIcon({ color = '#A78BFA', size = 18 }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {/* Hexagonal outer frame */}
+      <Path
+        d="M12 2L21 7V17L12 22L3 17V7L12 2Z"
+        stroke={color}
+        strokeWidth={1.6}
+        strokeLinejoin="round"
+      />
+      {/* Top-center robot head */}
+      <Rect x="9.5" y="4.5" width="5" height="4" rx="1" stroke={color} strokeWidth={1.3} />
+      <Circle cx="11" cy="6.5" r="0.7" fill={color} />
+      <Circle cx="13" cy="6.5" r="0.7" fill={color} />
+      <Path d="M12 4.5V3.5" stroke={color} strokeWidth={1.2} strokeLinecap="round" />
+      {/* Bottom-left robot head */}
+      <Rect x="4.5" y="13.5" width="5" height="4" rx="1" stroke={color} strokeWidth={1.3} />
+      <Circle cx="6" cy="15.5" r="0.7" fill={color} />
+      <Circle cx="8" cy="15.5" r="0.7" fill={color} />
+      <Path d="M7 13.5V12.5" stroke={color} strokeWidth={1.2} strokeLinecap="round" />
+      {/* Bottom-right robot head */}
+      <Rect x="14.5" y="13.5" width="5" height="4" rx="1" stroke={color} strokeWidth={1.3} />
+      <Circle cx="16" cy="15.5" r="0.7" fill={color} />
+      <Circle cx="18" cy="15.5" r="0.7" fill={color} />
+      <Path d="M17 13.5V12.5" stroke={color} strokeWidth={1.2} strokeLinecap="round" />
+      {/* Connecting lines between heads */}
+      <Path d="M12 8.5L7 13.5" stroke={color} strokeWidth={1} strokeLinecap="round" strokeOpacity={0.6} />
+      <Path d="M12 8.5L17 13.5" stroke={color} strokeWidth={1} strokeLinecap="round" strokeOpacity={0.6} />
+      <Path d="M9.5 15.5H14.5" stroke={color} strokeWidth={1} strokeLinecap="round" strokeOpacity={0.6} />
+    </Svg>
+  );
+}
+
+/**
+ * AgentBuilderIcon
+ * Single robot head with a small plus symbol in the top-right corner.
+ * Used as fallback team icon in AgentLibraryPanel.
+ */
+export function AgentBuilderIcon({ color = '#A78BFA', size = 18 }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {/* Robot head */}
+      <Rect x="4" y="8" width="13" height="10" rx="2.5" stroke={color} strokeWidth={1.8} />
+      {/* Eyes */}
+      <Circle cx="8.5" cy="13" r="1.4" fill={color} />
+      <Circle cx="13.5" cy="13" r="1.4" fill={color} />
+      {/* Antenna */}
+      <Path d="M10.5 8V5.5" stroke={color} strokeWidth={1.8} strokeLinecap="round" />
+      <Circle cx="10.5" cy="4.6" r="0.9" fill={color} />
+      {/* Neck stubs */}
+      <Path d="M9 18v2M12 18v2" stroke={color} strokeWidth={1.6} strokeLinecap="round" />
+      {/* Plus badge in top-right corner */}
+      <Circle cx="19" cy="6" r="4" fill={color} />
+      <Path d="M19 4v4M17 6h4" stroke="#1a1028" strokeWidth={1.6} strokeLinecap="round" />
+    </Svg>
+  );
+}
