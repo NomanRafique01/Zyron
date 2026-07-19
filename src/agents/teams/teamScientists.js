@@ -17,7 +17,7 @@ export default {
   agents: {
     reasoner: {
       name: 'Theorist',
-      icon: '🧮',
+      icon: require('../../../assets/agent-icons/theorist.png'),
       features: [
         'Key equations explained with every symbol defined',
         'Derivation shown step by step — no skipped logic',
@@ -43,7 +43,7 @@ Use LaTeX for all equations — display math \\[ ... \\] for key results, inline
     },
     coder: {
       name: 'Experimenter',
-      icon: '🧪',
+      icon: require('../../../assets/agent-icons/experimenter.png'),
       features: [
         'Step-by-step calculation anyone can follow',
         'Units tracked and checked throughout',
@@ -69,7 +69,7 @@ Be thorough. Show every step so someone else could reproduce it.`,
     },
     vision: {
       name: 'Modeler',
-      icon: '📊',
+      icon: require('../../../assets/agent-icons/modeler.png'),
       features: [
         'Plain-language explanation of why the equation behaves as it does',
         'Good everyday analogy with its limits stated honestly',
@@ -95,7 +95,7 @@ Write clearly and in plain language. Be as thorough as the question needs.`,
     },
     writer: {
       name: 'Reporter',
-      icon: '📋',
+      icon: require('../../../assets/agent-icons/reporter.png'),
       features: [
         'Lab-report structure: Theory → Computation → Intuition → Result',
         'All LaTeX preserved verbatim from Theorist and Experimenter',

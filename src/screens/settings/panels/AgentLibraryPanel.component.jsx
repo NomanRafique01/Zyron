@@ -120,7 +120,7 @@ function TeamAccordionCard({
                   if (!agent) return null;
                   return (
                     <View key={role} style={s.agentLibraryRosterChip}>
-                      <AgentIcon icon={agent.icon} size={18} style={s.agentLibraryRosterIcon} />
+                      <AgentIcon icon={agent.icon} size={22} />
                       <Text style={s.agentLibraryRosterName}>{agent.name}</Text>
                     </View>
                   );
@@ -133,6 +133,23 @@ function TeamAccordionCard({
         {/* Expanded: detailed agent breakdown */}
         {isExpanded && (
           <View style={s.teamAccordionBody}>
+
+            {/* Icon row — 4 agents centered at the top */}
+            <View style={ls.iconRow}>
+              {ROSTER.map((role) => {
+                const agent = team.agents?.[role];
+                if (!agent) return null;
+                return (
+                  <View key={role} style={ls.iconItem}>
+                    <View style={[ls.iconWrap, { backgroundColor: agent.accentDim, borderColor: (agent.accent || team.accent) + '44' }]}>
+                      <AgentIcon icon={agent.icon} size={56} />
+                    </View>
+                    <Text style={ls.iconName} numberOfLines={1}>{agent.name}</Text>
+                  </View>
+                );
+              })}
+            </View>
+
             <Text style={s.teamBodyIntro}>{team.description}</Text>
 
             {ROSTER.map((role, idx) => {
@@ -156,12 +173,10 @@ function TeamAccordionCard({
                         {
                           backgroundColor: agent.accentDim,
                           borderColor: (agent.accent || team.accent) + '44',
-                          width: 52,
-                          height: 52,
                         },
                       ]}
                     >
-                      <AgentIcon icon={agent.icon} size={44} style={s.teamAgentIcon} />
+                      <AgentIcon icon={agent.icon} size={36} />
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={s.teamAgentName}>{agent.name}</Text>
@@ -352,5 +367,32 @@ const ls = StyleSheet.create({
     fontSize: 10,
     textAlign: 'center',
     lineHeight: 15,
+  },
+  iconRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    gap: 12,
+    marginBottom: 16,
+  },
+  iconItem: {
+    alignItems: 'center',
+    width: 68,
+  },
+  iconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 14,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  iconName: {
+    marginTop: 5,
+    fontSize: 9,
+    fontWeight: '600',
+    color: '#AAAACC',
+    textAlign: 'center',
   },
 });

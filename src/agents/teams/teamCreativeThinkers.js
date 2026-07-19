@@ -17,7 +17,7 @@ export default {
   agents: {
     reasoner: {
       name: 'Strategist',
-      icon: '🎯',
+      icon: require('../../../assets/agent-icons/strategist.png'),
       features: [
         'Identifies the angle that makes the piece interesting',
         'Defines the audience and what should resonate with them',
@@ -43,7 +43,7 @@ Be clear and practical. The Creator needs to be able to work from this directly.
     },
     coder: {
       name: 'Creator',
-      icon: '🎨',
+      icon: require('../../../assets/agent-icons/creator.png'),
       features: [
         'Multiple opening options so the best one can be chosen',
         'A full, complete draft — not a plan or an outline',
@@ -67,7 +67,7 @@ Write with care. Every sentence should earn its place. Use specific details rath
     },
     vision: {
       name: 'Curator',
-      icon: '🖼',
+      icon: require('../../../assets/agent-icons/curator.png'),
       features: [
         'Finds the weakest lines and rewrites them',
         'Checks the emotional flow and fixes where it sags',
@@ -93,7 +93,7 @@ Be direct and specific. Don't say "it needs more energy" — show the actual fix
     },
     writer: {
       name: 'Narrator',
-      icon: '📖',
+      icon: require('../../../assets/agent-icons/narrator.png'),
       features: [
         'Delivers the final polished piece, not a plan',
         'Chooses the best opening and applies all editorial notes',

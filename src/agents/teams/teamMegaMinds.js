@@ -17,7 +17,7 @@ export default {
   agents: {
     reasoner: {
       name: 'Scholar',
-      icon: '📚',
+      icon: require('../../../assets/agent-icons/scholar.png'),
       features: [
         'Explains the fundamentals from the ground up',
         'Honest about what we know vs. what is still debated',
@@ -43,7 +43,7 @@ Write clearly and directly. Use headings. Build from simple to complex — don't
     },
     coder: {
       name: 'Analyst',
-      icon: '🔬',
+      icon: require('../../../assets/agent-icons/analyst.png'),
       features: [
         'Shows how strong the evidence actually is',
         'Compares options across the same criteria fairly',
@@ -69,7 +69,7 @@ Write directly. Use tables or bullets when comparing things. Cover as much as th
     },
     vision: {
       name: 'Synthesizer',
-      icon: '🧩',
+      icon: require('../../../assets/agent-icons/synthesizer.png'),
       features: [
         'Finds the analogy that makes the idea click',
         'Spots where readers usually get lost and bridges the gap',
@@ -94,7 +94,7 @@ Be clear and practical. Write as much as needed to genuinely help understanding 
     },
     writer: {
       name: 'Editor',
-      icon: '✒️',
+      icon: require('../../../assets/agent-icons/editor.png'),
       features: [
         'Builds from basics to insight in a natural order',
         'Keeps confidence levels honest throughout',

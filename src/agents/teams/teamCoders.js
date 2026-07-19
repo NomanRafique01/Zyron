@@ -1,5 +1,5 @@
 /**
- * Coders — Architect · Engineer · Debugger · Technical Writer
+ * Coders — Designer · Programmer · Debugger · Executor
  * Pure implementation team. Best for: new features, refactors, algorithm design, API development, debugging.
  */
 export default {
@@ -7,7 +7,7 @@ export default {
   name: 'Coders',
   tagline: 'Clear, complete software construction',
   description:
-    'Practical coding team. Architect explains how to structure the solution. Engineer writes complete, working code. Debugger spots bugs, edge cases, and security issues. Technical Writer puts it all together in a clear, developer-friendly answer.',
+    'Practical coding team. Designer explains how to structure the solution. Programmer writes complete, working code. Debugger spots bugs, edge cases, and security issues. Executor puts it all together in a clear, developer-friendly answer.',
   accent: '#7B2FFF',
   accentDim: 'rgba(123, 47, 255, 0.12)',
   badge: 'CODING',
@@ -15,8 +15,8 @@ export default {
   teamIcon: '💻',
   agents: {
     reasoner: {
-      name: 'Architect',
-      icon: '📐',
+      name: 'Designer',
+      icon: require('../../../assets/agent-icons/designer.png'),
       features: [
         'Clear system structure with module responsibilities explained',
         'Design choice with plain-English rationale',
@@ -27,9 +27,9 @@ export default {
       accentGlow: 'rgba(167, 139, 250, 0.35)',
       activeStatus: 'thinking',
       activeLabel: 'Designing...',
-      socketLabel: 'Architect Agent',
+      socketLabel: 'Designer Agent',
       contributionLens: 'system structure, design decisions with rationale, API surface definitions, data flow, and scalability considerations',
-      specialistDirective: `You are a **Software Architect**. Your job is to explain how the solution should be structured — clearly and simply.
+      specialistDirective: `You are a **Software Designer**. Your job is to explain how the solution should be structured — clearly and simply.
 
 Focus on:
 - **What the pieces are** — name each module or component and what it does in plain language.
@@ -41,8 +41,8 @@ Focus on:
 Write clearly. Use headings and short paragraphs. Avoid jargon unless you explain it. Be as thorough as the question needs — don't cut corners, but don't pad either.`,
     },
     coder: {
-      name: 'Engineer',
-      icon: '⚙️',
+      name: 'Programmer',
+      icon: require('../../../assets/agent-icons/programmer.png'),
       features: [
         'Complete working code — no placeholders, no TODOs',
         'Typed, error-handled, and production-ready',
@@ -53,9 +53,9 @@ Write clearly. Use headings and short paragraphs. Avoid jargon unless you explai
       accentGlow: 'rgba(139, 92, 246, 0.35)',
       activeStatus: 'working',
       activeLabel: 'Coding...',
-      socketLabel: 'Engineer Agent',
+      socketLabel: 'Programmer Agent',
       contributionLens: 'complete working implementation — typed, error-handled, well-named, fully written with no placeholders',
-      specialistDirective: `You are a **Software Engineer** writing code that actually works and is easy to understand.
+      specialistDirective: `You are a **Programmer** writing code that actually works and is easy to understand.
 
 Rules:
 - Write the **complete implementation** — every function body filled in. No placeholders, no "implement later", no ellipsis.
@@ -69,7 +69,7 @@ Write as much code as the task genuinely needs. Don't cut the implementation sho
     },
     vision: {
       name: 'Debugger',
-      icon: '🔍',
+      icon: require('../../../assets/agent-icons/debugger.png'),
       features: [
         'Spots bugs, null dereferences, and edge cases',
         'Flags security issues and performance traps',
@@ -94,8 +94,8 @@ Look for:
 Be specific and direct. Quote the problematic part, explain what's wrong, then show the fix. Write as much as the review genuinely needs.`,
     },
     writer: {
-      name: 'Technical Writer',
-      icon: '📝',
+      name: 'Executor',
+      icon: require('../../../assets/agent-icons/executor.png'),
       features: [
         'Clear developer reference: design → code → issues → usage',
         'All code blocks preserved exactly as written',
@@ -106,12 +106,12 @@ Be specific and direct. Quote the problematic part, explain what's wrong, then s
       accentGlow: 'rgba(221, 214, 254, 0.35)',
       activeStatus: 'formatting',
       activeLabel: 'Documenting...',
-      socketLabel: 'Technical Writer Agent',
+      socketLabel: 'Executor Agent',
       contributionLens: 'clear developer documentation — design overview, complete code, known issues, and usage examples',
-      specialistDirective: 'Write a **clear, complete developer answer**. Structure: (1) **Design** — brief explanation of how the solution is structured and why, (2) **Implementation** — the Engineer\'s complete code, all blocks preserved exactly with language tags, (3) **Known Issues & Security** — the Debugger\'s findings as a simple list with fixes, (4) **Usage** — short examples showing how to use it. Write like a good README — clear, direct, and useful. Never paraphrase code.',
+      specialistDirective: 'Write a **clear, complete developer answer**. Structure: (1) **Design** — brief explanation of how the solution is structured and why, (2) **Implementation** — the Programmer\'s complete code, all blocks preserved exactly with language tags, (3) **Known Issues & Security** — the Debugger\'s findings as a simple list with fixes, (4) **Usage** — short examples showing how to use it. Write like a good README — clear, direct, and useful. Never paraphrase code.',
     },
   },
-  greetingReply: `Hi! I'm the Coders team — architect, engineer, and debugger.\nWhat are you coding today?`,
+  greetingReply: `Hi! I'm the Coders team — designer, programmer, debugger, and executor.\nWhat are you coding today?`,
   writerRules:
     'Start with a brief design overview. Complete code next — never paraphrase it. Known issues and fixes after. Usage examples last. Keep it clear and developer-friendly.',
   sharedBriefSuffix: 'Team focus: clear software answers — well-structured design, complete working code, practical debugging, and developer-friendly documentation.',
