@@ -22,7 +22,6 @@
 
 ---
 
-
 ## What is Zyron?
 
 Zyron is a production-grade Android AI assistant that replaces a single chatbot with a **coordinated swarm of four specialist agents** running in parallel. Every query is routed to a team of domain experts — an analyst, an executor, a validator, and a synthesizer — whose outputs are fused into a single, high-quality response.
@@ -36,9 +35,9 @@ Unlike standard AI apps where one model does everything, Zyron assigns each agen
   <img src="assets/images/banner.png" alt="Zyron Banner" width="100%"/>
 </div>
 
+---
 
 ## Core Architecture
-
 
 ```
                      User Query
@@ -59,13 +58,12 @@ Unlike standard AI apps where one model does everything, Zyron assigns each agen
 │(Analyst │         │(Executor│           │(Validator│
 │  /ADR)  │         │  /Impl) │           │ /QA/Red) │
 └────┬────┘         └────┬────┘           └────┬─────┘
-     │                   │                     │     
+     │                   │                     │
      └───────────────────┼─────────────────────┘
-                         │                           
+                         │
                ┌┬────────┴─────────┬┐
                ││Specialist outputs││
                └┴────────┬─────────┴┘
-                         ╷                
                          │
                    ┌─────┴──────┐
                    │  Agent 4   │
@@ -77,6 +75,7 @@ Unlike standard AI apps where one model does everything, Zyron assigns each agen
                          ▼
                   Final Response
 ```
+
 The pipeline runs three phases:
 1. **Analysis** — `queryAnalyzer.js` classifies intent, detects coding/STEM/creative signals, and selects COMPACT vs. FULL coordination mode
 2. **Specialist execution** — Agents 1–3 run in parallel with individual SSE streaming, circuit-breakers, and automatic fallback chains
@@ -84,156 +83,333 @@ The pipeline runs three phases:
 
 ---
 
-## Agent Teams
+## Backend + Local Fallback Logic
 
-Zyron ships with **six pre-built specialist teams**. Each team redefines all four agent slots — names, icons, directives, and contribution lenses — while keeping the same underlying API sockets.
+Zyron uses a **dual-engine architecture** — a Railway-hosted Python FastAPI backend as the primary orchestrator, with a fully self-contained local JS engine as a silent fallback. The user never sees the switch happen.
 
----
+```
+┌─────────────────────────────────────────────────────────┐
+│                   backendBridge.js                      │
+│                                                         │
+│  1. POST /orchestrate → Railway backend (30 s timeout)  │
+│         │                                               │
+│         ├── ✅ 200 OK  → remap agents to active team    │
+│         │              → return fused response          │
+│         │                                               │
+│         └── ❌ Timeout │ Network error │ Non-200        │
+│                        │                               │
+│                        ▼                               │
+│         Local runAgentsOrchestrator() — silent fallback │
+│         Full SSE streaming, circuit-breakers, dedup    │
+└─────────────────────────────────────────────────────────┘
+```
 
-### ⚡ Dev Core
-> *Staff-level engineering team*
+### What the backend does
+- **Python FastAPI** on Railway (`https://zyron-production-7af1.up.railway.app`)
+- `POST /orchestrate` — accepts `{ query, agentConfigs, team, persona, userProfile }`
+- Runs three specialist agents in parallel via `LangGraph` then synthesizes via the writer agent
+- Returns structured `{ finalAnswer, agents[], coordinationMode }` JSON
 
-The general-purpose software engineering team. Best for system design, full-stack implementation, code review, debugging, and technical explanations.
-
-| Slot | Agent | Icon | Role |
-|------|-------|------|------|
-| Agent 1 | **Reasoner** | 🧠 | Produces Architecture Decision Records, typed interface contracts, and failure taxonomies ranked by probability × impact |
-| Agent 2 | **Coder** | ⚡ | Delivers complete, type-safe, zero-placeholder implementations with O(n) complexity annotations |
-| Agent 3 | **Vision** | 🔍 | Red-teams with STRIDE threat modeling (Spoofing, Tampering, Repudiation, Info Disclosure, DoS, Elevation) and a 6-case test matrix |
-| Agent 4 | **Writer** | ✍️ | Developer-ready reference: ADR → implementation → QA → usage |
-
----
-
-### 💻 Coders
-> *Principal-level software construction*
-
-Pure implementation team with zero-tolerance production standards. Best for new features, refactors, algorithm design, API development, and adversarial debugging.
-
-| Slot | Agent | Icon | Role |
-|------|-------|------|------|
-| Agent 1 | **Architect** | 📐 | ADR-style blueprints with dependency graphs, circular-dependency risk identification, and typed API contracts |
-| Agent 2 | **Engineer** | ⚙️ | Zero-tolerance code: no ellipsis, no TODOs, TypeScript strict mode, named constants only |
-| Agent 3 | **Debugger** | 🔍 | Adversarial failure catalog, Big-O complexity audit, STRIDE security audit, 6-case adversarial test suite |
-| Agent 4 | **Technical Writer** | 📝 | Production reference: ADR → typed implementation → adversarial findings, with typed usage examples |
-
----
-
-### 🔬 Scientists
-> *Professional-grade scientific reasoning*
-
-Rigorous STEM analysis team. Best for physics, chemistry, mathematics, statistics, engineering calculations, and formal derivations.
-
-| Slot | Agent | Icon | Role |
-|------|-------|------|------|
-| Agent 1 | **Theorist** | 🧮 | First-principles LaTeX derivations, full symbol dictionary, dimensional analysis checkpoint, limiting cases |
-| Agent 2 | **Experimenter** | 🧪 | Reproducible numerical calculation with unit propagation, significant figures discipline, and boxed final answer |
-| Agent 3 | **Modeler** | 📊 | Physical intuition, variable sensitivity in LaTeX, phase diagrams with behavioral regimes, simulation suggestions |
-| Agent 4 | **Reporter** | 📋 | Lab-report structure: Theory → Computation → Intuition → Result, all LaTeX preserved verbatim |
+### Fallback guarantee
+- Timeout is **30 seconds**. If the backend doesn't respond in time, the local engine starts immediately — no error is ever shown to the user
+- If the user pressed **Stop** while waiting, the abort propagates cleanly across both paths
+- **Progress bar animation** starts on the frontend while the backend call is in-flight: agents animate from 0 % → 78 % (exponential approach, τ = 28 s), then jump to 100 % on response
+- Agent names, icons, and accent colors are always **remapped to the active team** after a backend response — the backend drives logic, the frontend owns visual identity
 
 ---
 
-### 📖 Mega Minds
-> *World-class research and understanding*
+## All 6 Teams — All 24 Agents
 
-Deep knowledge and research team. Best for explaining complex concepts, comparative analysis, research deep-dives, and learning frameworks.
-
-| Slot | Agent | Icon | Role |
-|------|-------|------|------|
-| Agent 1 | **Scholar** | 📚 | First-principles derivation, steelmanned counterarguments, epistemic confidence levels (HIGH/MEDIUM/LOW), assumption auditing |
-| Agent 2 | **Analyst** | 🔬 | Evidence hierarchy (meta-analysis → RCT → observational), causal mechanism chains (A→B→C), quantified trade-off matrices |
-| Agent 3 | **Synthesizer** | 🧩 | Cognitive load audit, mental model construction, analogy with explicit structural mapping, insight crystallization in ≤20 words |
-| Agent 4 | **Editor** | ✒️ | Builds from definition → mechanism → nuance → mental model → insight, closes with a perspective shift |
+Every team has **4 agents** (Roles: Analyst · Executor · Validator · Synthesizer) with individual PNG icons, distinct accent colors, and specialist directives.
 
 ---
 
-### 📜 Historians
-> *Distinguished historical scholarship*
+### <img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/financers/investor.png" width="22" height="22" style="vertical-align:middle"/> Financers
+> *Expert financial insight across every domain*
 
-Historical analysis and narrative team. Best for historical events, era analysis, biographical research, comparative history, and geopolitical context.
+Master finance team for personal, corporate, and business finance.
 
-| Slot | Agent | Icon | Role |
-|------|-------|------|------|
-| Agent 1 | **Archivist** | 📚 | Verified chronologies with ESTABLISHED/PROBABLE/CONTESTED/UNKNOWN epistemic status, bias detection, source landscape analysis |
-| Agent 2 | **Contextualist** | ⏳ | Three-level causal chain (proximate → intermediate → root), agency-vs-structure analysis, counterfactual reasoning |
-| Agent 3 | **Cartographer** | 🗺️ | Timeline architecture, comparison tables with defined criteria, geographical and demographic context |
-| Agent 4 | **Biographer** | 🖋️ | Authoritative scholarly narrative — Niall Ferguson narrative command + Barbara Tuchman human specificity + peer-review rigor |
+<table>
+<tr>
+<th align="center">Agent 1 — Accountant</th>
+<th align="center">Agent 2 — Adviser</th>
+<th align="center">Agent 3 — Auditor</th>
+<th align="center">Agent 4 — Investor</th>
+</tr>
+<tr>
+<td align="center"><img src="assets/agent-icons/financers/accountant.png" width="64" height="64"/><br><b>Accountant</b></td>
+<td align="center"><img src="assets/agent-icons/financers/adviser.png" width="64" height="64"/><br><b>Adviser</b></td>
+<td align="center"><img src="assets/agent-icons/financers/auditor.png" width="64" height="64"/><br><b>Auditor</b></td>
+<td align="center"><img src="assets/agent-icons/financers/investor.png" width="64" height="64"/><br><b>Investor</b></td>
+</tr>
+<tr>
+<td>Breaks down numbers, identifies patterns & trends, evaluates financial risk with data-driven reasoning</td>
+<td>Strategic financial advice, investment guidance, tailored action plans, opportunity identification</td>
+<td>Reviews for errors, compliance issues, red flags, control weaknesses, and inconsistencies</td>
+<td>Structured financial report: Analysis → Advice → Audit Findings → Final Recommendation</td>
+</tr>
+</table>
 
 ---
 
-### 🎭 Creative Thinkers
-> *Executive-level creative strategy*
+### <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M8 7L3 12L8 17" stroke="#7B2FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 7L21 12L16 17" stroke="#7B2FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 4L10 20" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round"/></svg> Coders
+> *Clear, complete software construction*
 
-World-class creative team. Best for copywriting, brand strategy, storytelling, content campaigns, naming, and creative ideation.
+Practical coding team for features, refactors, algorithms, and debugging.
 
-| Slot | Agent | Icon | Role |
-|------|-------|------|------|
-| Agent 1 | **Strategist** | 🎯 | Creative tension identification, human truth, anti-brief (executional traps), three creative territories with risk/opportunity |
-| Agent 2 | **Creator** | 🎨 | Three hook variants (conventional/subversive/formally unusual), sensory-dense drafts, rhythm scoring annotations |
-| Agent 3 | **Curator** | 🖼 | Line-level editorial surgery: 5 weakest lines diagnosed and rewritten, rhythm surgery, emotional arc mapping, six precision word swaps |
-| Agent 4 | **Narrator** | 📖 | Final polished voice honoring the strategic brief, best hook selected, all curation edits applied |
+<table>
+<tr>
+<th align="center">Agent 1 — Designer</th>
+<th align="center">Agent 2 — Programmer</th>
+<th align="center">Agent 3 — Debugger</th>
+<th align="center">Agent 4 — Executor</th>
+</tr>
+<tr>
+<td align="center"><img src="assets/agent-icons/coders/designer.png" width="64" height="64"/><br><b>Designer</b></td>
+<td align="center"><img src="assets/agent-icons/coders/programmer.png" width="64" height="64"/><br><b>Programmer</b></td>
+<td align="center"><img src="assets/agent-icons/coders/debugger.png" width="64" height="64"/><br><b>Debugger</b></td>
+<td align="center"><img src="assets/agent-icons/coders/executor.png" width="64" height="64"/><br><b>Executor</b></td>
+</tr>
+<tr>
+<td>System structure, design decisions with plain-English rationale, API surface definitions, data flow</td>
+<td>Complete working code — no placeholders, no TODOs, typed, error-handled, production-ready</td>
+<td>Spots bugs, null dereferences, edge cases, security issues, performance traps — gives concrete fixes</td>
+<td>Developer reference: Design → Code → Known Issues → Usage examples</td>
+</tr>
+</table>
+
+---
+
+### <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><rect x="9" y="2" width="5" height="3" rx="1" stroke="#7B2FFF" stroke-width="1.7"/><path d="M11.5 5v5" stroke="#7B2FFF" stroke-width="1.7" stroke-linecap="round"/><rect x="8" y="10" width="7" height="4" rx="1.5" stroke="#7B2FFF" stroke-width="1.7"/><path d="M11.5 14v2" stroke="#7B2FFF" stroke-width="1.7" stroke-linecap="round"/><path d="M7 16h9" stroke="#7B2FFF" stroke-width="1.7" stroke-linecap="round"/><path d="M6 19h12" stroke="#7B2FFF" stroke-width="2" stroke-linecap="round"/><path d="M7 19v-1a1 1 0 011-1h8a1 1 0 011 1v1" stroke="#7B2FFF" stroke-width="1.5" stroke-linecap="round"/></svg> Scientists
+> *Clear scientific explanations and calculations*
+
+Practical STEM team for physics, chemistry, mathematics, statistics, and engineering.
+
+<table>
+<tr>
+<th align="center">Agent 1 — Theorist</th>
+<th align="center">Agent 2 — Experimenter</th>
+<th align="center">Agent 3 — Modeler</th>
+<th align="center">Agent 4 — Reporter</th>
+</tr>
+<tr>
+<td align="center"><img src="assets/agent-icons/scientists/theorist.png" width="64" height="64"/><br><b>Theorist</b></td>
+<td align="center"><img src="assets/agent-icons/scientists/experimenter.png" width="64" height="64"/><br><b>Experimenter</b></td>
+<td align="center"><img src="assets/agent-icons/scientists/modeler.png" width="64" height="64"/><br><b>Modeler</b></td>
+<td align="center"><img src="assets/agent-icons/scientists/reporter.png" width="64" height="64"/><br><b>Reporter</b></td>
+</tr>
+<tr>
+<td>Key equations with every symbol defined, step-by-step derivation in LaTeX, validity limits</td>
+<td>Step-by-step calculation with units tracked, intermediate checkpoints, boxed final answer</td>
+<td>Physical mechanism in plain language, everyday analogies with limits stated, real-world scale anchors</td>
+<td>Lab-report structure: Theory → Calculation → Intuition → Result; all LaTeX preserved verbatim</td>
+</tr>
+</table>
+
+---
+
+### <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M12 6C12 4.34 10.66 3 9 3C7.34 3 6 4.34 6 6C4.9 6 4 6.9 4 8C4 9.1 4.9 10 6 10C6 11.66 7.34 13 9 13H12" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 6C12 4.34 13.34 3 15 3C16.66 3 18 4.34 18 6C19.1 6 20 6.9 20 8C20 9.1 19.1 10 18 10C18 11.66 16.66 13 15 13H12" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 13V20M9 17h6" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Mega Minds *(Default Team)*
+> *Deep, clear answers to complex questions*
+
+Thoughtful knowledge and research team for concepts, analysis, and learning.
+
+<table>
+<tr>
+<th align="center">Agent 1 — Scholar</th>
+<th align="center">Agent 2 — Analyst</th>
+<th align="center">Agent 3 — Synthesizer</th>
+<th align="center">Agent 4 — Editor</th>
+</tr>
+<tr>
+<td align="center"><img src="assets/agent-icons/mega-minds/scholar.png" width="64" height="64"/><br><b>Scholar</b></td>
+<td align="center"><img src="assets/agent-icons/mega-minds/analyst.png" width="64" height="64"/><br><b>Analyst</b></td>
+<td align="center"><img src="assets/agent-icons/mega-minds/synthesizer.png" width="64" height="64"/><br><b>Synthesizer</b></td>
+<td align="center"><img src="assets/agent-icons/mega-minds/editor.png" width="64" height="64"/><br><b>Editor</b></td>
+</tr>
+<tr>
+<td>First-principles derivation, honest confidence levels (established vs. debated), counterarguments, hidden assumptions</td>
+<td>Evidence strength, causal mechanism chains (A→B→C), comparative analysis, trade-off matrices</td>
+<td>Bridging analogies, confusion-point bridges, mental models, core insight crystallized in one sentence</td>
+<td>Builds definition → mechanism → nuance → analogy → insight; closes with perspective shift</td>
+</tr>
+</table>
+
+---
+
+### <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M6 4C6 4 4 4 4 6C4 8 6 8 6 8H18C18 8 20 8 20 10V18C20 20 18 20 18 20H6C6 20 4 20 4 18V6" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 20C6 20 4 20 4 18C4 16 6 16 6 16" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 12h6M9 15h4" stroke="#7B2FFF" stroke-width="1.6" stroke-linecap="round"/></svg> Historians
+> *Clear, engaging historical answers*
+
+Knowledgeable history team for events, eras, biographies, and geopolitical context.
+
+<table>
+<tr>
+<th align="center">Agent 1 — Archivist</th>
+<th align="center">Agent 2 — Contextualist</th>
+<th align="center">Agent 3 — Cartographer</th>
+<th align="center">Agent 4 — Biographer</th>
+</tr>
+<tr>
+<td align="center"><img src="assets/agent-icons/historians/archivist.png" width="64" height="64"/><br><b>Archivist</b></td>
+<td align="center"><img src="assets/agent-icons/historians/contextualist.png" width="64" height="64"/><br><b>Contextualist</b></td>
+<td align="center"><img src="assets/agent-icons/historians/cartographer.png" width="64" height="64"/><br><b>Cartographer</b></td>
+<td align="center"><img src="assets/agent-icons/historians/biographer.png" width="64" height="64"/><br><b>Biographer</b></td>
+</tr>
+<tr>
+<td>Verified chronologies, key actors and roles, ESTABLISHED/PROBABLE/CONTESTED/UNKNOWN epistemic status, source gaps</td>
+<td>Trigger → intermediate → root cause chain, agency vs. structure, counterfactual reasoning</td>
+<td>Timeline tables, comparison grids, geographic and demographic context, narrative structure blueprint</td>
+<td>Authoritative scholarly narrative — honest about uncertainty, contextual judgment, no anachronism</td>
+</tr>
+</table>
+
+---
+
+### <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M9 21h6M10 17.5C10 17.5 7 14.5 7 10C7 7.24 9.24 5 12 5C14.76 5 17 7.24 17 10C17 14.5 14 17.5 14 17.5H10Z" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 17.5h4M10.5 20h3" stroke="#7B2FFF" stroke-width="1.6" stroke-linecap="round"/><path d="M12 2V3.5M5.5 4.5L6.5 5.5M18.5 4.5L17.5 5.5" stroke="#7B2FFF" stroke-width="1.6" stroke-linecap="round"/></svg> Creative Thinkers
+> *Creative strategy and original writing*
+
+Creative team that thinks before it writes — strategy, drafting, editing, delivery.
+
+<table>
+<tr>
+<th align="center">Agent 1 — Strategist</th>
+<th align="center">Agent 2 — Creator</th>
+<th align="center">Agent 3 — Curator</th>
+<th align="center">Agent 4 — Narrator</th>
+</tr>
+<tr>
+<td align="center"><img src="assets/agent-icons/creative/strategist.png" width="64" height="64"/><br><b>Strategist</b></td>
+<td align="center"><img src="assets/agent-icons/creative/creator.png" width="64" height="64"/><br><b>Creator</b></td>
+<td align="center"><img src="assets/agent-icons/creative/curator.png" width="64" height="64"/><br><b>Curator</b></td>
+<td align="center"><img src="assets/agent-icons/creative/narrator.png" width="64" height="64"/><br><b>Narrator</b></td>
+</tr>
+<tr>
+<td>Audience definition, creative angle, tone direction, traps to avoid, 2–3 genuinely different creative directions</td>
+<td>Multiple opening options, a full complete draft, and a bold alternative version — real writing, no placeholders</td>
+<td>Weakest lines diagnosed and rewritten, word choices sharpened, emotional arc mapped, what to cut</td>
+<td>Final polished piece — best opening chosen, all editorial notes applied, crafted and intentional</td>
+</tr>
+</table>
 
 ---
 
 ## Feature Overview
 
-### 🤖 Multi-Agent Swarm Engine
+### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><circle cx="5.5" cy="5" r="1.5" stroke="#7B2FFF" stroke-width="1.4"/><circle cx="18.5" cy="5" r="1.5" stroke="#7B2FFF" stroke-width="1.4"/><circle cx="12" cy="12" r="2.2" stroke="#7B2FFF" stroke-width="1.6"/><path d="M10.2 10.2L7 7" stroke="#7B2FFF" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 10.2L17 7" stroke="#7B2FFF" stroke-width="1.2" stroke-linecap="round"/><circle cx="5.5" cy="19" r="1.5" stroke="#7B2FFF" stroke-width="1.4"/><circle cx="18.5" cy="19" r="1.5" stroke="#7B2FFF" stroke-width="1.4"/><path d="M10.2 13.8L7 17" stroke="#7B2FFF" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 13.8L17 17" stroke="#7B2FFF" stroke-width="1.2" stroke-linecap="round"/></svg> Multi-Agent Swarm Engine
 - **Parallel execution** — Agents 1–3 fire simultaneously, not sequentially
-- **Team Blending** — cross-team specialist borrowing per query without changing the active session team (e.g., pull Mega Minds' Scholar into a Coders session)
+- **Team Blending** — cross-team specialist borrowing per query without changing the active session team (e.g. pull Mega Minds' Scholar into a Coders session)
 - **Coordination modes** — `NONE` (direct), `COMPACT` (brief sharing), `FULL` (structured specialist briefs with shared context)
 - **Model tier routing** — cheap vs. expensive model selection based on query complexity
 - **Team switching suggestions** — the router detects when a different team would produce better results
 
-### ⚡ Real-Time Streaming
-- **Server-Sent Events (SSE)** for all supporting providers — tokens stream live to screen
-- **Per-agent streaming state** — each agent has its own progress bar and status label (Thinking / Building / Red-teaming / Polishing)
-- **Graceful abort** — stop mid-generation, generation cancels cleanly across all active sockets
+### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><rect x="9" y="2" width="6" height="11" rx="3" stroke="#7B2FFF" stroke-width="1.8"/><path d="M5 10a7 7 0 0014 0" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round"/><path d="M12 21v-4" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round"/><path d="M9 21h6" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round"/></svg> Live Talk Mode *(New)*
+Zyron can be talked to directly — no typing required. Live Talk opens a full-screen voice conversation interface powered by a neural-network node-web animation that pulses in sync with microphone activity.
 
-### 🛡️ Resilient API Layer
+**Pipeline:**
+```
+Mic Input (STT)  →  Transcript  →  LLM Call (Agent 1 config)  →  TTS Output
+     ↑                                                                │
+     └──────── Interrupt detection (new voice kills TTS) ────────────┘
+```
+
+- **Speech-to-text** via `expo-speech-recognition` — real-time partial results, silence detection
+- **Continuous mic** — hardware never closes between turns (no click sound); a 1.5 s silence timer triggers the LLM call
+- **Text-to-speech** via `expo-speech` — response is spoken sentence-by-sentence as tokens arrive, minimising latency
+- **Interrupt** — if the user speaks while Zyron is talking, TTS stops immediately and the new input is processed
+- **Auto-close** — if no speech is detected for 20 s after Zyron finishes speaking, the session closes silently
+- **All providers supported** — uses Agent 1's configured key/model (OpenAI, Anthropic, Gemini, Groq, Mistral, DeepSeek, GLM, OpenRouter)
+- **Conversation saved** — each turn is written to the active chat session in the background
+- **Visual phases:** `idle` → `listening` → `thinking` → `speaking` → back to `listening`
+
+### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><rect x="9" y="2" width="6" height="11" rx="3" stroke="#7B2FFF" stroke-width="1.8"/><path d="M5 10a7 7 0 0014 0" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round"/><path d="M12 17v4" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round"/></svg> Mic / Voice Input *(New)*
+The input bar now includes a **microphone button** alongside the text field. Tap it to dictate your message instead of typing — the transcript populates the input bar, and you can edit it before sending.
+
+- Lazy-loads `expo-speech-recognition` with a try/catch guard — gracefully disabled in Expo Go or stripped builds where the native module is not linked
+- Requests `RECORD_AUDIO` permission on first use
+- Live partial results update the input field in real time as you speak
+- Tap the mic button again (or tap Stop) to end dictation early
+
+### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="#7B2FFF" stroke="#7B2FFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Real-Time Streaming
+- **Server-Sent Events (SSE)** for all supporting providers — tokens stream live to screen
+- **Per-agent streaming state** — each agent has its own progress bar and status label (Thinking / Building / Stress-testing / Documenting / etc.)
+- **Graceful abort** — stop mid-generation, cancels cleanly across all active sockets
+
+### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M12 3l7 3v5c0 4.6-2.9 8.5-7 10-4.1-1.5-7-5.4-7-10V6l7-3z" stroke="#7B2FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 12l2 2 4-5" stroke="#7B2FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Resilient API Layer
 - **Circuit breaker** — per-provider failure tracking; tripped circuits skip that socket for the current session
 - **Fallback chains** — automatic failover to the next provider on timeout or error
 - **Sanitized error messages** — no raw API keys or stack traces ever surface in the UI
 
-### 💾 On-Device Memory
+### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" stroke="#7B2FFF" stroke-width="1.8" stroke-linejoin="round"/></svg> Agents Workshop *(New)*
+Create fully custom agent personas and custom teams — no coding required.
+
+**Custom Agents (free):**
+- Give the agent a name, description, and pick an icon from the 24-icon library (all built-in agent portraits available)
+- Configure personality traits (Critical Thinker, Systems Architect, Researcher, Innovator, Strategist, Mentor)
+- Set tone (Professional, Technical, Friendly, Formal, Direct, Creative) and communication style (Concise, Detailed, Structured, Educational, Executive)
+- Tune five strength sliders: Reasoning, Creativity, Analytical, Coding, Teaching (0–100)
+- `metadataGenerator.js` auto-generates `contributionLens` and `specialistDirective` from the form
+- Agents are stored in `AsyncStorage` and available immediately across all sessions
+- Edit, duplicate, or delete any saved custom agent
+
+**Custom Teams (premium):**
+- Fill all four role slots (Agent 1–4) with agents from the custom agent library
+- Choose a team name, tagline, description, and one of 8 SVG team icons (Shield, Network, Atom, Lightning, Compass, DNA, Brain, Rocket)
+- Saved teams are merged with built-in teams at runtime via `customTeamRegistry.js` — they behave identically to built-in teams: full orchestration, streaming, synthesis, and team routing work with no changes
+
+**Registry merge logic (`customTeamRegistry.js`):**
+```
+getAllTeams() → [...BUILTIN_TEAMS, ...customTeams]
+```
+Custom teams are bootstrapped async at app start then cached. All existing consumers (Agent Library, team router, runtime) call `getAllTeams()` with no conditional logic.
+
+### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><rect x="2" y="6" width="20" height="12" rx="2" stroke="#7B2FFF" stroke-width="1.8"/><path d="M6 10h.01M6 14h.01" stroke="#7B2FFF" stroke-width="2" stroke-linecap="round"/><path d="M10 10h8M10 14h6" stroke="#7B2FFF" stroke-width="1.6" stroke-linecap="round"/></svg> On-Device Memory
 - **SQLite persistence** — full conversation history with session index and message pagination
 - **User memory** — contextual facts extracted from conversations and injected into future prompts
 - **Offline fallback** — Gemini Nano on-device inference for queries when all network providers are unreachable
 
-### 🔒 Security
+### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" stroke="#7B2FFF" stroke-width="1.8"/><path d="M7 11V7a5 5 0 0110 0v4" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16" r="1.5" fill="#7B2FFF"/></svg> Authentication *(New)*
+Optional Firebase-backed sign-in with three providers:
+- **Email + Password** — full sign-up / sign-in / password reset flow
+- **Google Sign-In** — OAuth via `@react-native-google-signin`
+- **GitHub Sign-In** — OAuth via `expo-web-browser`
+
+Firebase is lazy-loaded via `try/catch` so the app runs in local mode (no auth, no crash) when the native module is not linked (e.g. Expo Go). All auth state is managed in `auth.service.js` with Firestore user document upsert on first sign-in.
+
+### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M12 3l7 3v5c0 4.6-2.9 8.5-7 10-4.1-1.5-7-5.4-7-10V6l7-3z" stroke="#7B2FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Security
 - **Android Keystore-backed storage** — API keys stored in `EncryptedSharedPreferences` via `expo-secure-store`; never in `AsyncStorage` or any JS bundle string
 - **Single read gateway** — `keyGuard.js` is the only permitted key-read path; keys are read at call-time and never stored in module-level variables
 - **Optional API Config Lock** — a password gate that locks all API settings behind biometric or PIN authentication
 - **No telemetry** — all telemetry is session-local, never transmitted
 
-### ✍️ Synthesis Intelligence
+### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M12 20h9" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Synthesis Intelligence
 - **Quality judge** — LLM + heuristic scorer evaluates output against domain-specific required/prohibited criteria (coding, STEM, analytical, writing, creative, general)
 - **Semantic deduplication** — removes redundant content across agent outputs before synthesis
 - **Agent personas** — five Writer synthesis modes: Balanced, Creative, Precise, Educator, Executive
 
-### 🧮 Math & Code Rendering
+### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M8 7L3 12L8 17" stroke="#7B2FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 7L21 12L16 17" stroke="#7B2FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 4L10 20" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round"/></svg> Math & Code Rendering
 - **LaTeX rendering** — `KaTeX` via `WebView` for inline and display math formulas
 - **Syntax-highlighted code blocks** — dedicated `SyntaxCode` component with language detection and copy-to-clipboard
 - **Chemical formula detection** — `mathParser.utils.js` handles inline chemical notation alongside LaTeX
 
-### 🗂️ Conversation Management
+### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Conversation Management
 - **Timeline grouping** — conversations bucketed into Today / Yesterday / Older
 - **Session sidebar** — slide-out drawer with conversation history, search, and new-chat creation
 - **Smart welcome greeting** — time-aware greeting (Night Owl / Early Bird / Golden Hour / etc.) with the user's first name
 
-### ⚙️ Settings & Personalization
+### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><circle cx="12" cy="12" r="3" stroke="#7B2FFF" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="#7B2FFF" stroke-width="1.8"/></svg> Settings & Personalization
 - **Profile panel** — display name, role, preferred tone, language, coding style, detail level
 - **Agent Library** — accordion panel showing all six teams with per-team agent roster and expand-to-inspect detail
+- **Agents Workshop** — custom agent and custom team builder (described above)
 - **API Config panel** — per-provider key entry, model selection, key status verification, share-key-across-agents toggle
 - **Privacy panel** — privacy mode, profile context injection toggle
 - **Reset panel** — wipe conversation history, clear API keys, full factory reset
 
 ---
-## How to Use
 
-Follow these steps once the app is installed and running on your Android device.
+## How to Use
 
 ### Step 1 — Add Your API Keys
 
-1. Tap the **⚙ Settings** icon (top-right of the chat screen)
+1. Tap the **Settings** icon (top-right of the chat screen)
 2. Navigate to **API Config**
 3. For each agent socket (Agent 1 – 4), select a provider from the dropdown and paste your API key
 4. Tap **Verify** to confirm the key is live — a green status indicator means it's ready
@@ -246,7 +422,7 @@ Follow these steps once the app is installed and running on your Android device.
 ### Step 2 — Choose a Team
 
 1. In **Settings → Agent Library**, browse the six specialist teams:
-   `Dev Core · Coders · Scientists · Mega Minds · Historians · Creative Thinkers`
+   `Financers · Coders · Scientists · Mega Minds · Historians · Creative Thinkers`
 2. Tap a team to preview its four agents and their roles
 3. Tap **Set as Active Team** to activate it for your next query
 
@@ -256,20 +432,37 @@ The active team is shown in the header.
 
 ### Step 3 — Send a Query
 
-1. Type your question or task in the **input bar** at the bottom
+1. Type your question in the input bar, or tap the **Mic** button to dictate
 2. Tap **Send** (or press Enter)
-3. Watch the four agent progress bars appear — each agent streams its output in real time:
-   - 🧠 Agent 1 — **Thinking / Analyzing**
-   - ⚡ Agent 2 — **Building / Executing**
-   - 🔍 Agent 3 — **Red-teaming / Validating**
-   - ✍️ Agent 4 — **Synthesizing** (waits for Agents 1–3, then produces the final answer)
+3. Watch the four agent progress bars appear — each agent streams its output in real time
 4. The final fused response appears in the chat bubble when Agent 4 completes
 
-To **stop** a generation mid-stream, tap the **Stop** button that replaces Send while the agents are running.
+To **stop** a generation mid-stream, tap the **Stop** button.
 
 ---
 
-### Step 4 — Customize Synthesis Persona
+### Step 4 — Use Live Talk
+
+1. Tap the **Live** button in the input bar (right side)
+2. The neural-network animation opens — tap the center to start listening
+3. Speak your question — partial transcript shows in real time
+4. After a 1.5 s pause Zyron thinks, then speaks the answer back to you
+5. Keep talking for follow-up questions — the mic stays open continuously
+6. Tap **Interrupt** to stop Zyron mid-sentence, or tap **X** to close the session
+
+---
+
+### Step 5 — Build a Custom Team
+
+1. Go to **Settings → Agents Workshop**
+2. Switch to the **Agents** tab — create your custom agent personas with icons, traits, and strength sliders
+3. Switch to the **Teams** tab — assign your agents to the four role slots
+4. Give the team a name and icon, then tap **Create Team**
+5. Your team now appears in Agent Library alongside the built-in teams
+
+---
+
+### Step 6 — Customize Synthesis Persona
 
 1. Open **Settings → Profile**
 2. Under **Writer Persona**, pick one of five modes:
@@ -284,7 +477,7 @@ To **stop** a generation mid-stream, tap the **Stop** button that replaces Send 
 
 ---
 
-### Step 5 — Manage Conversations
+### Step 7 — Manage Conversations
 
 | Action | How |
 |--------|-----|
@@ -295,7 +488,7 @@ To **stop** a generation mid-stream, tap the **Stop** button that replaces Send 
 
 ---
 
-### Step 6 — Lock API Settings (Optional)
+### Step 8 — Lock API Settings (Optional)
 
 If other people use your device, enable **API Config Lock** in **Settings → Privacy**:
 
@@ -311,6 +504,7 @@ If other people use your device, enable **API Config Lock** in **Settings → Pr
 - **Wrong team for your query?** The router will suggest a better-suited team — look for the suggestion banner below your response
 - **Regenerate** a response by long-pressing the assistant bubble → **Regenerate**
 - **Copy code** from any code block by tapping the copy icon in the top-right of the block
+- **Backend unavailable?** Zyron silently switches to its local engine — same quality, no interruption
 
 ---
 
@@ -337,20 +531,27 @@ All providers support free model tiers where available. Keys are stored per-agen
 
 ```
 React Native 0.81.5 + Expo SDK 54
-├── expo-secure-store        Android Keystore-backed key storage
-├── expo-sqlite              On-device conversation + memory persistence
-├── expo-local-authentication  Biometric/PIN API lock gate
-├── expo-blur                Settings modal blur backgrounds
-├── expo-linear-gradient     Agent glow effects
-├── expo-clipboard           Code block copy-to-clipboard
-├── react-native-webview     KaTeX LaTeX rendering
-├── react-native-svg         SVG icons and decorative elements
+├── expo-secure-store              Android Keystore-backed key storage
+├── expo-sqlite                    On-device conversation + memory persistence
+├── expo-speech                    TTS — Live Talk voice output
+├── expo-speech-recognition        STT — Mic input + Live Talk voice input
+├── expo-local-authentication      Biometric/PIN API lock gate
+├── expo-blur                      Settings modal blur backgrounds
+├── expo-linear-gradient           Agent glow effects
+├── expo-clipboard                 Code block copy-to-clipboard
+├── expo-web-browser               GitHub OAuth redirect handler
+├── react-native-webview           KaTeX LaTeX rendering
+├── react-native-svg               SVG icons, decorative elements, team icons
 ├── react-native-keyboard-controller  Cross-platform keyboard layout tracking
 ├── react-native-safe-area-context    Edge-to-edge safe area handling
-├── @react-native-async-storage       User profile and team selection persistence
+├── @react-native-async-storage       User profile, team selection, custom teams/agents
 ├── @react-native-community/netinfo   Offline detection → Gemini Nano fallback
-└── katex 0.17              LaTeX math typesetting
+├── @react-native-firebase/auth       Firebase email/Google/GitHub authentication
+├── @react-native-firebase/firestore  User document store
+└── katex 0.17                     LaTeX math typesetting
 ```
+
+**Backend:** Python 3.11 · FastAPI · LangGraph · Railway deployment
 
 **Build toolchain:** EAS Build with development / preview / production-APK / production-AAB profiles.
 
@@ -360,80 +561,105 @@ React Native 0.81.5 + Expo SDK 54
 
 ```
 Zyron/
-├── App.js                     React root — SplashScreen + MainApp
-├── index.js                   Expo entry point + global error handler
-├── app.config.js              Active Expo config (merges .env secrets)
-├── eas.json                   EAS Build profiles
+├── App.js                       React root — SplashScreen + MainApp
+├── index.js                     Expo entry point + global error handler
+├── app.config.js                Active Expo config (merges .env secrets)
+├── eas.json                     EAS Build profiles
 │
 ├── assets/
-│   ├── icons/                 Favicon + web icons
-│   ├── images/                In-app logo assets
-│   └── splash/                Android adaptive icon + splash screen
+│   ├── agent-icons/             24 agent portrait PNGs (6 teams × 4 agents)
+│   │   ├── financers/           accountant · adviser · auditor · investor
+│   │   ├── coders/              designer · programmer · debugger · executor
+│   │   ├── scientists/          theorist · experimenter · modeler · reporter
+│   │   ├── mega-minds/          scholar · analyst · synthesizer · editor
+│   │   ├── historians/          archivist · contextualist · cartographer · biographer
+│   │   └── creative/            strategist · creator · curator · narrator
+│   ├── icons/                   Favicon + web icons
+│   ├── images/                  In-app logo assets
+│   └── splash/                  Android adaptive icon + splash screen
+│
+├── backend/                     ◀ Python FastAPI backend (Railway)
+│   ├── main.py                  FastAPI app — /health + /orchestrate endpoints
+│   ├── models.py                Pydantic request/response models
+│   ├── orchestrator.py          LangGraph pipeline runner
+│   ├── query_analyzer.py        Query classification
+│   ├── prompt_builder.py        Prompt construction
+│   ├── providers.py             Provider HTTP clients
+│   └── requirements.txt
 │
 ├── plugins/
 │   └── withAndroidWindowBackground.js  Prevents white flash on cold launch
 │
 └── src/
-    ├── agents/                ◀ Core AI swarm engine (private implementation)
-    │   ├── orchestrator.js       Pipeline runner
-    │   ├── analysis/             Query classifier
-    │   ├── api/                  Provider HTTP clients + circuit-breaker + fallback
-    │   ├── memory/               SQLite on-device memory store
-    │   ├── offline/              Gemini Nano offline fallback
-    │   ├── progress/             Per-agent progress state tracker
-    │   ├── prompts/              Prompt builder + domain templates
-    │   ├── registry/             Agent registry + team metadata + persona instructions
-    │   ├── router/               Team router + model tier selector
-    │   ├── security/             keyGuard — single key-read gateway
-    │   ├── streaming/            SSE stream manager
-    │   ├── synthesis/            Synthesizer + quality judge + semantic dedup
-    │   ├── teams/                Dev Core, Coders, Scientists, Mega Minds, Historians, Creative Thinkers
-    │   ├── telemetry/            Session-local latency/token/error metrics
-    │   └── tools/                Tool registry + sandboxed JS code executor
+    ├── agents/                  ◀ Core AI swarm engine
+    │   ├── backendBridge.js         Primary entry point — backend first, local fallback
+    │   ├── orchestrator.js          Local pipeline runner (fallback engine)
+    │   ├── analysis/                Query classifier
+    │   ├── api/                     Provider HTTP clients + circuit-breaker + fallback
+    │   ├── memory/                  SQLite on-device memory store
+    │   ├── offline/                 Gemini Nano offline fallback
+    │   ├── progress/                Per-agent progress state tracker
+    │   ├── prompts/                 Prompt builder + domain templates
+    │   ├── registry/                Agent registry + team metadata + persona instructions
+    │   ├── router/                  Team router + model tier selector
+    │   ├── security/                keyGuard — single key-read gateway
+    │   ├── streaming/               SSE stream manager
+    │   ├── synthesis/               Synthesizer + quality judge + semantic dedup
+    │   ├── teams/                   6 built-in team definitions + teamRuntime + teamBlend
+    │   ├── telemetry/               Session-local latency/token/error metrics
+    │   ├── tools/                   Tool registry + sandboxed JS code executor
+    │   └── workshop/                Custom agent/team storage + registry + metadata generator
     │
     ├── components/
-    │   ├── agent/             AgentPanel, AgentBadge, AgentCoordinationTab
-    │   ├── chat/              ChatBubble, ChatMessageList, SyntaxCode
-    │   ├── input/             InputBar with agent-strip dots
-    │   ├── layout/            Header (glow/offline), SidebarDrawer
-    │   ├── math/              MathFormula (KaTeX via WebView)
-    │   ├── modals/            ConfirmDialog, SetupGuideModal
-    │   └── shared/            Icons, PasswordField, WelcomeLogo
+    │   ├── agent/               AgentPanel, AgentBadge, AgentCoordinationTab, AgentIcon
+    │   ├── chat/                ChatBubble, ChatMessageList, SyntaxCode, MarkdownText
+    │   ├── input/               InputBar — mic button, Live Talk button, agent-strip dots
+    │   ├── layout/              Header (glow/offline), SidebarDrawer
+    │   ├── math/                MathFormula (KaTeX via WebView)
+    │   ├── modals/              NeuralNetLiveTalk, ConfirmDialog, SetupGuideModal
+    │   ├── shared/              Icons (SVG), PasswordField, WelcomeLogo
+    │   └── workshop/            AgentBuilderPanel, TeamBuilderPanel, CustomAgentsLibrary
     │
     ├── config/
-    │   ├── appConfig.js       Agent defaults, provider models, user profile schema
-    │   ├── colors.config.js   Design token palette (agent accent colors, glows)
-    │   ├── apiLock.config.js  SecureStore key constants for API lock
-    │   └── agentPersona.config.js  Writer synthesis persona options
+    │   ├── appConfig.js             Agent defaults, provider models, user profile schema
+    │   ├── colors.config.js         Design token palette (agent accent colors, glows)
+    │   ├── apiLock.config.js        SecureStore key constants for API lock
+    │   ├── agentPersona.config.js   Writer synthesis persona options
+    │   └── agentIconOptions.js      Centralised 24-icon asset catalogue (for custom agents)
     │
     ├── database/
-    │   └── db.init.js         SQLite schema + all message CRUD operations
+    │   └── db.init.js               SQLite schema + all message CRUD operations
     │
     ├── hooks/
-    │   ├── useAgentExecution.hook.js   Send/stop/regenerate, agent state updates
-    │   ├── useAgentSockets.hook.js     Key load/save/verify, team selection, engine toggle
-    │   ├── useConversations.hook.js    Session index, message pagination, new/delete chat
-    │   ├── useSettings.hook.js         Settings modal, password manager, API lock, profile
-    │   └── useToast.hook.js            In-app toast: show/dismiss, swipe-to-dismiss, auto-dismiss
+    │   ├── useAgentExecution.hook.js    Send/stop/regenerate, agent state updates
+    │   ├── useAgentSockets.hook.js      Key load/save/verify, team selection, engine toggle
+    │   ├── useConversations.hook.js     Session index, message pagination, new/delete chat
+    │   ├── useLiveTalk.hook.js          Live Talk pipeline — STT → LLM → TTS + interrupt
+    │   ├── useSettings.hook.js          Settings modal, password manager, API lock, profile
+    │   └── useToast.hook.js             In-app toast: show/dismiss, swipe-to-dismiss
     │
     ├── screens/
+    │   ├── auth/MainApp.screen.jsx      Firebase Auth — email, Google, GitHub sign-in
     │   ├── chat/MainApp.screen.jsx      Composition root — wires all hooks and components
-    │   ├── splash/SplashScreen.screen.jsx  Animated custom splash over native launch screen
+    │   ├── splash/SplashScreen.screen.jsx  Animated custom splash
     │   └── settings/
     │       ├── SettingsModal.screen.jsx
-    │       ├── panels/                  Profile, AgentLibrary, ApiConfig, Privacy, About, Reset
+    │       ├── panels/                  Profile, AgentLibrary, AgentsWorkshop, ApiConfig, Privacy, About, Reset
     │       ├── auth/                    ApiLockGate, PasswordManager, RemoveLockBanner
     │       └── rows/                    AgentSocketRow
     │
+    ├── services/
+    │   └── auth.service.js          Firebase Auth service (lazy-loaded)
+    │
     ├── styles/
-    │   ├── app.styles.js        Master stylesheet (merges all sub-sheets)
-    │   └── *.styles.js          Layout, feedback, welcome, sidebar, settings, profile, socket
+    │   ├── app.styles.js            Master stylesheet
+    │   └── *.styles.js              Layout, feedback, welcome, sidebar, settings, profile, socket, auth
     │
     └── utils/
-        ├── agentLogic.utils.js      Backward-compatible facade for agents public API
-        ├── mathParser.utils.js      LaTeX / chemical formula detection and splitting
-        ├── responseGenerator.utils.js  Legacy direct API caller
-        └── responsive.utils.js      Dimension-based scale/spacing/fontScale helpers
+        ├── agentLogic.utils.js          Backward-compatible facade for agents public API
+        ├── mathParser.utils.js          LaTeX / chemical formula detection and splitting
+        ├── responseGenerator.utils.js   Legacy direct API caller
+        └── responsive.utils.js          Dimension-based scale/spacing/fontScale helpers
 ```
 
 ---
@@ -515,10 +741,11 @@ The **Writer agent** (Agent 4) supports five synthesis personas, selectable in S
 |-----------|---------|
 | `INTERNET` | API calls to all AI providers |
 | `VIBRATE` | Haptic feedback on send / toast |
+| `RECORD_AUDIO` | Mic input dictation + Live Talk STT |
 | `USE_BIOMETRIC` | Biometric gate for API Config Lock |
 | `USE_FINGERPRINT` | Fingerprint unlock for API Config Lock |
 
-Minimum SDK: **21 (Android 5.0)**  
+Minimum SDK: **21 (Android 5.0)**
 Target SDK: **34 (Android 14)**
 
 ---
@@ -543,7 +770,7 @@ MIT — see [`LICENSE.md`](LICENSE.md)
 
 ## Author
 
-**Noman Rafique**  
+**Noman Rafique**
 [nomanrafique.official01@gmail.com](mailto:nomanrafique.official01@gmail.com)
 
 ---
