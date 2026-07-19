@@ -36,6 +36,7 @@ import {
   replaceSessionMessages,
   deleteSessionMessages,
 } from '../database/db.init';
+import { clearSearchCache } from '../agents/search/webSearch';
 
 /**
  * useConversations
@@ -126,6 +127,9 @@ export default function useConversations({
     autoFocusedRef.current = false;
     setCurrentSessionId(null);
     setMessages([]);
+    // Clear the web-search cache so stale/null results from the previous
+    // session never carry over into the new one.
+    clearSearchCache();
   };
 
   // ── Delete specific conversation session ─────────────────────────────────

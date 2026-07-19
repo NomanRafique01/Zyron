@@ -9,8 +9,10 @@
  * - If both fail → return null (agents use own knowledge, silently).
  *
  * Result caching:
- * - Identical queries within the same session are cached to avoid repeated
- *   API calls when the user asks the same question twice.
+ * - Only SUCCESSFUL results are cached. Failed/null results are never stored
+ *   so a transient provider outage (e.g. missing API key) never permanently
+ *   poisons the cache for that query in the current session.
+ * - The cache is cleared on every new chat session via clearSearchCache().
  *
  * Performance guarantee:
  * - The 3-second hard timeout is enforced inside each provider.
@@ -67,9 +69,9 @@ export const runWebSearch = async (query) => {
   }
 
   // ── Both failed — agents use own knowledge ────────────────────────────────
-  // Cache null so a repeated query in the same session doesn't hit the network again.
+  // Do NOT cache null — a provider may recover (key added, quota reset) and the
+  // next message in the same session should retry rather than get a stale null.
   console.log('[WebSearch] Both providers failed — using model knowledge');
-  _cache.set(key, null);
   return null;
 };
 
