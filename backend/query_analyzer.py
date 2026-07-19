@@ -108,10 +108,21 @@ _WEB_SEARCH = re.compile(
     r"|2024|2025|2026|price|prices|cost|stock|crypto|bitcoin|ethereum|btc|eth"
     r"|exchange rate|weather|forecast|score|scores|result|results|standings"
     r"|match|game|news|update|updates|trending|viral|who won|who is winning"
-    r"|released|available now|out now|just dropped)\b",
+    r"|released|available now|out now|just dropped"
+    # Current-events and position/title queries
+    r"|who is|who are|who's"
+    r"|president|prime minister|ceo|leader|governor|chancellor|secretary of state"
+    r"|elected|in office|ruling|in power|won the election|latest news"
+    r"|as of|nowadays|currently|right now|at the moment"
+    r"|current (president|prime minister|ceo|leader|governor|chancellor|secretary)"
+    r"|new (president|prime minister|ceo|leader|governor|chancellor|secretary)"
+    r")\b",
     re.IGNORECASE,
 )
 
+# NOTE: _FILLER_WORDS must NEVER include meaningful search terms such as
+# "current", "president", "who is", "new", "now", or any positional title.
+# Only remove true conversational filler/slang that carries zero search signal.
 _FILLER_WORDS = re.compile(
     r"\b(bro|man|dude|yo|hey|like|um|uh|just|rn|lol|omg|wtf|tbh|ngl)\b",
     re.IGNORECASE,

@@ -3,9 +3,11 @@ import { getActiveTeam } from '../teams/teamRuntime';
 
 // ─── Pattern bank ─────────────────────────────────────────────────────────────
 const PATTERNS = {
-  // Signals the query needs real-time web data to answer well
+  // Signals the query needs real-time web data to answer well.
+  // IMPORTANT: never add terms like "current", "president", "who is", "new", or
+  // any positional title to the filler-word list — they are critical search signal.
   webSearch:
-    /\b(latest|current|today|tonight|this week|this month|right now|just released|just launched|recently|new release|breaking|live|now|2024|2025|2026|price|prices|cost|stock|crypto|bitcoin|ethereum|btc|eth|exchange rate|weather|forecast|score|scores|result|results|standings|match|game|news|update|updates|trending|viral|who won|who is winning|released|available now|out now|just dropped)\b/i,
+    /\b(latest|current|today|tonight|this week|this month|right now|just released|just launched|recently|new release|breaking|live|now|2024|2025|2026|price|prices|cost|stock|crypto|bitcoin|ethereum|btc|eth|exchange rate|weather|forecast|score|scores|result|results|standings|match|game|news|update|updates|trending|viral|who won|who is winning|released|available now|out now|just dropped|who is|who are|who's|president|prime minister|ceo|leader|governor|chancellor|secretary of state|elected|in office|ruling|in power|won the election|latest news|as of|nowadays|currently|at the moment|current president|current prime minister|current ceo|current leader|current governor|new president|new prime minister|new ceo|new leader|new governor)\b/i,
 
   agentsMeta:
     /how (does|do) (zyron|you|the swarm|this) work|what (did )?(each )?agent (do|say|contribute)|show .*(collaboration|contribution|process)|your architecture|multi.?agent|swarm (system|pipeline|mode)|explain.*agents/i,
@@ -156,6 +158,8 @@ export const analyzeQuery = (userText = '') => {
   const needsWebSearch = PATTERNS.webSearch.test(lower);
   // Produce a clean, optimized search query from the raw text:
   // strip filler words and slang so the search engine gets a precise query.
+  // Strip only true conversational filler/slang — never remove meaningful search
+  // terms such as "current", "president", "who is", "new", or any positional title.
   const webSearchQuery = needsWebSearch
     ? text
         .replace(/\b(bro|man|dude|yo|hey|like|um|uh|just|rn|lol|omg|wtf|tbh|ngl)\b/gi, '')
