@@ -4,6 +4,7 @@ import C from '../../config/colors.config';
 import { getAgentMeta } from '../../agents/registry/agentRegistry';
 import { COORDINATION_MODES } from '../../agents/registry/teamMetadata';
 import { getActiveTeam } from '../../agents/teams/teamRuntime';
+import AgentIcon from './AgentIcon.component';
 
 const getAgentUiConfig = (role, team = getActiveTeam()) => {
   const meta = getAgentMeta(role);
@@ -48,11 +49,16 @@ function AgentRow({ agent, index, activeTeam }) {
   const pulseAnim = useRef(new Animated.Value(0.6)).current;
   // Shimmer for progress bar
   const shimmerAnim = useRef(new Animated.Value(0)).current;
-  // Icon pop/spring on completion — starts at 1, springs to 1.18 then settles back
-  const iconScaleAnim = useRef(new Animated.Value(1)).current;
+  // Continuous glow border opacity loop on completion
+  const glowBorderAnim = useRef(new Animated.Value(0)).current;
 
-  // Entry animation with staggered delay
+  // Entry animation — run only once on initial mount.
+  // Using refs ensures the slide-in never re-fires when the parent re-renders
+  // with updated progress data during text generation.
+  const hasAnimatedEntry = useRef(false);
   useEffect(() => {
+    if (hasAnimatedEntry.current) return;
+    hasAnimatedEntry.current = true;
     Animated.parallel([
       Animated.timing(slideAnim, {
         toValue: 0,
@@ -106,25 +112,29 @@ function AgentRow({ agent, index, activeTeam }) {
     }
   }, [isActive, isDone]);
 
-  // Icon pop spring when agent transitions to done
+  // Continuous glow border loop — starts when done, loops indefinitely
   useEffect(() => {
     if (isDone) {
-      Animated.sequence([
-        Animated.spring(iconScaleAnim, {
-          toValue: 1.28,
-          speed: 40,
-          bounciness: 18,
-          useNativeDriver: true,
-        }),
-        Animated.spring(iconScaleAnim, {
-          toValue: 1,
-          speed: 22,
-          bounciness: 6,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      const loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowBorderAnim, {
+            toValue: 1,
+            duration: 700,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+          Animated.timing(glowBorderAnim, {
+            toValue: 0.25,
+            duration: 700,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      loop.start();
+      return () => loop.stop();
     } else {
-      iconScaleAnim.setValue(1);
+      glowBorderAnim.setValue(0);
     }
   }, [isDone]);
 
@@ -179,41 +189,42 @@ function AgentRow({ agent, index, activeTeam }) {
     >
       {/* Left: Agent Icon + Name + Model */}
       <View style={s.agentInfo}>
-        <Animated.View
-          style={[
-            s.agentIconWrap,
-            {
-              backgroundColor: isDone
-                ? config.accentGlow
-                : isExhausted
-                ? 'rgba(251, 191, 36, 0.15)'
-                : isError
-                ? 'rgba(249, 115, 22, 0.15)'
-                : isActive
-                ? config.accentDim
-                : 'rgba(255,255,255,0.03)',
-              borderWidth: isDone ? 1 : 0,
-              borderColor: isDone ? config.accent : 'transparent',
-              shadowColor: isDone ? config.accent : 'transparent',
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: isDone ? 0.8 : 0,
-              shadowRadius: isDone ? 8 : 0,
-              elevation: isDone ? 6 : 0,
-              transform: [{ scale: iconScaleAnim }],
-            },
-          ]}
-        >
-          <Animated.Text
+        {/* Icon with continuous glow border on completion */}
+        <View style={s.agentIconGlowContainer}>
+          <Animated.View
             style={[
-              s.agentIcon,
+              s.agentIconWrap,
               {
-                opacity: isActive ? pulseAnim : 1,
+                backgroundColor: isDone
+                  ? config.accentGlow
+                  : isExhausted
+                  ? 'rgba(251, 191, 36, 0.15)'
+                  : isError
+                  ? 'rgba(249, 115, 22, 0.15)'
+                  : isActive
+                  ? config.accentDim
+                  : 'rgba(255,255,255,0.03)',
               },
             ]}
           >
-            {config.icon}
-          </Animated.Text>
-        </Animated.View>
+            <Animated.View style={{ opacity: isActive ? pulseAnim : 1 }}>
+              <AgentIcon icon={config.icon} size={12} />
+            </Animated.View>
+          </Animated.View>
+          {/* Thin glow border — only visible when done, loops continuously */}
+          {isDone && (
+            <Animated.View
+              style={[
+                s.agentIconGlowRing,
+                {
+                  borderColor: config.accent,
+                  opacity: glowBorderAnim,
+                },
+              ]}
+              pointerEvents="none"
+            />
+          )}
+        </View>
         <View style={s.agentMeta}>
           <Text
             style={[
@@ -363,6 +374,12 @@ function TokenRow({ tokenUsage }) {
 // ─── Main Agent Coordination Table ─────────────────
 export default function AgentCoordinationTable({ agents, isTyping, coordinationMode = COORDINATION_MODES.FULL, tokenUsage }) {
   const containerAnim = useRef(new Animated.Value(0)).current;
+  // Animated overall progress bar — avoids inline width string changes causing
+  // layout reflow (and visible height jitter) on every progress tick.
+  const overallProgressAnim = useRef(new Animated.Value(0)).current;
+  // maxHeight animation — collapses physical space during exit so the panel
+  // never overlaps an in-bubble AgentPanel while fading out.
+  const maxHeightAnim = useRef(new Animated.Value(400)).current;
 
   const [prevShow, setPrevShow] = useState(false);
   // mounted stays true until the exit animation finishes so the panel
@@ -390,6 +407,7 @@ export default function AgentCoordinationTable({ agents, isTyping, coordinationM
         // run is never shown during this run's fadeout.
         lastAgentsRef.current = agents && agents.length > 0 ? agents : [];
         lastTokenUsageRef.current = null;
+        maxHeightAnim.setValue(400);
         setMounted(true);
         Animated.timing(containerAnim, {
           toValue: 1,
@@ -398,15 +416,45 @@ export default function AgentCoordinationTable({ agents, isTyping, coordinationM
           useNativeDriver: false,
         }).start();
       } else {
-        Animated.timing(containerAnim, {
-          toValue: 0,
-          duration: 350,
-          easing: Easing.in(Easing.cubic),
-          useNativeDriver: false,
-        }).start(() => setMounted(false));
+        // Animate both opacity and maxHeight to 0 simultaneously so the panel
+        // physically collapses and never holds space alongside the in-bubble
+        // AgentPanel (prevents the layout-expansion jump on backend responses).
+        Animated.parallel([
+          Animated.timing(containerAnim, {
+            toValue: 0,
+            duration: 280,
+            easing: Easing.in(Easing.cubic),
+            useNativeDriver: false,
+          }),
+          Animated.timing(maxHeightAnim, {
+            toValue: 0,
+            duration: 280,
+            easing: Easing.in(Easing.cubic),
+            useNativeDriver: false,
+          }),
+        ]).start(() => setMounted(false));
       }
     }
   }, [showAny, prevShow]);
+
+  // Compute overall progress unconditionally (before any early return) so
+  // the useEffect below always runs — hooks must not be called after a return.
+  const overallAgents = (agents && agents.length > 0) ? agents : lastAgentsRef.current;
+  const overallTotal = overallAgents.length || 1;
+  const overallProgress = Math.round(
+    overallAgents.reduce((sum, a) => sum + (a.progress || 0), 0) / overallTotal
+  );
+
+  // Animate the overall progress bar width on every tick — keeps the bar
+  // smooth and avoids the layout-triggering string-width style change.
+  useEffect(() => {
+    Animated.timing(overallProgressAnim, {
+      toValue: overallProgress,
+      duration: 500,
+      easing: Easing.out(Easing.quad),
+      useNativeDriver: false,
+    }).start();
+  }, [overallProgress]);
 
   if (!mounted && !showAny) return null;
 
@@ -423,10 +471,15 @@ export default function AgentCoordinationTable({ agents, isTyping, coordinationM
   const allDone = doneCount + errorCount + exhaustedCount === total;
   const activeTeam = getActiveTeam();
 
-  // Overall pipeline progress
+  // Overall pipeline progress (same value — re-computed for render clarity)
   const totalProgress = Math.round(
     renderAgents.reduce((sum, a) => sum + (a.progress || 0), 0) / total
   );
+
+  const overallProgressWidth = overallProgressAnim.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['0%', '100%'],
+  });
 
   const containerOpacity = containerAnim.interpolate({
     inputRange: [0, 1],
@@ -435,14 +488,14 @@ export default function AgentCoordinationTable({ agents, isTyping, coordinationM
 
   if (showCompact && !showFull) {
     return (
-      <Animated.View style={[s.compactContainer, { opacity: containerOpacity }]}>
+      <Animated.View style={[s.compactContainer, { opacity: containerOpacity, maxHeight: maxHeightAnim, overflow: 'hidden' }]}>
         <CompactCoordinationBar agents={renderAgents} totalProgress={totalProgress} activeTeam={activeTeam} />
       </Animated.View>
     );
   }
 
   return (
-    <Animated.View style={[s.container, { opacity: containerOpacity }]}>
+    <Animated.View style={[s.container, { opacity: containerOpacity, maxHeight: maxHeightAnim }]}>
       <View style={s.tableHeader}>
         <View style={s.headerLeft}>
           <View style={s.headerIconWrap}>
@@ -475,11 +528,11 @@ export default function AgentCoordinationTable({ agents, isTyping, coordinationM
 
       {/* Overall Progress Bar */}
       <View style={s.overallTrack}>
-        <View
+        <Animated.View
           style={[
             s.overallFill,
             {
-              width: `${totalProgress}%`,
+              width: overallProgressWidth,
               backgroundColor: allDone ? C.green : C.purple,
             },
           ]}
@@ -666,12 +719,28 @@ const s = StyleSheet.create({
     width: 100,
     gap: 8,
   },
+  // Container that positions the glow ring over the icon
+  agentIconGlowContainer: {
+    width: 26,
+    height: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   agentIconWrap: {
     width: 26,
     height: 26,
     borderRadius: 7,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Glow ring — same size as the icon wrap, absolutely centred
+  agentIconGlowRing: {
+    position: 'absolute',
+    width: 26,
+    height: 26,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   agentIcon: {
     fontSize: 12,

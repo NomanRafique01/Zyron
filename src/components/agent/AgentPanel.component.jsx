@@ -1,8 +1,9 @@
 import React, { useRef, useEffect } from 'react';
-import { StyleSheet, Text, View, Animated } from 'react-native';
+import { StyleSheet, Text, View, Animated, Easing } from 'react-native';
 import C from '../../config/colors.config';
 import { getTeamById } from '../../agents/teams';
 import { getActiveTeam } from '../../agents/teams/teamRuntime';
+import AgentIcon from './AgentIcon.component';
 
 const AGENT_CONFIGS = {
   reasoner: { icon: '🧠', color: C.agentReasoner, bg: 'rgba(167, 139, 250, 0.12)' },
@@ -84,8 +85,8 @@ function AgentRow({ role, name, model, progress, status, statusColor, variant = 
   const isFailed = status === 'error' || status === 'exhausted';
   const isActive = !isDone && !isFailed && status !== 'queued';
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  // Icon spring pop on completion — mirrors AgentCoordinationTab
-  const iconScaleAnim = useRef(new Animated.Value(1)).current;
+  // Continuous glow border opacity loop on completion
+  const glowBorderAnim = useRef(new Animated.Value(0)).current;
   const displayStatus = variant === 'summary'
     ? (SUMMARY_STATUS_LABELS[status] || String(status || '').toUpperCase())
     : status;
@@ -113,60 +114,77 @@ function AgentRow({ role, name, model, progress, status, statusColor, variant = 
     }
   }, [isActive]);
 
-  // Icon pop spring when agent transitions to done
+  // Continuous glow border loop — starts when done, loops indefinitely
   useEffect(() => {
     if (isDone) {
-      Animated.sequence([
-        Animated.spring(iconScaleAnim, {
-          toValue: 1.28,
-          speed: 40,
-          bounciness: 18,
-          useNativeDriver: true,
-        }),
-        Animated.spring(iconScaleAnim, {
-          toValue: 1,
-          speed: 22,
-          bounciness: 6,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      const loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowBorderAnim, {
+            toValue: 1,
+            duration: 700,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+          Animated.timing(glowBorderAnim, {
+            toValue: 0.25,
+            duration: 700,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      loop.start();
+      return () => loop.stop();
     } else {
-      iconScaleAnim.setValue(1);
+      glowBorderAnim.setValue(0);
     }
   }, [isDone]);
 
   return (
     <View style={s.agentRow}>
-      <Animated.View
-        style={[
-          s.agentIconWrap,
-          {
-            backgroundColor: isDone
-              ? 'rgba(110, 231, 183, 0.12)'
-              : isFailed
-              ? status === 'exhausted'
-                ? 'rgba(251, 191, 36, 0.12)'
-                : 'rgba(249, 115, 22, 0.12)'
-              : isActive
-              ? config.bg
-              : 'rgba(255, 255, 255, 0.03)',
-            opacity: isActive ? pulseAnim : 1,
-            borderWidth: isDone || isActive || isFailed ? 1 : 0,
-            borderColor: isDone
-              ? C.green
-              : isFailed
-              ? status === 'exhausted'
-                ? C.amber
-                : C.orange
-              : isActive
-              ? config.color
-              : 'transparent',
-            transform: [{ scale: iconScaleAnim }],
-          },
-        ]}
-      >
-        <Text style={s.agentIcon}>{config.icon}</Text>
-      </Animated.View>
+      {/* Icon with continuous glow border on completion */}
+      <View style={s.agentIconGlowContainer}>
+        <Animated.View
+          style={[
+            s.agentIconWrap,
+            {
+              backgroundColor: isDone
+                ? 'rgba(110, 231, 183, 0.12)'
+                : isFailed
+                ? status === 'exhausted'
+                  ? 'rgba(251, 191, 36, 0.12)'
+                  : 'rgba(249, 115, 22, 0.12)'
+                : isActive
+                ? config.bg
+                : 'rgba(255, 255, 255, 0.03)',
+              opacity: isActive ? pulseAnim : 1,
+              borderWidth: isActive || isFailed ? 1 : 0,
+              borderColor: isFailed
+                ? status === 'exhausted'
+                  ? C.amber
+                  : C.orange
+                : isActive
+                ? config.color
+                : 'transparent',
+            },
+          ]}
+        >
+          <AgentIcon icon={config.icon} size={10} />
+        </Animated.View>
+        {/* Thin glow border — only visible when done, loops continuously */}
+        {isDone && (
+          <Animated.View
+            style={[
+              s.agentIconGlowRing,
+              {
+                borderColor: C.green,
+                opacity: glowBorderAnim,
+              },
+            ]}
+            pointerEvents="none"
+          />
+        )}
+      </View>
 
       <View style={s.agentMeta}>
         <Text style={s.agentName}>{name}</Text>
@@ -281,12 +299,26 @@ const s = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  agentIconGlowContainer: {
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   agentIconWrap: {
     width: 20,
     height: 20,
     borderRadius: 5,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  agentIconGlowRing: {
+    position: 'absolute',
+    width: 20,
+    height: 20,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: 'transparent',
   },
   agentIcon: {
     fontSize: 10,
