@@ -459,7 +459,7 @@ export default function useAgentExecution({
         runAgentSimulation(userMsg.text, listWithoutResponse, sessionId, documentContext);
       });
     });
-  }, [isTyping, messages, agentConfigs, teamRoleInfo]);
+  }, [isTyping, messages, agentConfigs, teamRoleInfo, documentContext]);
 
   return {
     isTyping,

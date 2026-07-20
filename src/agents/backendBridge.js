@@ -211,6 +211,7 @@ export const runOrchestration = async (
         _searchResults = await runWebSearch(_analysis.webSearchQuery).catch(() => null);
       }
 
+      console.log('[BackendBridge] documentContext being sent:', documentContext != null, 'chars:', documentContext?.text?.length ?? 0);
       const _t0 = Date.now();
       const response = await fetch(`${BACKEND_URL}/orchestrate`, {
         method: 'POST',
