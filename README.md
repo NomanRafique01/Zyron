@@ -123,9 +123,11 @@ Zyron uses a **dual-engine architecture** — a Railway-hosted Python FastAPI ba
 
 ### What the backend does
 - **Python FastAPI** on Railway (`https://zyron-production-7af1.up.railway.app`)
-- `POST /orchestrate` — accepts `{ query, agentConfigs, team, persona, userProfile }`
+- `POST /orchestrate` — accepts `{ query, agentConfigs, team, persona, userProfile, searchResults, documentContext }`
 - Runs three specialist agents in parallel via `LangGraph` then synthesizes via the writer agent
-- Returns structured `{ finalAnswer, agents[], coordinationMode }` JSON
+- Returns structured `{ text, agents[], tokenUsage, meta }` JSON
+- `POST /extract-document` — accepts a base64-encoded file (PDF, DOCX, TXT) and returns extracted plain text for prompt injection
+- **Web search** — `web_search.py` fires a Tavily → Serper fallback search before the pipeline executes; `key_facts` from raw results (up to 5) are injected into every specialist prompt; returns `None` silently when both providers fail
 
 ### Fallback guarantee
 - Timeout is **30 seconds**. If the backend doesn't respond in time, the local engine starts immediately — no error is ever shown to the user
@@ -333,7 +335,7 @@ A full-stack overview of every layer Zyron is built on — from the on-device UI
 | **react-native-keyboard-controller** | — | Cross-platform keyboard layout tracking |
 | **react-native-safe-area-context** | — | Edge-to-edge safe area insets |
 | **@react-native-async-storage** | — | User profile, team selection, custom agents + teams |
-| **@react-native-community/netinfo** | — | Offline detection → Gemini Nano fallback trigger |
+| **@react-native-community/netinfo** | — | Offline detection |
 
 ### Backend — Python / FastAPI / LangGraph
 
@@ -354,7 +356,7 @@ A full-stack overview of every layer Zyron is built on — from the on-device UI
 | **OpenRouter** | `nvidia/nemotron-3-super-120b-a12b:free` + 100+ | Default free-tier agent socket |
 | **OpenAI** | `gpt-4o-mini`, `gpt-4o`, o-series | General reasoning and synthesis |
 | **Anthropic** | `claude-3-5-haiku-latest`, `claude-3-5-sonnet` | High-quality analysis and writing |
-| **Google Gemini** | `gemini-2.5-flash`, `gemini-pro` | STEM, multimodal, offline fallback (Nano) |
+| **Google Gemini** | `gemini-2.5-flash`, `gemini-pro` | STEM, multimodal |
 | **Groq** | `llama-3.3-70b-versatile` | Ultra-low-latency inference for Live Talk |
 | **Mistral** | `mistral-small-latest` | Writer / synthesis agent default |
 | **DeepSeek** | `deepseek-chat`, `deepseek-reasoner` | Extended chain-of-thought reasoning |
@@ -420,6 +422,31 @@ The input bar now includes a **microphone button** alongside the text field. Tap
 - **Per-agent streaming state** — each agent has its own progress bar and status label (Thinking / Building / Stress-testing / Documenting / etc.)
 - **Graceful abort** — stop mid-generation, cancels cleanly across all active sockets
 
+### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><circle cx="11" cy="11" r="7" stroke="#7B2FFF" stroke-width="1.8"/><path d="M16.5 16.5L21 21" stroke="#7B2FFF" stroke-width="2" stroke-linecap="round"/><path d="M8 11h6M11 8v6" stroke="#7B2FFF" stroke-width="1.6" stroke-linecap="round"/></svg> Web Search *(New)*
+Zyron enriches every query with live web results before the agent pipeline runs — no manual "search mode" toggle required.
+
+**Pipeline:**
+```
+User query
+     │
+     ▼
+Web Search (Tavily → Serper fallback, 3 s timeout)
+     │  key_facts[] + sources[]
+     ▼
+Injected into all specialist agent prompts
+     │
+     ▼
+LangGraph multi-agent pipeline runs with grounded context
+```
+
+- **Dual-provider fallback** — Tavily is the primary search provider; if it fails or is unconfigured, Serper is tried automatically
+- **Silent degradation** — if both providers return nothing, agents proceed using their own knowledge without any error shown
+- **Grounded facts** — up to 5 distilled `key_facts` extracted from raw search content (Tavily's auto-answer is intentionally ignored for accuracy) are injected into every specialist prompt
+- **Source attribution** — `title`, `url`, and `snippet` for each result are available alongside the facts
+- **Session-level caching** — duplicate queries within the same session reuse the cached result; cache is cleared on new chat
+- **3-second hard timeout** per provider — web search never blocks the pipeline for more than ~6 s total
+- **Both engines supported** — runs on the Railway backend (`web_search.py`) and on the local JS fallback engine (`src/agents/search/`)
+
 ### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M12 3l7 3v5c0 4.6-2.9 8.5-7 10-4.1-1.5-7-5.4-7-10V6l7-3z" stroke="#7B2FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 12l2 2 4-5" stroke="#7B2FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Resilient API Layer
 - **Circuit breaker** — per-provider failure tracking; tripped circuits skip that socket for the current session
 - **Fallback chains** — automatic failover to the next provider on timeout or error
@@ -451,7 +478,6 @@ Custom teams are bootstrapped async at app start then cached. All existing consu
 ### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><rect x="2" y="6" width="20" height="12" rx="2" stroke="#7B2FFF" stroke-width="1.8"/><path d="M6 10h.01M6 14h.01" stroke="#7B2FFF" stroke-width="2" stroke-linecap="round"/><path d="M10 10h8M10 14h6" stroke="#7B2FFF" stroke-width="1.6" stroke-linecap="round"/></svg> On-Device Memory
 - **SQLite persistence** — full conversation history with session index and message pagination
 - **User memory** — contextual facts extracted from conversations and injected into future prompts
-- **Offline fallback** — Gemini Nano on-device inference for queries when all network providers are unreachable
 
 ### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M12 3l7 3v5c0 4.6-2.9 8.5-7 10-4.1-1.5-7-5.4-7-10V6l7-3z" stroke="#7B2FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Security
 - **Android Keystore-backed storage** — API keys stored in `EncryptedSharedPreferences` via `expo-secure-store`; never in `AsyncStorage` or any JS bundle string
@@ -514,111 +540,35 @@ User attaches file / image
 - **API Config panel** — per-provider key entry, model selection, key status verification, share-key-across-agents toggle
 - **Privacy panel** — privacy mode, profile context injection toggle
 - **Reset panel** — wipe conversation history, clear API keys, full factory reset
+---
+
+## App in Action
+
+<div align="center">
+  <video src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/demo/demo.mp4" controls autoplay muted loop width="100%"></video>
+</div>
 
 ---
 
-## How to Use
+## Screenshots
 
-### Step 1 — Add Your API Keys
-
-1. Tap the **Settings** icon (top-right of the chat screen)
-2. Navigate to **API Config**
-3. For each agent socket (Agent 1 – 4), select a provider from the dropdown and paste your API key
-4. Tap **Verify** to confirm the key is live — a green status indicator means it's ready
-5. Enable **Share key across agents** if you want all four sockets to use the same key
-
-> You only need one working key to start. Zyron will use it across all agents until you configure individual keys.
-
----
-
-### Step 2 — Choose a Team
-
-1. In **Settings → Agent Library**, browse the six specialist teams:
-   `Financers · Coders · Scientists · Mega Minds · Historians · Creative Thinkers`
-2. Tap a team to preview its four agents and their roles
-3. Tap **Set as Active Team** to activate it for your next query
-
-The active team is shown in the header.
+<div align="center">
+  <table>
+    <tr>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/screenshots/s1.png" width="100%" alt="Screenshot 1"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/screenshots/s2.png" width="100%" alt="Screenshot 2"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/screenshots/s3.png" width="100%" alt="Screenshot 3"/></td>
+    </tr>
+    <tr>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/screenshots/s4.png" width="100%" alt="Screenshot 4"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/screenshots/s5.png" width="100%" alt="Screenshot 5"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/screenshots/s6.png" width="100%" alt="Screenshot 6"/></td>
+    </tr>
+  </table>
+</div>
 
 ---
 
-### Step 3 — Send a Query
-
-1. Type your question in the input bar, or tap the **Mic** button to dictate
-2. Tap **Send** (or press Enter)
-3. Watch the four agent progress bars appear — each agent streams its output in real time
-4. The final fused response appears in the chat bubble when Agent 4 completes
-
-To **stop** a generation mid-stream, tap the **Stop** button.
-
----
-
-### Step 4 — Use Live Talk
-
-1. Tap the **Live** button in the input bar (right side)
-2. The neural-network animation opens — tap the center to start listening
-3. Speak your question — partial transcript shows in real time
-4. After a 1.5 s pause Zyron thinks, then speaks the answer back to you
-5. Keep talking for follow-up questions — the mic stays open continuously
-6. Tap **Interrupt** to stop Zyron mid-sentence, or tap **X** to close the session
-
----
-
-### Step 5 — Build a Custom Team
-
-1. Go to **Settings → Agents Workshop**
-2. Switch to the **Agents** tab — create your custom agent personas with icons, traits, and strength sliders
-3. Switch to the **Teams** tab — assign your agents to the four role slots
-4. Give the team a name and icon, then tap **Create Team**
-5. Your team now appears in Agent Library alongside the built-in teams
-
----
-
-### Step 6 — Customize Synthesis Persona
-
-1. Open **Settings → Profile**
-2. Under **Writer Persona**, pick one of five modes:
-
-   | Persona | When to use |
-   |---------|-------------|
-   | **Balanced** | Everyday queries |
-   | **Precise** | Technical / factual answers needing exact numbers |
-   | **Educator** | Learning new concepts step-by-step |
-   | **Creative** | Brainstorming, copywriting, storytelling |
-   | **Executive** | Quick decisions — TL;DR + action item |
-
----
-
-### Step 7 — Manage Conversations
-
-| Action | How |
-|--------|-----|
-| **New chat** | Tap **＋** in the top-left sidebar |
-| **Switch session** | Slide open the left drawer and tap any past conversation |
-| **Delete session** | Long-press a session in the sidebar → Delete |
-| **Search history** | Use the search bar at the top of the sidebar |
-
----
-
-### Step 8 — Lock API Settings (Optional)
-
-If other people use your device, enable **API Config Lock** in **Settings → Privacy**:
-
-1. Set a PIN or use biometric authentication
-2. Once enabled, the **API Config** panel requires authentication before it can be opened
-3. To remove the lock, authenticate and tap **Remove Lock**
-
----
-
-### Tips
-
-- **Offline?** Zyron falls back to on-device **Gemini Nano** automatically when all network providers are unreachable
-- **Wrong team for your query?** The router will suggest a better-suited team — look for the suggestion banner below your response
-- **Regenerate** a response by long-pressing the assistant bubble → **Regenerate**
-- **Copy code** from any code block by tapping the copy icon in the top-right of the block
-- **Backend unavailable?** Zyron silently switches to its local engine — same quality, no interruption
-
----
 
 ## Supported AI Providers
 
@@ -657,7 +607,7 @@ React Native 0.81.5 + Expo SDK 54
 ├── react-native-keyboard-controller  Cross-platform keyboard layout tracking
 ├── react-native-safe-area-context    Edge-to-edge safe area handling
 ├── @react-native-async-storage       User profile, team selection, custom teams/agents
-├── @react-native-community/netinfo   Offline detection → Gemini Nano fallback
+├── @react-native-community/netinfo   Offline detection
 └── katex 0.17                     LaTeX math typesetting
 ```
 
@@ -689,11 +639,15 @@ Zyron/
 │   └── splash/                  Android adaptive icon + splash screen
 │
 ├── backend/                     ◀ Python FastAPI backend (Railway)
-│   ├── main.py                  FastAPI app — /health + /orchestrate endpoints
+│   ├── main.py                  FastAPI app — /health + /orchestrate + /extract-document endpoints
 │   ├── models.py                Pydantic request/response models
-│   ├── orchestrator.py          LangGraph pipeline runner
+│   ├── orchestrator.py          Backwards-compat shim → re-exports from orchestrator/ package
+│   ├── orchestrator/            LangGraph pipeline package (_state, _utils, _nodes, _graph, _pipeline)
+│   ├── web_search.py            Web search — Tavily → Serper fallback; injects key_facts into agent prompts
+│   ├── document_extractor.py    Base64 file → plain text (PDF via pdfminer.six, DOCX via python-docx, TXT)
 │   ├── query_analyzer.py        Query classification
-│   ├── prompt_builder.py        Prompt construction
+│   ├── prompt_builder.py        Backwards-compat shim → prompt_builder/ package
+│   ├── prompt_builder/          Prompt construction package (_specialist, _writer, _templates, _style, _user_profile)
 │   ├── providers.py             Provider HTTP clients
 │   └── requirements.txt
 │
@@ -707,11 +661,12 @@ Zyron/
     │   ├── analysis/                Query classifier
     │   ├── api/                     Provider HTTP clients + circuit-breaker + fallback
     │   ├── memory/                  SQLite on-device memory store
-    │   ├── offline/                 Gemini Nano offline fallback
+    │   ├── offline/                 On-device offline inference fallback
     │   ├── progress/                Per-agent progress state tracker
     │   ├── prompts/                 Prompt builder + domain templates
     │   ├── registry/                Agent registry + team metadata + persona instructions
     │   ├── router/                  Team router + model tier selector
+    │   ├── search/                  Web search — Tavily → Serper fallback (webSearch.js, searchProviders.js, searchResultFormatter.js)
     │   ├── security/                keyGuard — single key-read gateway
     │   ├── streaming/               SSE stream manager
     │   ├── synthesis/               Synthesizer + quality judge + semantic dedup
