@@ -18,6 +18,18 @@
 ![Status](https://img.shields.io/badge/status-Active%20Dev-F97316?style=flat-square)
 ![SDK](https://img.shields.io/badge/min%20SDK-21-A78BFA?style=flat-square)
 
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?style=flat-square&logo=fastapi&logoColor=white)
+![LangGraph](https://img.shields.io/badge/LangGraph-multi--agent-1C3C3C?style=flat-square&logo=langchain&logoColor=white)
+![LangChain](https://img.shields.io/badge/LangChain-orchestration-1C3C3C?style=flat-square&logo=langchain&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-on--device-003B57?style=flat-square&logo=sqlite&logoColor=white)
+![Railway](https://img.shields.io/badge/Railway-backend-0B0D0E?style=flat-square&logo=railway&logoColor=white)
+![KaTeX](https://img.shields.io/badge/KaTeX-LaTeX%20rendering-008080?style=flat-square)
+![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o-412991?style=flat-square&logo=openai&logoColor=white)
+![Anthropic](https://img.shields.io/badge/Anthropic-Claude-D97757?style=flat-square)
+![Gemini](https://img.shields.io/badge/Google-Gemini-4285F4?style=flat-square&logo=google&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq-ultra--low%20latency-F55036?style=flat-square)
+
 </div>
 
 ---
@@ -32,7 +44,7 @@ Unlike standard AI apps where one model does everything, Zyron assigns each agen
 
 ---
 <div align="center">
-  <img src="assets/images/banner.png" alt="Zyron Banner" width="100%"/>
+  <img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/images/banner.png" alt="Zyron Banner" width="100%"/>
 </div>
 
 ---
@@ -137,10 +149,10 @@ Thoughtful knowledge and research team for concepts, analysis, and learning.
 <th align="center">Agent 4 — Editor</th>
 </tr>
 <tr>
-<td align="center"><img src="assets/agent-icons/mega-minds/scholar.png" width="64" height="64"/><br><b>Scholar</b></td>
-<td align="center"><img src="assets/agent-icons/mega-minds/analyst.png" width="64" height="64"/><br><b>Analyst</b></td>
-<td align="center"><img src="assets/agent-icons/mega-minds/synthesizer.png" width="64" height="64"/><br><b>Synthesizer</b></td>
-<td align="center"><img src="assets/agent-icons/mega-minds/editor.png" width="64" height="64"/><br><b>Editor</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/mega-minds/scholar.png" width="64" height="64"/><br><b>Scholar</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/mega-minds/analyst.png" width="64" height="64"/><br><b>Analyst</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/mega-minds/synthesizer.png" width="64" height="64"/><br><b>Synthesizer</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/mega-minds/editor.png" width="64" height="64"/><br><b>Editor</b></td>
 </tr>
 <tr>
 <td>First-principles derivation, honest confidence levels (established vs. debated), counterarguments, hidden assumptions</td>
@@ -165,10 +177,10 @@ Practical coding team for features, refactors, algorithms, and debugging.
 <th align="center">Agent 4 — Executor</th>
 </tr>
 <tr>
-<td align="center"><img src="assets/agent-icons/coders/designer.png" width="64" height="64"/><br><b>Designer</b></td>
-<td align="center"><img src="assets/agent-icons/coders/programmer.png" width="64" height="64"/><br><b>Programmer</b></td>
-<td align="center"><img src="assets/agent-icons/coders/debugger.png" width="64" height="64"/><br><b>Debugger</b></td>
-<td align="center"><img src="assets/agent-icons/coders/executor.png" width="64" height="64"/><br><b>Executor</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/coders/designer.png" width="64" height="64"/><br><b>Designer</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/coders/programmer.png" width="64" height="64"/><br><b>Programmer</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/coders/debugger.png" width="64" height="64"/><br><b>Debugger</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/coders/executor.png" width="64" height="64"/><br><b>Executor</b></td>
 </tr>
 <tr>
 <td>System structure, design decisions with plain-English rationale, API surface definitions, data flow</td>
@@ -193,10 +205,10 @@ Creative team that thinks before it writes — strategy, drafting, editing, deli
 <th align="center">Agent 4 — Narrator</th>
 </tr>
 <tr>
-<td align="center"><img src="assets/agent-icons/creative/strategist.png" width="64" height="64"/><br><b>Strategist</b></td>
-<td align="center"><img src="assets/agent-icons/creative/creator.png" width="64" height="64"/><br><b>Creator</b></td>
-<td align="center"><img src="assets/agent-icons/creative/curator.png" width="64" height="64"/><br><b>Curator</b></td>
-<td align="center"><img src="assets/agent-icons/creative/narrator.png" width="64" height="64"/><br><b>Narrator</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/creative/strategist.png" width="64" height="64"/><br><b>Strategist</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/creative/creator.png" width="64" height="64"/><br><b>Creator</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/creative/curator.png" width="64" height="64"/><br><b>Curator</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/creative/narrator.png" width="64" height="64"/><br><b>Narrator</b></td>
 </tr>
 <tr>
 <td>Audience definition, creative angle, tone direction, traps to avoid, 2–3 genuinely different creative directions</td>
@@ -221,10 +233,10 @@ Practical STEM team for physics, chemistry, mathematics, statistics, and enginee
 <th align="center">Agent 4 — Reporter</th>
 </tr>
 <tr>
-<td align="center"><img src="assets/agent-icons/scientists/theorist.png" width="64" height="64"/><br><b>Theorist</b></td>
-<td align="center"><img src="assets/agent-icons/scientists/experimenter.png" width="64" height="64"/><br><b>Experimenter</b></td>
-<td align="center"><img src="assets/agent-icons/scientists/modeler.png" width="64" height="64"/><br><b>Modeler</b></td>
-<td align="center"><img src="assets/agent-icons/scientists/reporter.png" width="64" height="64"/><br><b>Reporter</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/scientists/theorist.png" width="64" height="64"/><br><b>Theorist</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/scientists/experimenter.png" width="64" height="64"/><br><b>Experimenter</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/scientists/modeler.png" width="64" height="64"/><br><b>Modeler</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/scientists/reporter.png" width="64" height="64"/><br><b>Reporter</b></td>
 </tr>
 <tr>
 <td>Key equations with every symbol defined, step-by-step derivation in LaTeX, validity limits</td>
@@ -249,10 +261,10 @@ Knowledgeable history team for events, eras, biographies, and geopolitical conte
 <th align="center">Agent 4 — Biographer</th>
 </tr>
 <tr>
-<td align="center"><img src="assets/agent-icons/historians/archivist.png" width="64" height="64"/><br><b>Archivist</b></td>
-<td align="center"><img src="assets/agent-icons/historians/contextualist.png" width="64" height="64"/><br><b>Contextualist</b></td>
-<td align="center"><img src="assets/agent-icons/historians/cartographer.png" width="64" height="64"/><br><b>Cartographer</b></td>
-<td align="center"><img src="assets/agent-icons/historians/biographer.png" width="64" height="64"/><br><b>Biographer</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/archivist.png" width="64" height="64"/><br><b>Archivist</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/contextualist.png" width="64" height="64"/><br><b>Contextualist</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/cartographer.png" width="64" height="64"/><br><b>Cartographer</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/biographer.png" width="64" height="64"/><br><b>Biographer</b></td>
 </tr>
 <tr>
 <td>Verified chronologies, key actors and roles, ESTABLISHED/PROBABLE/CONTESTED/UNKNOWN epistemic status, source gaps</td>
@@ -277,10 +289,10 @@ Master finance team for personal, corporate, and business finance.
 <th align="center">Agent 4 — Investor</th>
 </tr>
 <tr>
-<td align="center"><img src="assets/agent-icons/financers/accountant.png" width="64" height="64"/><br><b>Accountant</b></td>
-<td align="center"><img src="assets/agent-icons/financers/adviser.png" width="64" height="64"/><br><b>Adviser</b></td>
-<td align="center"><img src="assets/agent-icons/financers/auditor.png" width="64" height="64"/><br><b>Auditor</b></td>
-<td align="center"><img src="assets/agent-icons/financers/investor.png" width="64" height="64"/><br><b>Investor</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/financers/accountant.png" width="64" height="64"/><br><b>Accountant</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/financers/adviser.png" width="64" height="64"/><br><b>Adviser</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/financers/auditor.png" width="64" height="64"/><br><b>Auditor</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/financers/investor.png" width="64" height="64"/><br><b>Investor</b></td>
 </tr>
 <tr>
 <td>Breaks down numbers, identifies patterns & trends, evaluates financial risk with data-driven reasoning</td>
@@ -289,6 +301,76 @@ Master finance team for personal, corporate, and business finance.
 <td>Structured financial report: Analysis → Advice → Audit Findings → Final Recommendation</td>
 </tr>
 </table>
+
+---
+
+## Technologies Used
+
+A full-stack overview of every layer Zyron is built on — from the on-device UI to the cloud orchestration backend.
+
+### Frontend — React Native / Expo
+
+| Technology | Version | Integration |
+|---|---|---|
+| **React Native** | 0.81.5 | Core UI framework — all screens, navigation, animations |
+| **Expo SDK** | 54 | Build toolchain, native module access, OTA updates |
+| **expo-secure-store** | — | Android Keystore-backed encrypted API key storage |
+| **expo-sqlite** | — | On-device SQLite database for conversation + memory persistence |
+| **expo-speech** | — | Text-to-speech output for Live Talk voice responses |
+| **expo-speech-recognition** | — | Real-time STT — mic dictation and Live Talk input |
+| **expo-local-authentication** | — | Biometric / PIN gate for API Config Lock |
+| **expo-blur** | — | Settings modal blur backgrounds |
+| **expo-linear-gradient** | — | Agent glow accent effects |
+| **expo-clipboard** | — | Copy-to-clipboard on code blocks |
+| **expo-web-browser** | — | GitHub OAuth redirect handler |
+| **react-native-webview** | — | KaTeX LaTeX rendering sandbox |
+| **react-native-svg** | — | SVG team icons, decorative elements, Live Talk neural animation |
+| **react-native-keyboard-controller** | — | Cross-platform keyboard layout tracking |
+| **react-native-safe-area-context** | — | Edge-to-edge safe area insets |
+| **@react-native-async-storage** | — | User profile, team selection, custom agents + teams |
+| **@react-native-community/netinfo** | — | Offline detection → Gemini Nano fallback trigger |
+
+### Backend — Python / FastAPI / LangGraph
+
+| Technology | Version | Integration |
+|---|---|---|
+| **Python** | 3.11 | Backend runtime on Railway |
+| **FastAPI** | 0.111 | REST API server — `/health` + `/orchestrate` endpoints |
+| **LangGraph** | latest | Multi-agent pipeline graph — three parallel specialist nodes + writer synthesis node |
+| **LangChain** | latest | LLM abstraction layer used inside LangGraph nodes for prompt building and provider calls |
+| **Pydantic** | v2 | Request / response model validation (`models.py`) |
+| **Railway** | — | Cloud deployment platform — auto-deploy from `main` branch |
+| **Uvicorn** | — | ASGI server for FastAPI |
+
+### AI Providers
+
+| Provider | Models Used | Role |
+|---|---|---|
+| **OpenRouter** | `nvidia/nemotron-3-super-120b-a12b:free` + 100+ | Default free-tier agent socket |
+| **OpenAI** | `gpt-4o-mini`, `gpt-4o`, o-series | General reasoning and synthesis |
+| **Anthropic** | `claude-3-5-haiku-latest`, `claude-3-5-sonnet` | High-quality analysis and writing |
+| **Google Gemini** | `gemini-2.5-flash`, `gemini-pro` | STEM, multimodal, offline fallback (Nano) |
+| **Groq** | `llama-3.3-70b-versatile` | Ultra-low-latency inference for Live Talk |
+| **Mistral** | `mistral-small-latest` | Writer / synthesis agent default |
+| **DeepSeek** | `deepseek-chat`, `deepseek-reasoner` | Extended chain-of-thought reasoning |
+| **GLM / Zhipu** | `glm-4-flash`, `glm-4-air` | Low-cost high-speed inference |
+
+### Data & Storage
+
+| Technology | Integration |
+|---|---|
+| **SQLite** (`expo-sqlite`) | Full conversation history, session index, user memory facts — all stored on-device |
+| **AsyncStorage** | Non-sensitive user preferences — active team, profile settings, custom agents, custom teams |
+| **Android Keystore** (`EncryptedSharedPreferences`) | All API keys — hardware-backed encryption, never stored in JS bundle or AsyncStorage |
+
+### Rendering & Math
+
+| Technology | Integration |
+|---|---|
+| **KaTeX 0.17** | LaTeX formula typesetting — inline (`$...$`) and display (`$$...$$`) math rendered in a sandboxed WebView |
+| **react-native-webview** | WebView host for KaTeX rendering |
+| **mathParser.utils.js** | Custom parser that detects and splits LaTeX and chemical formulae out of raw LLM text before rendering |
+| **SyntaxCode component** | Syntax-highlighted code blocks with language auto-detection and copy-to-clipboard |
 
 ---
 
@@ -366,14 +448,6 @@ Custom teams are bootstrapped async at app start then cached. All existing consu
 - **User memory** — contextual facts extracted from conversations and injected into future prompts
 - **Offline fallback** — Gemini Nano on-device inference for queries when all network providers are unreachable
 
-### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><rect x="3" y="11" width="18" height="11" rx="2" stroke="#7B2FFF" stroke-width="1.8"/><path d="M7 11V7a5 5 0 0110 0v4" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16" r="1.5" fill="#7B2FFF"/></svg> Authentication *(New)*
-Optional Firebase-backed sign-in with three providers:
-- **Email + Password** — full sign-up / sign-in / password reset flow
-- **Google Sign-In** — OAuth via `@react-native-google-signin`
-- **GitHub Sign-In** — OAuth via `expo-web-browser`
-
-Firebase is lazy-loaded via `try/catch` so the app runs in local mode (no auth, no crash) when the native module is not linked (e.g. Expo Go). All auth state is managed in `auth.service.js` with Firestore user document upsert on first sign-in.
-
 ### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M12 3l7 3v5c0 4.6-2.9 8.5-7 10-4.1-1.5-7-5.4-7-10V6l7-3z" stroke="#7B2FFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg> Security
 - **Android Keystore-backed storage** — API keys stored in `EncryptedSharedPreferences` via `expo-secure-store`; never in `AsyncStorage` or any JS bundle string
 - **Single read gateway** — `keyGuard.js` is the only permitted key-read path; keys are read at call-time and never stored in module-level variables
@@ -394,6 +468,39 @@ Firebase is lazy-loaded via `try/catch` so the app runs in local mode (no auth, 
 - **Timeline grouping** — conversations bucketed into Today / Yesterday / Older
 - **Session sidebar** — slide-out drawer with conversation history, search, and new-chat creation
 - **Smart welcome greeting** — time-aware greeting (Night Owl / Early Bird / Golden Hour / etc.) with the user's first name
+
+### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6" stroke="#7B2FFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 13h6M9 17h4" stroke="#7B2FFF" stroke-width="1.6" stroke-linecap="round"/><circle cx="9" cy="10" r="1.2" fill="#7B2FFF"/></svg> Document Processing & Image Analysis *(New)*
+Zyron can read and reason over documents and images — attach a file or image alongside your query and the agent swarm will analyze the content directly.
+
+**Document Processing:**
+- **PDF parsing** — extract and analyze text content from PDF documents; the full extracted text is passed as context to the active agent team
+- **Plain-text files** — `.txt`, `.md`, `.csv`, `.json`, `.xml` and other text-based formats are read directly into the prompt context
+- **Code files** — source files (`.js`, `.py`, `.ts`, `.jsx`, `.tsx`, etc.) are passed to the Coders team with syntax-aware handling
+- **Chunked context** — large documents are chunked intelligently to fit within model context windows; key excerpts are surface-ranked before injection
+- **Multi-document sessions** — attach multiple documents in a single session; the agent team cross-references them in synthesis
+
+**Image Analysis:**
+- **Multimodal vision input** — images are passed directly to vision-capable models (GPT-4o, Gemini 2.5 Flash, Claude 3.5 Sonnet) for analysis
+- **Supported formats** — PNG, JPG, JPEG, WEBP, GIF (static)
+- **Use cases** — diagram explanation, chart reading, screenshot debugging, handwritten note transcription, UI/UX critique, scientific image interpretation
+- **Auto provider routing** — if the active agent's configured model does not support vision, Zyron automatically routes the image query to the best available vision-capable provider without user action
+- **Image + text combined** — mix a written query with an attached image; the agents analyze both together and synthesize a unified response
+
+**Supported pipeline:**
+```
+User attaches file / image
+         │
+         ▼
+  fileProcessor.js   ──── PDF → text extraction (pdf-parse)
+  imageHandler.js    ──── Image → base64 encode → multimodal payload
+         │
+         ▼
+  Injected into agent prompt context (alongside user query)
+         │
+         ▼
+  Agent swarm runs normally — all streaming, circuit-breakers,
+  synthesis, and quality judge apply as usual
+```
 
 ### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><circle cx="12" cy="12" r="3" stroke="#7B2FFF" stroke-width="1.8"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="#7B2FFF" stroke-width="1.8"/></svg> Settings & Personalization
 - **Profile panel** — display name, role, preferred tone, language, coding style, detail level
@@ -546,8 +653,6 @@ React Native 0.81.5 + Expo SDK 54
 ├── react-native-safe-area-context    Edge-to-edge safe area handling
 ├── @react-native-async-storage       User profile, team selection, custom teams/agents
 ├── @react-native-community/netinfo   Offline detection → Gemini Nano fallback
-├── @react-native-firebase/auth       Firebase email/Google/GitHub authentication
-├── @react-native-firebase/firestore  User document store
 └── katex 0.17                     LaTeX math typesetting
 ```
 
@@ -639,7 +744,6 @@ Zyron/
     │   └── useToast.hook.js             In-app toast: show/dismiss, swipe-to-dismiss
     │
     ├── screens/
-    │   ├── auth/MainApp.screen.jsx      Firebase Auth — email, Google, GitHub sign-in
     │   ├── chat/MainApp.screen.jsx      Composition root — wires all hooks and components
     │   ├── splash/SplashScreen.screen.jsx  Animated custom splash
     │   └── settings/
@@ -647,9 +751,6 @@ Zyron/
     │       ├── panels/                  Profile, AgentLibrary, AgentsWorkshop, ApiConfig, Privacy, About, Reset
     │       ├── auth/                    ApiLockGate, PasswordManager, RemoveLockBanner
     │       └── rows/                    AgentSocketRow
-    │
-    ├── services/
-    │   └── auth.service.js          Firebase Auth service (lazy-loaded)
     │
     ├── styles/
     │   ├── app.styles.js            Master stylesheet
