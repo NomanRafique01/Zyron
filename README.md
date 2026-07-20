@@ -55,7 +55,7 @@ Unlike standard AI apps where one model does everything, Zyron assigns each agen
 ---
 
 <div align="center">
-  <img src="https://github.com/NomanRafique01/Zyron/blob/main/assets/demo/demo.gif?raw=true" alt="Zyron Demo" width="100%"/>
+  <img src="https://github.com/NomanRafique01/Zyron/blob/main/assets/demo/demo.gif?raw=true" alt="Zyron Demo" width="250"/>
 </div>
 
 ---
