@@ -80,7 +80,6 @@ import useAgentExecution from '../../hooks/useAgentExecution.hook.js';
 import useAgentSockets from '../../hooks/useAgentSockets.hook.js';
 import useSettings from '../../hooks/useSettings.hook.js';
 import { bootstrapCustomTeams } from '../../agents/workshop/customTeamRegistry';
-import { getForceLocal, setForceLocal } from '../../agents/backendBridge';
 
 // ── Extracted components ─────────────────────────────────────────────────────
 import WelcomeLogo from '../../components/shared/WelcomeLogo.component.jsx';
@@ -116,7 +115,6 @@ export default function MainApp({ splashVisible = true, onSignedOut }) {
   const sidebarAnim = useRef(new Animated.Value(-280)).current;
 
   // ── App-level state ──────────────────────────────────────────────────────
-  const [forceLocal, setForceLocalState] = useState(() => getForceLocal());
   const [isOffline, setIsOffline] = useState(false);
   const [isEngineLive, setIsEngineLive] = useState(false);
   const [showSetupGuideModal, setShowSetupGuideModal] = useState(false);
@@ -563,13 +561,6 @@ export default function MainApp({ splashVisible = true, onSignedOut }) {
     }
   };
 
-  // ── DEV: forceLocal toggle handler — remove with the header toggle ────────
-  const handleToggleForceLocal = useCallback(() => {
-    const next = !forceLocal;
-    setForceLocal(next);
-    setForceLocalState(next);
-  }, [forceLocal]);
-
   // ── Derived values ────────────────────────────────────────────────────────
   const welcomeGreeting = getLocalWelcomeGreeting(settings.userProfile.displayName);
   const profileHasUnsavedChanges = JSON.stringify(settings.userProfile) !== JSON.stringify(settings.savedUserProfile);
@@ -648,8 +639,6 @@ export default function MainApp({ splashVisible = true, onSignedOut }) {
         <Header
           onToggleSidebar={() => { Keyboard.dismiss(); setSidebarOpen(!sidebarOpen); }}
           isOffline={isOffline}
-          forceLocal={forceLocal}
-          onToggleForceLocal={handleToggleForceLocal}
           onOpenSettings={() => {
             settings.settingsScrollOffsetRef.current = 0;
             settings.setApiPanelOpen(false);

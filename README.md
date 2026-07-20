@@ -35,14 +35,6 @@
 ![Gemini](https://img.shields.io/badge/Google-Gemini-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white&labelColor=1C1C1E)
 ![Groq](https://img.shields.io/badge/Groq-Low--Latency-F55036?style=for-the-badge&logo=groq&logoColor=white&labelColor=1C1C1E)
 
-<!-- ── Divider ─────────────────────────────────────────────────────────────── -->
-<br>
-
-<!-- ── Row 3 · Live Signals ────────────────────────────────────────────────── -->
-![Stars](https://img.shields.io/github/stars/NomanRafique01/Zyron?style=for-the-badge&label=Stars&color=F59E0B&labelColor=1C1C1E&logo=github&logoColor=white)
-![Last Commit](https://img.shields.io/github/last-commit/NomanRafique01/Zyron?style=for-the-badge&label=Last%20Commit&color=22C55E&labelColor=1C1C1E&logo=github&logoColor=white)
-![Open Issues](https://img.shields.io/github/issues/NomanRafique01/Zyron?style=for-the-badge&label=Open%20Issues&color=3B82F6&labelColor=1C1C1E&logo=github&logoColor=white)
-
 </div>
 
 ---

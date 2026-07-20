@@ -269,6 +269,7 @@ export default function SettingsModal({
               </TouchableOpacity>
               <AgentLibraryPanel
                 style={{ display: agentLibraryPanelOpen ? 'flex' : 'none' }}
+                isVisible={agentLibraryPanelOpen}
                 activeTeamId={activeTeamId}
                 activeTeam={activeTeam}
                 expandedTeamId={expandedTeamId}

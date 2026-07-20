@@ -26,6 +26,7 @@ import {
 import {
   loadCustomTeams,
   deleteCustomTeam,
+  invalidateCustomTeamsCache,
 } from '../../../agents/workshop/customTeamsStorage';
 import { invalidateCustomTeams } from '../../../agents/workshop/customTeamRegistry';
 import AgentBuilderPanel from '../../../components/workshop/AgentBuilderPanel.component.jsx';
@@ -154,6 +155,7 @@ export default function AgentsWorkshopPanel({ showToast, scrollRef, scrollOffset
   const handleTeamRegistered = useCallback((team) => {
     setShowTeamBuilder(false);
     invalidateCustomTeams();
+    invalidateCustomTeamsCache();
     // Reload only teams after registration
     loadCustomTeams()
       .then((teams) => setCustomTeams(teams))

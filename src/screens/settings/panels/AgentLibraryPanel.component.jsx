@@ -27,6 +27,7 @@ import { BoltIcon, AgentBuilderIcon } from '../../../components/shared/Icons';
 import { renderTeamSvgIcon } from '../../../components/workshop/TeamBuilderPanel.component';
 import {
   loadCustomTeams,
+  invalidateCustomTeamsCache,
 } from '../../../agents/workshop/customTeamsStorage';
 
 const ROSTER = ['reasoner', 'coder', 'vision', 'writer'];
@@ -262,6 +263,7 @@ function SectionHeader({ label, count }) {
 
 export default function AgentLibraryPanel({
   style,
+  isVisible,
   activeTeamId,
   activeTeam,
   expandedTeamId,
@@ -272,13 +274,17 @@ export default function AgentLibraryPanel({
 }) {
   const [customTeams, setCustomTeams] = useState([]);
 
+  // Re-fetch custom teams every time the panel becomes visible so newly
+  // registered teams show up immediately without needing to restart.
   useEffect(() => {
+    if (!isVisible) return;
     let cancelled = false;
+    invalidateCustomTeamsCache();
     loadCustomTeams()
       .then((teams) => { if (!cancelled) setCustomTeams(teams); })
       .catch(() => { if (!cancelled) setCustomTeams([]); });
     return () => { cancelled = true; };
-  }, []);
+  }, [isVisible]);
 
   const builtInTeams = useMemo(
     () => AGENTS_TEAMS.map((t) => ({ ...t, _isCustom: false })),
