@@ -42,10 +42,8 @@ export const runAgentsPipeline = (
   persona,
   userProfile,
   onSocketStatusChange,
-  onStreamDelta       = null,  // optional real-time token callback — enables streaming path
-  documentContext     = null,  // optional { text, filename } — user document upload
-  sessionId           = null,  // optional session key for backend conversation memory
-  conversationContext = null   // optional pre-built context string for local writer
+  onStreamDelta   = null,  // optional real-time token callback — enables streaming path
+  documentContext = null   // optional { text, filename } — user document upload
 ) =>
   runAgentsOrchestrator(
     userText,
@@ -56,7 +54,5 @@ export const runAgentsPipeline = (
     userProfile,
     onSocketStatusChange,
     onStreamDelta,
-    documentContext,
-    sessionId,
-    conversationContext
+    documentContext
   );

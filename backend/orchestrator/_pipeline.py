@@ -9,15 +9,12 @@ compiled graph, and returns a structured result dict.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import time
 from typing import Any, Dict, List, Optional
 
 from query_analyzer import analyze_query
 from web_search     import run_web_search
-from db.sqlite      import get_summary
-from memory.suggestions import generate_suggestions
 
 from ._graph import _compiled_graph
 from ._utils import build_token_usage
@@ -33,7 +30,6 @@ async def run_pipeline(
     user_profile:     Optional[Any] = None,
     search_results:   Optional[Dict[str, Any]] = None,
     document_context: Optional[Dict[str, Any]] = None,
-    session_id:       Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Run the full Zyron multi-agent pipeline.
@@ -101,47 +97,31 @@ async def run_pipeline(
 
     print(f"[Pipeline] search_results being passed to state: {search_results is not None}")
 
-    # ── 1c. Fetch conversation summary (if session_id provided) ───────────────
-    conversation_summary: Optional[str] = None
-    if session_id:
-        conversation_summary = await get_summary(session_id)
-        if conversation_summary:
-            log.info("[Pipeline] Loaded conversation summary for session=%r (%d chars)", session_id, len(conversation_summary))
-
     # ── 2. Build initial ZyronState ───────────────────────────────────────────
     initial_state: Dict[str, Any] = {
-        "query":                query,
-        "analysis":             analysis,
-        "team":                 team,
-        "agent_configs":        agent_configs,
-        "user_profile":         user_profile,
-        "persona":              persona,
-        "search_results":       search_results,
-        "document_context":     document_context,
-        "session_id":           session_id,
-        "conversation_summary": conversation_summary,
-        "specialist_outputs":   {},
-        "agent_results":        [],
-        "writer_output":        "",
-        "writer_usage":         None,
-        "usage_by_role":        {},
-        "errors":               [],
+        "query":               query,
+        "analysis":            analysis,
+        "team":                team,
+        "agent_configs":       agent_configs,
+        "user_profile":        user_profile,
+        "persona":             persona,
+        "search_results":      search_results,
+        "document_context":    document_context,
+        "specialist_outputs":  {},
+        "agent_results":       [],
+        "writer_output":       "",
+        "writer_usage":        None,
+        "usage_by_role":       {},
+        "errors":              [],
     }
 
-    # ── 3. Run graph + suggestions concurrently ───────────────────────────────
-    # Suggestions are generated in parallel with response assembly so they
-    # add ZERO latency to the critical path.  The graph must finish first
-    # (we need writer_output) so we use a two-stage gather:
-    #   Stage A: run the graph alone
-    #   Stage B: concurrently assemble suggestions using writer_output
-    # This is faster than the old pattern (graph → suggestions serially).
+    # ── 3. Run graph ──────────────────────────────────────────────────────────
     try:
         final_state: Dict[str, Any] = await _compiled_graph.ainvoke(initial_state)
     except Exception as exc:
         log.exception("[Pipeline] Graph crashed: %s", exc)
         return {
             "text":        "",
-            "suggestions": [],
             "agents":      [],
             "token_usage": {},
             "meta": {
@@ -151,7 +131,7 @@ async def run_pipeline(
             },
         }
 
-    # ── 4. Assemble response — suggestions run concurrently ───────────────────
+    # ── 4. Assemble response ──────────────────────────────────────────────────
     elapsed_ms = int((time.monotonic() - t_start) * 1000)
 
     agent_results: List[Dict[str, Any]] = final_state.get("agent_results", [])
@@ -159,26 +139,16 @@ async def run_pipeline(
     errors:        List[str]            = final_state.get("errors", [])
     writer_output: str                  = final_state.get("writer_output", "")
 
-    # Fire suggestions concurrently with token-usage assembly — both are fast.
-    # asyncio.gather ensures suggestions never delay the response: the coroutine
-    # runs concurrently with build_token_usage (a pure-Python sync call wrapped).
-    async def _noop() -> Dict[str, Any]:
-        return build_token_usage(agent_results, usage_by_role)
-
-    token_usage, suggestions = await asyncio.gather(
-        _noop(),
-        generate_suggestions(query, writer_output, agent_configs),
-    )
+    token_usage = build_token_usage(agent_results, usage_by_role)
 
     log.info(
-        "[Pipeline] done — writer=%d chars, suggestions=%d, elapsed=%dms, errors=%d",
-        len(writer_output), len(suggestions), elapsed_ms, len(errors),
+        "[Pipeline] done — writer=%d chars, elapsed=%dms, errors=%d",
+        len(writer_output), elapsed_ms, len(errors),
     )
 
     return {
-        "text":        writer_output,
-        "suggestions": suggestions,
-        "agents":      agent_results,
+        "text":   writer_output,
+        "agents": agent_results,
         "token_usage": token_usage,
         "meta": {
             "analysis":        analysis,

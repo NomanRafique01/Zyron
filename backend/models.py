@@ -119,14 +119,6 @@ class OrchestrateRequest(BaseModel):
     """
 
     query: str = Field(..., min_length=1, description="The user's raw input text.")
-    session_id: Optional[str] = Field(
-        default=None,
-        alias="sessionId",
-        description=(
-            "Opaque session identifier forwarded from the frontend. "
-            "Used as the SQLite key for conversation memory summaries."
-        ),
-    )
     agent_configs: Dict[str, AgentConfig] = Field(
         ...,
         alias="agentConfigs",
@@ -209,10 +201,6 @@ class OrchestrateResponse(BaseModel):
     """Top-level response returned by POST /orchestrate."""
 
     text: str = Field(description="Final synthesised answer produced by the writer agent.")
-    suggestions: List[str] = Field(
-        default_factory=list,
-        description="2-3 AI-generated follow-up suggestion strings for the chat UI.",
-    )
     agents: List[AgentResult] = Field(
         default_factory=list,
         description="Per-specialist results (reasoner, coder, vision, writer).",

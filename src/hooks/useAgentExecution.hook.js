@@ -140,7 +140,6 @@ export default function useAgentExecution({
   const [coordinationMode, setCoordinationMode] = useState(COORDINATION_MODES.FULL);
   const [lastTokenUsage, setLastTokenUsage] = useState(null);
   const [inputText, setInputText] = useState('');
-  const [suggestions, setSuggestions] = useState([]);   // AI follow-up chips
   const abortControllerRef = useRef(null);
   const simulatedAgentsRafRef = useRef(null);
   const pendingSimulatedAgentsRef = useRef(null);
@@ -202,23 +201,6 @@ export default function useAgentExecution({
     // Reset streaming state for this run
     streamingWriterTextRef.current = '';
     streamingInsertedRef.current = false;
-
-    // ── Local-mode conversation context (last 3 raw messages, writer only) ───
-    // Build a compact plain-text digest of the 3 most recent messages so the
-    // local writer stays consistent with the conversation without any LLM call.
-    // Specialist agents still receive NO history.
-    // On the backend path this is ignored — the backend uses its SQLite summary.
-    const _buildLocalContext = (msgs) => {
-      if (!msgs || msgs.length < 2) return null;
-      const recent = msgs.slice(-3);   // last 3 messages (user + AI turns)
-      const lines = recent.map((m) => {
-        const role = m.sender === 'user' ? 'User' : 'AI';
-        const text = (m.text || '').trim().slice(0, 400);
-        return `${role}: ${text}`;
-      });
-      return lines.join('\n');
-    };
-    const conversationContext = _buildLocalContext(activeMessagesList);
 
     // ── Deferred extraction — if docCtx has uri but no text, extract now ──────
     // Update the user bubble: clear docExtracting spinner on success/failure.
@@ -321,19 +303,13 @@ export default function useAgentExecution({
         userProfile,
         handleSocketStatusChange,
         onStreamDelta,
-        docCtx,           // document context — injected into all specialist prompts
-        sessionId,        // session key — forwarded to backend for SQLite memory
-        conversationContext  // local-mode: last 3 messages as plain text (writer only)
+        docCtx  // document context — injected into all specialist prompts
       );
 
       // Expose token usage to the live coordination panel
       if (agentResult.tokenUsage && Object.keys(agentResult.tokenUsage).length > 0) {
         setLastTokenUsage(agentResult.tokenUsage);
       }
-
-      // Extract and store follow-up suggestion chips
-      const incomingSuggestions = Array.isArray(agentResult.suggestions) ? agentResult.suggestions : [];
-      setSuggestions(incomingSuggestions);
 
       const finalText = agentResult.text || streamingWriterTextRef.current;
       const finalMsgId = String(Date.now() + 1);
@@ -500,8 +476,6 @@ export default function useAgentExecution({
       return;
     }
 
-    // Clear chips when user manually sends a new message
-    setSuggestions([]);
     const userMsgText = inputText.trim();
     // documentContext is { uri, filename, mimeType } when pending (not yet extracted),
     // or { text, filename } when already extracted from a prior send.
@@ -555,7 +529,6 @@ export default function useAgentExecution({
       abortControllerRef.current = null;
     }
     setIsTyping(false);
-    setSuggestions([]);   // clear chips on stop
     clearSimulatedAgents();
   };
 
@@ -602,8 +575,6 @@ export default function useAgentExecution({
     lastTokenUsage,
     inputText,
     setInputText,
-    suggestions,
-    setSuggestions,
     abortControllerRef,
     updateSimulatedAgents,
     clearSimulatedAgents,

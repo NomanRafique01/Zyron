@@ -108,17 +108,15 @@ export const runOrchestration = async (
   persona,
   userProfile,
   onSocketStatusChange,
-  onStreamDelta       = null,   // { text, filename } | null — user document upload
-  documentContext     = null,   // { text, filename } | null — user document upload
-  sessionId           = null,   // opaque session key for conversation memory
-  conversationContext = null,   // pre-built plain-text context (last 3 msgs) for local writer
+  onStreamDelta = null,
+  documentContext = null,   // { text, filename } | null — user document upload
 ) => {
   // ── Dev toggle: skip backend when forceLocal is set ──────────────────────
   if (_forceLocal) {
     return runAgentsOrchestrator(
       userText, agentConfigs, onStateChange, signal,
       persona, userProfile, onSocketStatusChange, onStreamDelta,
-      documentContext, sessionId, conversationContext
+      documentContext
     );
   }
 
@@ -226,7 +224,6 @@ export const runOrchestration = async (
             userProfile,
             searchResults:   _searchResults,
             documentContext,
-            sessionId,       // conversation memory session key
           }),
         signal: signal ?? undefined,   // only the user's Stop signal; no timeout
       });
@@ -258,10 +255,8 @@ export const runOrchestration = async (
         }
         // Remap agents to the active team's UI metadata (name, icon, colours)
         // so the coordination panel reflects the correct team — not the backend default.
-        // Forward suggestions from the backend response (identical format to local).
         return {
           ...data,
-          suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
           agents: remapAgentsToActiveTeam(data.agents, activeTeam, agentConfigs),
         };
       }
@@ -288,9 +283,7 @@ export const runOrchestration = async (
     userProfile,
     onSocketStatusChange,
     onStreamDelta,
-    documentContext,
-    sessionId,
-    conversationContext
+    documentContext
   );
 };
 

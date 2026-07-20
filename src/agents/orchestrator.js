@@ -2,7 +2,7 @@ import { analyzeQuery } from './analysis/queryAnalyzer';
 import { callAgent } from './api/agentCaller.service';
 import { createProgressTracker } from './progress/progressTracker';
 import { buildSpecialistPrompt, buildWriterPrompt } from './prompts/promptBuilder';
-import { runSynthesisPhase, generateLocalSuggestions } from './synthesis/synthesizer';
+import { runSynthesisPhase } from './synthesis/synthesizer';
 import { getPipelinePhases, getAgentMeta } from './registry/agentRegistry';
 import { COORDINATION_MODES } from './registry/teamMetadata';
 import { isKeyExhaustedError } from './utils/agentErrors.utils';
@@ -62,10 +62,8 @@ export const runAgentsOrchestrator = async (
   persona,
   userProfile,
   onSocketStatusChange,
-  onStreamDelta       = null,   // optional — if not provided, falls back to blocking mode
-  documentContext     = null,   // optional — { text, filename } user document upload
-  sessionId           = null,   // optional — opaque session key (passed through; not used in local mode)
-  conversationContext = null    // optional — pre-built plain-text context for the writer (local mode only)
+  onStreamDelta    = null,   // optional — if not provided, falls back to blocking mode
+  documentContext  = null    // optional — { text, filename } user document upload
 ) => {
   const _orchestratorStart = Date.now();
   console.log('[Zyron Local] 🧠 Local orchestration engine active');
@@ -302,10 +300,9 @@ export const runAgentsOrchestrator = async (
           const { messages } = buildWriterPrompt({
             userText, analysis, personaInstruction, userProfile,
             specialistOutputs: trimmed, agentLabels, qualityReport,
-            chunkingActive:      useChunking,
-            searchResults:       _searchResults,
+            chunkingActive:  useChunking,
+            searchResults:   _searchResults,
             documentContext,
-            conversationContext,   // local-mode: last 3 messages as plain text (writer only)
           });
 
           let writerText = '';
@@ -391,16 +388,10 @@ export const runAgentsOrchestrator = async (
             }
           }
 
-          // Generate follow-up suggestion chips after streaming writer completes
-          const streamSuggestions = writerDone
-            ? await generateLocalSuggestions(userText, writerText, agentConfigs)
-            : [];
-
           const agents = progress.agents();
           console.log(`[Zyron Local] ✅ Response ready in ${Date.now() - _orchestratorStart}ms`);
           return {
             text: writerText,
-            suggestions: streamSuggestions,
             agents,
             tokenUsage: buildTokenUsage(agents, usageByRole),
             meta: { coordinationMode: analysis.coordinationMode, analysis },
@@ -412,9 +403,8 @@ export const runAgentsOrchestrator = async (
           userText, analysis, persona, userProfile, agentConfigs,
           specialistOutputs, agentLabels, signal, onSocketStatusChange,
           progress, chunkingActive: useChunking,
-          searchResults:       _searchResults,
+          searchResults:   _searchResults,
           documentContext,
-          conversationContext,   // local-mode: last 3 messages as plain text (writer only)
         });
 
         usageByRole.writer = synthesis.usage;
@@ -422,7 +412,6 @@ export const runAgentsOrchestrator = async (
         console.log(`[Zyron Local] ✅ Response ready in ${Date.now() - _orchestratorStart}ms`);
         return {
           text: synthesis.text,
-          suggestions: synthesis.suggestions || [],
           agents,
           tokenUsage: buildTokenUsage(agents, usageByRole),
           meta: { coordinationMode: analysis.coordinationMode, analysis },
