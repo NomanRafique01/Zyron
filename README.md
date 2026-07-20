@@ -545,7 +545,11 @@ User attaches file / image
 ## App in Action
 
 <div align="center">
-  <video src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/demo/demo.mp4" controls autoplay muted loop width="100%"></video>
+  <a href="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/demo/demo.mp4">
+    <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/images/banner.png" width="100%" alt="▶ Watch Demo — click to play"/>
+  </a>
+  <br/>
+  <sub>▶ Click the banner above to watch the full demo video</sub>
 </div>
 
 ---
@@ -555,14 +559,14 @@ User attaches file / image
 <div align="center">
   <table>
     <tr>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/screenshots/s1.png" width="100%" alt="Screenshot 1"/></td>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/screenshots/s2.png" width="100%" alt="Screenshot 2"/></td>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/screenshots/s3.png" width="100%" alt="Screenshot 3"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s1.png" width="100%" alt="Screenshot 1"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s2.png" width="100%" alt="Screenshot 2"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s3.png" width="100%" alt="Screenshot 3"/></td>
     </tr>
     <tr>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/screenshots/s4.png" width="100%" alt="Screenshot 4"/></td>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/screenshots/s5.png" width="100%" alt="Screenshot 5"/></td>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/screenshots/s6.png" width="100%" alt="Screenshot 6"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s4.png" width="100%" alt="Screenshot 4"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s5.png" width="100%" alt="Screenshot 5"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s6.png" width="100%" alt="Screenshot 6"/></td>
     </tr>
   </table>
 </div>
