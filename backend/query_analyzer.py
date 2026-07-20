@@ -129,6 +129,71 @@ _FILLER_WORDS = re.compile(
 )
 
 
+# ─── Response length classifier ───────────────────────────────────────────────
+
+_LONG_EXPLICIT = re.compile(
+    r"\b(explain in detail|comprehensive|in.?depth|full breakdown|complete"
+    r"|everything about|deep dive|deep-dive|research|analyze|analysis|elaborate"
+    r"|thoroughly|exhaustive|step by step|step-by-step|go deep|maximum detail"
+    r"|verbose|scholarly|academic|scientific explanation|rigorous)\b",
+    re.IGNORECASE,
+)
+
+_SHORT_ACK = re.compile(
+    r"^\s*(hi|hello|hey|thanks|thank you|ok|okay|got it|makes sense|cool"
+    r"|awesome|great|perfect|sounds good|interesting|sure|yep|nope|yes|no"
+    r")\s*[!.?]*\s*$",
+    re.IGNORECASE,
+)
+
+_SHORT_GREETING = re.compile(
+    r"^(how are you|what('?s| is) up|good (morning|afternoon|evening|night))\b",
+    re.IGNORECASE,
+)
+
+_SHORT_FACTUAL = re.compile(
+    r"\b(what year (was|did|is)|who (made|created|invented|founded|wrote)"
+    r"|when (was|did|is|are)|where (is|was|are)"
+    r"|is (it|this|that) true|does (it|this|that) exist)\b",
+)
+
+
+def _classify_response_length(text: str, word_count: int, flags: dict) -> str:
+    """
+    Classifies how long the model's response should be.
+
+    SHORT  — 1-3 sentences: greetings, yes/no, single-fact, conversational acks
+    MEDIUM — balanced: single-concept explanations, how-tos, comparisons
+    LONG   — full comprehensive: multi-part, research, code, deep technical
+
+    This is guidance to the model — never a hard character/token limit.
+    """
+    # ── LONG: always comprehensive, never restricted ──────────────────────────
+    if (
+        flags.get("needs_code")
+        or flags.get("needs_math")
+        or flags.get("is_agents_meta")
+        or _LONG_EXPLICIT.search(text)
+        or word_count > 40
+        or (flags.get("is_analytical") and word_count > 20)
+        or flags.get("is_financial")
+        or flags.get("is_legal")
+    ):
+        return "LONG"
+
+    # ── SHORT: greetings, yes/no, single-fact, conversational acks ───────────
+    if (
+        (flags.get("is_conversational") and word_count <= 10)
+        or bool(_SHORT_ACK.match(text))
+        or bool(_SHORT_GREETING.match(text))
+        or bool(_SHORT_FACTUAL.search(text))
+    ):
+        return "SHORT"
+
+    # ── MEDIUM: everything else ───────────────────────────────────────────────
+    return "MEDIUM"
+
+
 # ─── Complexity classifier ─────────────────────────────────────────────────────
 
 def _classify_complexity(word_count: int, flags: dict) -> str:
@@ -403,9 +468,11 @@ def analyze_query(text: str, analysis_bias: Optional[dict] = None) -> dict:
         "needs_web_search":  needs_web_search,
         "web_search_query":  web_search_query,
         "complexity":        "",   # filled below
+        "response_length":   "",   # filled below
     }
 
     flags["complexity"] = _classify_complexity(word_count, flags)
+    flags["response_length"] = _classify_response_length(text, word_count, flags)
 
     # ── Derived composites ────────────────────────────────────────────────────
     agent_focus   = _build_agent_focus(flags)

@@ -417,6 +417,23 @@ def _build_specialist_base(
 
     style_instruction = build_style_instruction(analysis.get("verbosity_level", "simple"))
 
+    # ── Response length guidance ──────────────────────────────────────────────
+    _rl = analysis.get("response_length", "MEDIUM")
+    if _rl == "SHORT":
+        response_length_note = (
+            "**Response length**: Be concise. Answer directly in 1-3 sentences. "
+            "No extra context, no elaboration unless asked."
+        )
+    elif _rl == "LONG":
+        response_length_note = (
+            "**Response length**: Be as comprehensive and detailed as needed. "
+            "Do not cut anything short."
+        )
+    else:
+        response_length_note = (
+            "**Response length**: Be focused and clear. Cover the topic fully but don't over-explain."
+        )
+
     domain_note = ""
     if (
         not analysis.get("needs_code")
@@ -461,6 +478,7 @@ def _build_specialist_base(
         f"Emphasis level: {emphasis}.",
         f"Request snapshot: {analysis.get('shared_brief', '')}",
         "",
+        response_length_note,
         math_mandate,
         code_note,
         domain_note,

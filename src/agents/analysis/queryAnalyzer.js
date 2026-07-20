@@ -47,6 +47,43 @@ const PATTERNS = {
     /\b(legal|law|regulation|compliance|GDPR|CCPA|contract|terms|privacy|intellectual property|patent|copyright|trademark|liability|jurisdiction|policy|consent|agreement|clause|dispute|court|attorney|legislation|statute|due diligence)\b/i,
 };
 
+// ─── Response length classifier ──────────────────────────────────────────────
+/**
+ * Classifies how long the model's response should be.
+ *
+ * SHORT  — 1-3 sentences: greetings, yes/no, single-fact, conversational acks
+ * MEDIUM — balanced: single-concept explanations, how-tos, comparisons
+ * LONG   — full comprehensive: multi-part, research, code, deep technical
+ *
+ * This is guidance to the model — never a hard character/token limit.
+ */
+const classifyResponseLength = (text, wordCount, flags) => {
+  const lower = text.toLowerCase();
+
+  // ── LONG: always comprehensive, never restricted ─────────────────────────
+  if (
+    flags.needsCode ||
+    flags.needsMath ||
+    flags.isAgentsMeta ||
+    /\b(explain in detail|comprehensive|in.?depth|full breakdown|complete|everything about|deep dive|deep-dive|research|analyze|analysis|elaborate|thoroughly|exhaustive|step by step|step-by-step|go deep|maximum detail|verbose|scholarly|academic|scientific explanation|rigorous)\b/i.test(text) ||
+    wordCount > 40 ||
+    (flags.isAnalytical && wordCount > 20) ||
+    flags.isFinancial ||
+    flags.isLegal
+  ) return 'LONG';
+
+  // ── SHORT: greetings, yes/no, single-fact, conversational acks ──────────
+  if (
+    (flags.isConversational && wordCount <= 10) ||
+    /^\s*(hi|hello|hey|thanks|thank you|ok|okay|got it|makes sense|cool|awesome|great|perfect|sounds good|interesting|sure|yep|nope|yes|no)\s*[!.?]*\s*$/i.test(text) ||
+    /^(how are you|what('?s| is) up|good (morning|afternoon|evening|night))\b/i.test(lower) ||
+    /\b(what year (was|did|is)|who (made|created|invented|founded|wrote)|when (was|did|is|are)|where (is|was|are)|is (it|this|that) true|does (it|this|that) exist|is [A-Z]|are [A-Z])\b/.test(text)
+  ) return 'SHORT';
+
+  // ── MEDIUM: everything else ───────────────────────────────────────────────
+  return 'MEDIUM';
+};
+
 // ─── Complexity classifier ────────────────────────────────────────────────────
 const classifyComplexity = (text, wordCount, flags) => {
   if (
@@ -195,12 +232,15 @@ export const analyzeQuery = (userText = '') => {
     coordinationMode = COORDINATION_MODES.COMPACT;
   }
 
+  const _complexityFlags = { needsCode, needsMath, isAgentsMeta, isAnalytical, isWriting, needsDesign };
+
   const flags = {
     primaryType, needsCode, needsDesign, needsMath, isWriting, isAnalytical,
     isConversational, isCreative, needsTable, isFinancial, isLegal, isAgentsMeta,
     isSimple, wordCount, coordinationMode, verbosityLevel,
     needsWebSearch, webSearchQuery,
-    complexity: classifyComplexity(text, wordCount, { needsCode, needsMath, isAgentsMeta, isAnalytical, isWriting, needsDesign }),
+    complexity: classifyComplexity(text, wordCount, _complexityFlags),
+    responseLength: classifyResponseLength(text, wordCount, { needsCode, needsMath, isAgentsMeta, isAnalytical, isConversational, isFinancial, isLegal }),
   };
 
   const agentFocus = buildAgentFocus(flags, team);

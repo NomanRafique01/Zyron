@@ -193,8 +193,13 @@ def build_writer_prompt(
     is_conversational = analysis.get("is_conversational", False)
     word_count        = analysis.get("word_count", 99)
     complexity        = analysis.get("complexity", "medium")
+    response_length   = analysis.get("response_length", "MEDIUM")
 
-    if is_conversational and word_count <= 15:
+    if response_length == "SHORT":
+        length_guidance = "Short answer — reply in 1-3 sentences. Be direct and natural. No headers, no lists unless they genuinely help."
+    elif response_length == "LONG":
+        length_guidance = "Full comprehensive answer — be as thorough and detailed as the topic demands. Never cut anything short. Use headers to separate genuinely distinct sections."
+    elif is_conversational and word_count <= 15:
         length_guidance = "Short conversational query — keep it natural and direct. Skip heavy headers and lists unless they genuinely help."
     elif complexity == "high":
         length_guidance = "Complex request — write as thoroughly as the topic demands. Use headers to separate genuinely distinct sections. Never truncate a complete answer."

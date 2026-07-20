@@ -435,6 +435,14 @@ const buildSpecialistBase = (role, agentName, analysis, userProfileInstruction) 
   // ── Dynamic suffix: changes every query ────────────────────────────────────
   const styleInstruction = buildStyleInstruction(analysis.verbosityLevel);
 
+  // ── Response length guidance ──────────────────────────────────────────────
+  const responseLengthNote = (() => {
+    const rl = analysis.responseLength;
+    if (rl === 'SHORT') return '**Response length**: Be concise. Answer directly in 1-3 sentences. No extra context, no elaboration unless asked.';
+    if (rl === 'LONG')  return '**Response length**: Be as comprehensive and detailed as needed. Do not cut anything short.';
+    return '**Response length**: Be focused and clear. Cover the topic fully but don\'t over-explain.';
+  })();
+
   const dynamicLines = [
     outputFormatDirective,
     styleInstruction,
@@ -444,6 +452,7 @@ const buildSpecialistBase = (role, agentName, analysis, userProfileInstruction) 
     `Emphasis level: ${focus?.emphasis || 'high'}.`,
     `Request snapshot: ${analysis.sharedBrief}`,
     ``,
+    responseLengthNote,
     analysis.needsMath
       ? '**All math MUST use LaTeX** — inline \\( ... \\) and display \\[ ... \\]. Never use ASCII for equations.'
       : '',
@@ -598,6 +607,10 @@ export const buildWriterPrompt = ({
   }
 
   const lengthGuidance = (() => {
+    const rl = analysis.responseLength;
+    if (rl === 'SHORT') return 'Short answer — reply in 1-3 sentences. Be direct and natural. No headers, no lists unless they genuinely help.';
+    if (rl === 'LONG')  return 'Full comprehensive answer — be as thorough and detailed as the topic demands. Never cut anything short. Use headers to separate genuinely distinct sections.';
+    // MEDIUM / fallback
     if (analysis.isConversational && analysis.wordCount <= 15) return 'Short conversational query — keep it natural and direct. Skip heavy headers and lists unless they genuinely help.';
     if (analysis.complexity === 'high') return 'Complex request — write as thoroughly as the topic demands. Use headers to separate genuinely distinct sections. Never truncate a complete answer.';
     if (analysis.complexity === 'medium') return 'Balanced depth — cover what matters fully. Add headers only when 3+ distinct sections exist.';
