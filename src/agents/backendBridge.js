@@ -4,9 +4,10 @@
  * Single entry point for all orchestration calls.
  *
  * Strategy:
- *   1. POST to the Railway backend /orchestrate endpoint (120-second timeout).
- *   2. On any failure — timeout, non-200, network error — fall back silently
- *      to the local runAgentsOrchestrator() without surfacing anything to the UI.
+ *   1. POST to the Railway backend /orchestrate endpoint — no timeout, waits
+ *      indefinitely for the server to respond.
+ *   2. Only falls back to the local runAgentsOrchestrator() on a non-200
+ *      response or a network error — never because of a timeout.
  *
  * Usage:
  *   Replace runAgentsOrchestrator() / runAgentsPipeline() call-sites with:
@@ -28,9 +29,6 @@ import { analyzeQuery } from './analysis/queryAnalyzer';
 // Set to the Railway deployment URL once available. Leave as an empty string
 // or null to skip the backend attempt entirely and always use local fallback.
 const BACKEND_URL = 'https://zyron-production-7af1.up.railway.app';
-
-// Milliseconds to wait for the backend before giving up and falling back.
-const BACKEND_TIMEOUT_MS = 120000;
 
 // ── DEV TEST TOGGLE — remove when no longer needed ───────────────────────────
 // When true, skip the backend entirely and run local orchestration directly.
@@ -130,19 +128,6 @@ export const runOrchestration = async (
     const _progressTimer = { id: null };
 
     try {
-      const controller = new AbortController();
-      console.log('[Zyron Backend] ⏱ Long query detected — waiting up to 120s...');
-      const timeoutId = setTimeout(() => {
-        console.log('[Zyron Backend] ⏱️ Request timed out — switching to local engine');
-        controller.abort();
-      }, BACKEND_TIMEOUT_MS);
-
-      // Combine the caller's abort signal with our timeout signal so either
-      // one cancels the fetch cleanly.
-      const combinedSignal = signal
-        ? anyAbort([signal, controller.signal])
-        : controller.signal;
-
       console.log('[Zyron Backend] ⚡ Routing to Railway orchestration engine...');
       const activeTeam = getActiveTeam();
 
@@ -239,12 +224,11 @@ export const runOrchestration = async (
             searchResults:   _searchResults,
             documentContext,
           }),
-        signal: combinedSignal,
+        signal: signal ?? undefined,   // only the user's Stop signal; no timeout
       });
 
       _progressTimer.cleared = true;
       clearInterval(_progressTimer.id);
-      clearTimeout(timeoutId);
 
       if (response.ok) {
         const data = await response.json();
@@ -278,8 +262,8 @@ export const runOrchestration = async (
       // Non-200 → fall through to local fallback silently
 
     } catch (e) {
-      // Network error, timeout (AbortError), or any other fetch failure →
-      // fall through to local fallback silently.
+      // Network error or any other fetch failure → fall through to local
+      // fallback silently.
       // Re-throw only if the caller explicitly cancelled (user pressed Stop).
       _progressTimer.cleared = true;
       clearInterval(_progressTimer.id);
@@ -302,23 +286,3 @@ export const runOrchestration = async (
   );
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/**
- * Returns an AbortSignal that aborts as soon as ANY of the supplied signals
- * fires. Polyfills AbortSignal.any() for environments that don't have it.
- *
- * @param {AbortSignal[]} signals
- * @returns {AbortSignal}
- */
-function anyAbort(signals) {
-  if (typeof AbortSignal?.any === 'function') {
-    return AbortSignal.any(signals);
-  }
-  const controller = new AbortController();
-  for (const s of signals) {
-    if (s.aborted) { controller.abort(); break; }
-    s.addEventListener('abort', () => controller.abort(), { once: true });
-  }
-  return controller.signal;
-}
