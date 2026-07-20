@@ -18,6 +18,7 @@
 ![License](https://img.shields.io/badge/License-MIT-A855F7?style=for-the-badge&logo=opensourceinitiative&logoColor=white&labelColor=1C1C1E)
 ![Status](https://img.shields.io/badge/Status-Active%20Dev-22C55E?style=for-the-badge&logo=statuspage&logoColor=white&labelColor=1C1C1E)
 ![Min SDK](https://img.shields.io/badge/Min%20SDK-21-3B82F6?style=for-the-badge&logo=android&logoColor=white&labelColor=1C1C1E)
+![Docker](https://img.shields.io/badge/Docker-Container-2496ED?style=for-the-badge&logo=docker&logoColor=white&labelColor=1C1C1E)
 
 <!-- ── Divider ─────────────────────────────────────────────────────────────── -->
 <br>
@@ -368,6 +369,19 @@ Master finance team for personal, corporate, and business finance.
 
 A full-stack overview of every layer Zyron is built on — from the on-device UI to the cloud orchestration backend.
 
+### Backend — Python / FastAPI / LangGraph
+
+| Technology | Version | Integration |
+|---|---|---|
+| **Python** | 3.11 | Backend runtime on Railway |
+| **FastAPI** | 0.111 | REST API server — `/health` + `/orchestrate` endpoints |
+| **LangGraph** | latest | Multi-agent pipeline graph — three parallel specialist nodes + writer synthesis node |
+| **LangChain** | latest | LLM abstraction layer used inside LangGraph nodes for prompt building and provider calls |
+| **Pydantic** | v2 | Request / response model validation (`models.py`) |
+| **Docker** | — | Containerised backend — consistent builds and local dev environment |
+| **Railway** | — | Cloud deployment platform — auto-deploy from `main` branch |
+| **Uvicorn** | — | ASGI server for FastAPI |
+
 ### Frontend — React Native / Expo
 
 | Technology | Version | Integration |
@@ -389,18 +403,6 @@ A full-stack overview of every layer Zyron is built on — from the on-device UI
 | **react-native-safe-area-context** | — | Edge-to-edge safe area insets |
 | **@react-native-async-storage** | — | User profile, team selection, custom agents + teams |
 | **@react-native-community/netinfo** | — | Offline detection |
-
-### Backend — Python / FastAPI / LangGraph
-
-| Technology | Version | Integration |
-|---|---|---|
-| **Python** | 3.11 | Backend runtime on Railway |
-| **FastAPI** | 0.111 | REST API server — `/health` + `/orchestrate` endpoints |
-| **LangGraph** | latest | Multi-agent pipeline graph — three parallel specialist nodes + writer synthesis node |
-| **LangChain** | latest | LLM abstraction layer used inside LangGraph nodes for prompt building and provider calls |
-| **Pydantic** | v2 | Request / response model validation (`models.py`) |
-| **Railway** | — | Cloud deployment platform — auto-deploy from `main` branch |
-| **Uvicorn** | — | ASGI server for FastAPI |
 
 ### AI Providers
 
