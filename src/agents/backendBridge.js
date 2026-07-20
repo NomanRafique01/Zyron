@@ -125,9 +125,16 @@ export const runOrchestration = async (
 
   // ── Attempt backend ───────────────────────────────────────────────────────
   if (BACKEND_URL) {
+    // Hoist mutable handles outside the try/catch so the catch block can
+    // always clear the interval and timeout regardless of where the error
+    // occurs inside the try (const declarations inside try are not accessible
+    // in the catch block in strict-mode JS environments).
+    let _timeoutId      = null;
+    const _progressTimer = { id: null };
+
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
+      _timeoutId = setTimeout(() => {
         console.log('[Zyron Backend] ⏱️ Request timed out — switching to local engine');
         controller.abort();
       }, BACKEND_TIMEOUT_MS);
@@ -168,11 +175,6 @@ export const runOrchestration = async (
               : AGENT_STATUS_COLORS[role] || AGENT_STATUS_COLORS.reasoner,
           };
         });
-
-      // Progress-bar interval — stored on an object so the catch block and the
-      // success path can always clear it, even when it was assigned asynchronously
-      // inside the setTimeout below.
-      const _progressTimer = { id: null };
 
       if (hasStateCallback) {
         // ── Phase 1: PENDING — show all agents queued at 0 % ─────────────────
@@ -244,7 +246,7 @@ export const runOrchestration = async (
 
       _progressTimer.cleared = true;
       clearInterval(_progressTimer.id);
-      clearTimeout(timeoutId);
+      clearTimeout(_timeoutId);
 
       if (response.ok) {
         const data = await response.json();
@@ -283,6 +285,8 @@ export const runOrchestration = async (
       // Re-throw only if the caller explicitly cancelled (user pressed Stop).
       _progressTimer.cleared = true;
       clearInterval(_progressTimer.id);
+      clearTimeout(_timeoutId);
+      onWebSearchEnd?.();
       if (signal?.aborted) throw new Error('Aborted');
       console.log('[Zyron Backend] ❌ Backend unavailable — switching to local engine');
     }
