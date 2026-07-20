@@ -11,24 +11,36 @@
 
 **A multi-agent AI assistant for Android — built on a swarm of specialist models<br>that analyze, execute, and synthesize in parallel.**
 
-![Platform](https://img.shields.io/badge/platform-Android-34A853?style=flat-square&logo=android&logoColor=white)
-![Framework](https://img.shields.io/badge/framework-React%20Native%20%2F%20Expo-0EA5E9?style=flat-square&logo=expo&logoColor=white)
-![Version](https://img.shields.io/badge/version-1.0.0-7B2FFF?style=flat-square)
-![License](https://img.shields.io/badge/license-MIT-10B981?style=flat-square)
-![Status](https://img.shields.io/badge/status-Active%20Dev-F97316?style=flat-square)
-![SDK](https://img.shields.io/badge/min%20SDK-21-A78BFA?style=flat-square)
+![Platform](https://img.shields.io/badge/PLATFORM-ANDROID-7B2FFF?style=for-the-badge&logo=android&logoColor=A78BFA&labelColor=0B0D0E)
+![Framework](https://img.shields.io/badge/FRAMEWORK-REACT%20NATIVE%20%2F%20EXPO-7B2FFF?style=for-the-badge&logo=expo&logoColor=A78BFA&labelColor=0B0D0E)
+![Version](https://img.shields.io/badge/VERSION-1.0.0-7B2FFF?style=for-the-badge&labelColor=0B0D0E)
+![License](https://img.shields.io/badge/LICENSE-MIT-7B2FFF?style=for-the-badge&labelColor=0B0D0E)
+![Status](https://img.shields.io/badge/STATUS-ACTIVE%20DEV-7B2FFF?style=for-the-badge&labelColor=0B0D0E)
+![SDK](https://img.shields.io/badge/MIN%20SDK-21-7B2FFF?style=for-the-badge&labelColor=0B0D0E)
 
-![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat-square&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?style=flat-square&logo=fastapi&logoColor=white)
-![LangGraph](https://img.shields.io/badge/LangGraph-multi--agent-1C3C3C?style=flat-square&logo=langchain&logoColor=white)
-![LangChain](https://img.shields.io/badge/LangChain-orchestration-1C3C3C?style=flat-square&logo=langchain&logoColor=white)
-![SQLite](https://img.shields.io/badge/SQLite-on--device-003B57?style=flat-square&logo=sqlite&logoColor=white)
-![Railway](https://img.shields.io/badge/Railway-backend-0B0D0E?style=flat-square&logo=railway&logoColor=white)
-![KaTeX](https://img.shields.io/badge/KaTeX-LaTeX%20rendering-008080?style=flat-square)
-![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o-412991?style=flat-square&logo=openai&logoColor=white)
-![Anthropic](https://img.shields.io/badge/Anthropic-Claude-D97757?style=flat-square)
-![Gemini](https://img.shields.io/badge/Google-Gemini-4285F4?style=flat-square&logo=google&logoColor=white)
-![Groq](https://img.shields.io/badge/Groq-ultra--low%20latency-F55036?style=flat-square)
+<sub>
+
+![Python](https://img.shields.io/badge/Python-3.11-8B93A7?style=flat-square&logo=python&logoColor=8B93A7&labelColor=12141A)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.111-8B93A7?style=flat-square&logo=fastapi&logoColor=8B93A7&labelColor=12141A)
+![LangGraph](https://img.shields.io/badge/LangGraph-multi--agent-8B93A7?style=flat-square&logo=langchain&logoColor=8B93A7&labelColor=12141A)
+![LangChain](https://img.shields.io/badge/LangChain-orchestration-8B93A7?style=flat-square&logo=langchain&logoColor=8B93A7&labelColor=12141A)
+![SQLite](https://img.shields.io/badge/SQLite-on--device-8B93A7?style=flat-square&logo=sqlite&logoColor=8B93A7&labelColor=12141A)
+![Railway](https://img.shields.io/badge/Railway-backend-8B93A7?style=flat-square&logo=railway&logoColor=8B93A7&labelColor=12141A)
+![KaTeX](https://img.shields.io/badge/KaTeX-LaTeX-8B93A7?style=flat-square&labelColor=12141A)
+![OpenAI](https://img.shields.io/badge/OpenAI-GPT--4o-8B93A7?style=flat-square&logo=openai&logoColor=8B93A7&labelColor=12141A)
+![Anthropic](https://img.shields.io/badge/Anthropic-Claude-8B93A7?style=flat-square&logoColor=8B93A7&labelColor=12141A)
+![Gemini](https://img.shields.io/badge/Google-Gemini-8B93A7?style=flat-square&logo=google&logoColor=8B93A7&labelColor=12141A)
+![Groq](https://img.shields.io/badge/Groq-low--latency-8B93A7?style=flat-square&labelColor=12141A)
+
+</sub>
+
+<sub>
+
+![Stars](https://img.shields.io/github/stars/NomanRafique01/Zyron?style=flat-square&color=7B2FFF&labelColor=12141A)
+![Last Commit](https://img.shields.io/github/last-commit/NomanRafique01/Zyron?style=flat-square&color=7B2FFF&labelColor=12141A)
+![Issues](https://img.shields.io/github/issues/NomanRafique01/Zyron?style=flat-square&color=7B2FFF&labelColor=12141A)
+
+</sub>
 
 </div>
 
