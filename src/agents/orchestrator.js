@@ -62,7 +62,9 @@ export const runAgentsOrchestrator = async (
   persona,
   userProfile,
   onSocketStatusChange,
-  onStreamDelta = null       // optional — if not provided, falls back to blocking mode
+  onStreamDelta = null,      // optional — if not provided, falls back to blocking mode
+  onWebSearchStart = null,
+  onWebSearchEnd = null
 ) => {
   const _orchestratorStart = Date.now();
   console.log('[Zyron Local] 🧠 Local orchestration engine active');
@@ -75,7 +77,9 @@ export const runAgentsOrchestrator = async (
   // Fallback chain: Tavily → Serper → null (silent).
   let _searchResults = null;
   if (analysis.needsWebSearch && analysis.webSearchQuery) {
+    onWebSearchStart?.();
     _searchResults = await runWebSearch(analysis.webSearchQuery).catch(() => null);
+    onWebSearchEnd?.();
   }
 
   let latestMeta = { coordinationMode: analysis.coordinationMode, analysis };

@@ -42,7 +42,9 @@ export const runAgentsPipeline = (
   persona,
   userProfile,
   onSocketStatusChange,
-  onStreamDelta = null    // optional real-time token callback — enables streaming path
+  onStreamDelta = null,   // optional real-time token callback — enables streaming path
+  onWebSearchStart = null,
+  onWebSearchEnd = null
 ) =>
   runAgentsOrchestrator(
     userText,
@@ -52,5 +54,7 @@ export const runAgentsPipeline = (
     persona,
     userProfile,
     onSocketStatusChange,
-    onStreamDelta
+    onStreamDelta,
+    onWebSearchStart,
+    onWebSearchEnd
   );

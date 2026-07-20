@@ -32,6 +32,13 @@ const BACKEND_URL = 'https://zyron-production-7af1.up.railway.app';
 // Milliseconds to wait for the backend before giving up and falling back.
 const BACKEND_TIMEOUT_MS = 30000;
 
+// ── DEV TEST TOGGLE — remove when no longer needed ───────────────────────────
+// When true, skip the backend entirely and run local orchestration directly.
+// Flipped by the header toggle in Header.component.jsx.
+let _forceLocal = false;
+export const getForceLocal = () => _forceLocal;
+export const setForceLocal = (v) => { _forceLocal = v; };
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -103,8 +110,19 @@ export const runOrchestration = async (
   persona,
   userProfile,
   onSocketStatusChange,
-  onStreamDelta = null
+  onStreamDelta = null,
+  onWebSearchStart = null,
+  onWebSearchEnd = null
 ) => {
+  // ── Dev toggle: skip backend when forceLocal is set ──────────────────────
+  if (_forceLocal) {
+    return runAgentsOrchestrator(
+      userText, agentConfigs, onStateChange, signal,
+      persona, userProfile, onSocketStatusChange, onStreamDelta,
+      onWebSearchStart, onWebSearchEnd
+    );
+  }
+
   // ── Attempt backend ───────────────────────────────────────────────────────
   if (BACKEND_URL) {
     try {
@@ -204,7 +222,9 @@ export const runOrchestration = async (
       const _analysis = analyzeQuery(userText);
       let _searchResults = null;
       if (_analysis.needsWebSearch && _analysis.webSearchQuery) {
+        onWebSearchStart?.();
         _searchResults = await runWebSearch(_analysis.webSearchQuery).catch(() => null);
+        onWebSearchEnd?.();
       }
 
       const _t0 = Date.now();
@@ -277,7 +297,9 @@ export const runOrchestration = async (
     persona,
     userProfile,
     onSocketStatusChange,
-    onStreamDelta
+    onStreamDelta,
+    onWebSearchStart,
+    onWebSearchEnd
   );
 };
 

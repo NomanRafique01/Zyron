@@ -3,6 +3,7 @@ import { FlatList, View, Animated, TouchableOpacity } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import ChatBubble from './ChatBubble.component.jsx';
 import AgentCoordinationTable from '../agent/AgentCoordinationTab.component.jsx';
+import WebSearchTicker from '../agent/WebSearchTicker.component.jsx';
 import s from '../../styles/app.styles';
 
 // ─── Thin custom scrollbar ─────────────────────────────────────────────────
@@ -104,6 +105,7 @@ function ChatMessageList({
   listRef,
   messages,
   isTyping,
+  isWebSearching,
   simulatedAgents,
   coordinationMode,
   lastTokenUsage,
@@ -240,6 +242,7 @@ function ChatMessageList({
     if (!isTyping) return null;
     return (
       <View onLayout={onCoordinationLayout}>
+        <WebSearchTicker isWebSearching={!!isWebSearching} />
         <AgentCoordinationTable
           agents={simulatedAgents}
           isTyping={isTyping}
@@ -248,7 +251,7 @@ function ChatMessageList({
         />
       </View>
     );
-  }, [isTyping, simulatedAgents, coordinationMode, lastTokenUsage, onCoordinationLayout]);
+  }, [isTyping, isWebSearching, simulatedAgents, coordinationMode, lastTokenUsage, onCoordinationLayout]);
 
   return (
     <View style={{ flex: 1 }}>

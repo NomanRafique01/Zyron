@@ -67,6 +67,7 @@ export default function useAgentExecution({
   latestAnswerFocusPendingRef,
 }) {
   const [isTyping, setIsTyping] = useState(false);
+  const [isWebSearching, setIsWebSearching] = useState(false);
   const [simulatedAgents, setSimulatedAgents] = useState([]);
   const [coordinationMode, setCoordinationMode] = useState(COORDINATION_MODES.FULL);
   const [lastTokenUsage, setLastTokenUsage] = useState(null);
@@ -208,7 +209,9 @@ export default function useAgentExecution({
         agentPersona,
         userProfile,
         handleSocketStatusChange,
-        onStreamDelta
+        onStreamDelta,
+        () => setIsWebSearching(true),
+        () => setIsWebSearching(false)
       );
 
       // Expose token usage to the live coordination panel
@@ -343,6 +346,7 @@ export default function useAgentExecution({
       streamingWriterTextRef.current = '';
       streamingInsertedRef.current = false;
       streamingPendingFlushRef.current = false;
+      setIsWebSearching(false);
       setIsTyping(false);
       // Only clear agents immediately for abort/error paths.  The success path
       // sets _successHandledCleanup = true and schedules clearSimulatedAgents()
@@ -459,6 +463,7 @@ export default function useAgentExecution({
   return {
     isTyping,
     setIsTyping,
+    isWebSearching,
     simulatedAgents,
     setSimulatedAgents,
     coordinationMode,
