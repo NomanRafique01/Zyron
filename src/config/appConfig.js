@@ -67,6 +67,59 @@ export const DEFAULT_AGENT_CONFIGS = {
   }
 };
 
+// ─── Vision-capable model list ───────────────────────────────────────────────
+// Used by InputBar to determine whether the Image attach option is enabled.
+// Checks agentConfigs.vision.model (runtime state — not SecureStore).
+export const VISION_CAPABLE_MODELS = [
+  // OpenAI
+  'gpt-4o',
+  'gpt-4o-mini',
+  'gpt-4-turbo',
+  'gpt-4-vision-preview',
+  // Anthropic
+  'claude-3-opus',
+  'claude-3-opus-20240229',
+  'claude-3-sonnet',
+  'claude-3-sonnet-20240229',
+  'claude-3-haiku',
+  'claude-3-haiku-20240307',
+  'claude-3-5-sonnet',
+  'claude-3-5-sonnet-20240620',
+  'claude-3-5-haiku',
+  'claude-3-5-haiku-latest',
+  // Google
+  'gemini-pro-vision',
+  'gemini-1.5-pro',
+  'gemini-1.5-flash',
+  'gemini-2.0-flash',
+  'gemini-2.5-flash',
+  'gemini-2.5-pro',
+  // OpenRouter multimodal (provider/model-id form)
+  'google/gemini-pro-vision',
+  'google/gemini-1.5-pro',
+  'google/gemini-1.5-flash',
+  'google/gemini-2.0-flash',
+  'google/gemini-2.5-flash',
+  'anthropic/claude-3-opus',
+  'anthropic/claude-3-opus-20240229',
+  'anthropic/claude-3-sonnet',
+  'anthropic/claude-3-haiku',
+  'anthropic/claude-3-5-sonnet',
+  'anthropic/claude-3-5-haiku',
+  'openai/gpt-4o',
+  'openai/gpt-4o-mini',
+  'openai/gpt-4-turbo',
+  'openai/gpt-4-vision-preview',
+  'mistralai/pixtral-12b',
+  'mistralai/pixtral-large-2411',
+  'qwen/qwen-vl-plus',
+  'qwen/qwen-vl-max',
+  'meta-llama/llama-3.2-11b-vision-instruct',
+  'meta-llama/llama-3.2-90b-vision-instruct',
+  'x-ai/grok-vision-beta',
+  'x-ai/grok-2-vision-1212',
+];
+
 export const OPENROUTER_MODEL_PRESETS = [
   'nvidia/nemotron-3-super-120b-a12b:free',
   'cohere/north-mini-code:free',

@@ -14,6 +14,8 @@ import {
   Alert,
 } from 'react-native';
 import C from '../../config/colors.config';
+import { VISION_CAPABLE_MODELS } from '../../config/appConfig';
+
 import { SendIcon, StopIcon, MicIcon, LiveIcon } from '../shared/Icons';
 import {
   fontScale,
@@ -59,25 +61,13 @@ try {
 }
 
 // ─── Vision-capable model detection ──────────────────────────────────────────
-// Returns true if the given agentConfigs contain at least one vision-capable model.
-// Vision support: OpenAI gpt-4o*, Anthropic claude-*, Google gemini-*, plus multimodal OpenRouter models.
+// Returns true if the vision agent's model is in VISION_CAPABLE_MODELS.
+// Reads agentConfigs.vision.model from runtime state — not SecureStore.
 const isVisionCapable = (agentConfigs = {}) => {
-  const VISION_PATTERNS = [
-    /gpt-4o/i,
-    /claude-3/i,
-    /claude-3\./i,
-    /claude/i,
-    /gemini/i,
-    /llava/i,
-    /vision/i,
-    /pixtral/i,
-    /qwen.*vl/i,
-    /mistral.*pixtral/i,
-  ];
-  return Object.values(agentConfigs).some((cfg) => {
-    if (!cfg?.model) return false;
-    return VISION_PATTERNS.some((re) => re.test(cfg.model));
-  });
+  const model = agentConfigs?.vision?.model;
+  if (!model) return false;
+  const lower = model.toLowerCase();
+  return VISION_CAPABLE_MODELS.some((m) => lower === m.toLowerCase());
 };
 
 // ─── Agent accent color map ───────────────────────────────────────────────────
@@ -332,7 +322,9 @@ function ImageSvgIcon({ size = 24, color = '#A78BFA' }) {
   );
 }
 
-function AttachMenu({ visible, onClose, onPickDocument, onPickImage, visionEnabled }) {
+// Floating popup card — uses a transparent Modal for the full-screen tap-to-dismiss
+// backdrop, with the card pinned bottom-left above the input bar.
+function AttachMenu({ visible, onClose, onPickDocument, onPickImage, visionEnabled, onShowToast }) {
   return (
     <Modal
       visible={visible}
@@ -340,49 +332,54 @@ function AttachMenu({ visible, onClose, onPickDocument, onPickImage, visionEnabl
       animationType="fade"
       onRequestClose={onClose}
     >
-      <TouchableOpacity style={s.attachMenuOverlay} activeOpacity={1} onPress={onClose}>
-        <View style={s.attachMenuSheet}>
-          {/* Handle bar */}
-          <View style={s.attachMenuHandle} />
-
-          <Text style={s.attachMenuTitle}>Attach</Text>
-
-          {/* Upload Document */}
+      {/* Invisible backdrop — tap anywhere outside card to close */}
+      <TouchableOpacity
+        style={s.attachPopupBackdrop}
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        {/* Card — stopPropagation so tapping inside doesn't close it */}
+        <TouchableOpacity
+          style={s.attachPopupCard}
+          activeOpacity={1}
+          onPress={() => {}}
+        >
+          {/* Document row — always enabled */}
           <TouchableOpacity
-            style={s.attachMenuRow}
+            style={s.attachPopupRow}
             onPress={() => { onClose(); onPickDocument(); }}
             activeOpacity={0.75}
           >
-            <View style={s.attachMenuIconBox}>
-              <DocSvgIcon size={22} color="#A78BFA" />
+            <View style={s.attachPopupIconBox}>
+              <DocSvgIcon size={20} color="#A78BFA" />
             </View>
-            <View style={s.attachMenuRowText}>
-              <Text style={s.attachMenuRowTitle}>Upload Document</Text>
-              <Text style={s.attachMenuRowSub}>PDF, DOCX, TXT — text extracted on device</Text>
-            </View>
+            <Text style={s.attachPopupRowLabel}>Document</Text>
           </TouchableOpacity>
 
-          {/* Upload Image */}
+          {/* Divider */}
+          <View style={s.attachPopupDivider} />
+
+          {/* Image row — greyed + toast when vision is not compatible */}
           <TouchableOpacity
-            style={[s.attachMenuRow, !visionEnabled && s.attachMenuRowDisabled]}
-            onPress={() => { if (!visionEnabled) return; onClose(); onPickImage(); }}
-            activeOpacity={visionEnabled ? 0.75 : 1}
+            style={[s.attachPopupRow, !visionEnabled && s.attachPopupRowDisabled]}
+            onPress={() => {
+              if (!visionEnabled) {
+                onShowToast?.('Not compatible', 'Switch the Vision agent to a vision-capable model (GPT-4o, Gemini, Claude…).', 'warning');
+                return;
+              }
+              onClose();
+              onPickImage();
+            }}
+            activeOpacity={visionEnabled ? 0.75 : 0.5}
           >
-            <View style={[s.attachMenuIconBox, !visionEnabled && s.attachMenuIconBoxDisabled]}>
-              <ImageSvgIcon size={22} color={visionEnabled ? '#A78BFA' : '#444455'} />
+            <View style={[s.attachPopupIconBox, !visionEnabled && s.attachPopupIconBoxDisabled]}>
+              <ImageSvgIcon size={20} color={visionEnabled ? '#A78BFA' : '#3A3A50'} />
             </View>
-            <View style={s.attachMenuRowText}>
-              <Text style={[s.attachMenuRowTitle, !visionEnabled && s.attachMenuRowTitleDisabled]}>
-                Upload Image
-              </Text>
-              <Text style={s.attachMenuRowSub}>
-                {visionEnabled
-                  ? 'Gallery or camera — vision models only'
-                  : 'Requires a vision-capable model (GPT-4o, Gemini, Claude…)'}
-              </Text>
-            </View>
+            <Text style={[s.attachPopupRowLabel, !visionEnabled && s.attachPopupRowLabelDisabled]}>
+              Image
+            </Text>
           </TouchableOpacity>
-        </View>
+        </TouchableOpacity>
       </TouchableOpacity>
     </Modal>
   );
@@ -767,19 +764,20 @@ export default function InputBar({
             </>
           )}
         </View>
+
+        {/* ── Floating attach popup — outside the pill so it isn't clipped ── */}
+        <AttachMenu
+          visible={attachMenuOpen}
+          onClose={() => setAttachMenuOpen(false)}
+          onPickDocument={handlePickDocument}
+          onPickImage={handlePickImage}
+          visionEnabled={visionEnabled}
+          onShowToast={showToast}
+        />
       </View>
 
       {/* ── Loading scrim ─────────────────────────────────────────────── */}
       {loading && <View style={[s.inputBarScrim, { pointerEvents: 'box-only' }]} />}
-
-      {/* ── Attach menu ─────────────────────────────────────────────────── */}
-      <AttachMenu
-        visible={attachMenuOpen}
-        onClose={() => setAttachMenuOpen(false)}
-        onPickDocument={handlePickDocument}
-        onPickImage={handlePickImage}
-        visionEnabled={visionEnabled}
-      />
     </View>
   );
 }
@@ -1045,71 +1043,63 @@ const s = StyleSheet.create({
     fontWeight: '600',
   },
 
-  // ── Attach menu (bottom sheet) ────────────────────────────────────────────
-  attachMenuOverlay: {
+  // ── Attach floating popup ─────────────────────────────────────────────────
+  // Full-screen transparent Modal backdrop — tapping closes the popup.
+  attachPopupBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'flex-end',
+    justifyContent: 'flex-end',    // keep card near the bottom
+    alignItems: 'flex-start',      // align card to the left
+    paddingLeft: spacing(16),      // match input bar horizontal padding
+    paddingBottom: Platform.select({ ios: spacing(90), android: spacing(80) }),
   },
-  attachMenuSheet: {
+  // The floating popup card — compact, dark purple, above the input bar.
+  attachPopupCard: {
     backgroundColor: '#13131F',
-    borderTopLeftRadius: radius(20),
-    borderTopRightRadius: radius(20),
-    borderTopWidth: 1,
-    borderColor: 'rgba(123,47,255,0.25)',
-    paddingHorizontal: spacing(20),
-    paddingTop: spacing(12),
-    paddingBottom: spacing(36),
+    borderWidth: 1,
+    borderColor: 'rgba(123,47,255,0.35)',
+    borderRadius: radius(14),
+    paddingVertical: spacing(4),
+    paddingHorizontal: spacing(4),
+    minWidth: scale(160),
+    shadowColor: '#7B2FFF',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    elevation: 18,
   },
-  attachMenuHandle: {
-    width: scale(36),
-    height: scale(4),
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: radius(2),
-    alignSelf: 'center',
-    marginBottom: spacing(16),
-  },
-  attachMenuTitle: {
-    color: '#ECECF1',
-    fontSize: fontScale(16),
-    fontWeight: '700',
-    letterSpacing: 0.2,
-    marginBottom: spacing(16),
-  },
-  attachMenuRow: {
+  attachPopupRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing(14),
-    gap: spacing(14),
-    borderTopWidth: 1,
-    borderColor: 'rgba(255,255,255,0.06)',
+    gap: spacing(10),
+    paddingVertical: spacing(10),
+    paddingHorizontal: spacing(12),
+    borderRadius: radius(10),
   },
-  attachMenuRowDisabled: { opacity: 0.4 },
-  attachMenuIconBox: {
-    width: verticalScale(44),
-    height: verticalScale(44),
-    borderRadius: radius(12),
+  attachPopupRowDisabled: { opacity: 0.4 },
+  attachPopupIconBox: {
+    width: verticalScale(34),
+    height: verticalScale(34),
+    borderRadius: radius(9),
     backgroundColor: 'rgba(123,47,255,0.15)',
     borderWidth: 1,
     borderColor: 'rgba(123,47,255,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  attachMenuIconBoxDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderColor: 'rgba(255,255,255,0.08)',
+  attachPopupIconBoxDisabled: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: 'rgba(255,255,255,0.07)',
   },
-  attachMenuRowText: { flex: 1 },
-  attachMenuRowTitle: {
+  attachPopupRowLabel: {
     color: '#ECECF1',
-    fontSize: fontScale(15),
+    fontSize: fontScale(14),
     fontWeight: '600',
-    marginBottom: spacing(2),
+    letterSpacing: 0.1,
   },
-  attachMenuRowTitleDisabled: { color: '#555566' },
-  attachMenuRowSub: {
-    color: '#57606A',
-    fontSize: fontScale(12),
-    lineHeight: fontScale(17),
+  attachPopupRowLabelDisabled: { color: '#444455' },
+  attachPopupDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    marginHorizontal: spacing(8),
   },
 });
