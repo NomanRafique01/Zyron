@@ -17,15 +17,16 @@ RUN pip install --no-cache-dir --upgrade pip \
  && pip install --no-cache-dir -r requirements.txt
 
 # ── Copy application source ───────────────────────────────────────────────────
-COPY main.py          .
-COPY models.py        .
-COPY providers.py     .
-COPY query_analyzer.py .
-COPY web_search.py    .
-COPY orchestrator.py  .
-COPY orchestrator/    ./orchestrator/
-COPY prompt_builder.py .
-COPY prompt_builder/   ./prompt_builder/
+COPY main.py              .
+COPY models.py            .
+COPY providers.py         .
+COPY query_analyzer.py    .
+COPY web_search.py        .
+COPY document_extractor.py .
+COPY orchestrator.py      .
+COPY orchestrator/        ./orchestrator/
+COPY prompt_builder.py    .
+COPY prompt_builder/      ./prompt_builder/
 
 # ── Runtime ───────────────────────────────────────────────────────────────────
 EXPOSE 8000
