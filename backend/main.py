@@ -21,9 +21,12 @@ from fastapi.responses import JSONResponse
 
 from models import (
     AgentResult,
+    DocumentExtractRequest,
+    DocumentExtractResponse,
     OrchestrateRequest,
     OrchestrateResponse,
 )
+from document_extractor import extract_text
 from orchestrator import run_pipeline
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
@@ -82,6 +85,29 @@ async def health() -> Dict[str, str]:
     the container is alive.  No database or provider calls are made.
     """
     return {"status": "ok"}
+
+
+# ─── Extract document ─────────────────────────────────────────────────────────
+@app.post(
+    "/extract-document",
+    response_model=DocumentExtractResponse,
+    summary="Extract plain text from an uploaded document",
+    tags=["documents"],
+    response_description="Extracted text, success flag, and optional error message.",
+)
+async def extract_document(body: DocumentExtractRequest) -> DocumentExtractResponse:
+    """
+    Accept a base64-encoded file and return its plain-text content.
+
+    Supports PDF (via pdfminer.six), DOCX (via python-docx), and TXT.
+    """
+    log.info("POST /extract-document  filename=%r  mime=%r", body.filename, body.mimeType)
+    result = extract_text(body.filename, body.base64Data, body.mimeType)
+    return DocumentExtractResponse(
+        text=result["text"],
+        success=result["success"],
+        error=result["error"],
+    )
 
 
 # ─── Orchestrate ──────────────────────────────────────────────────────────────

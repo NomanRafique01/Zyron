@@ -160,6 +160,24 @@ class OrchestrateRequest(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+# ─── Document extraction models ───────────────────────────────────────────────
+
+class DocumentExtractRequest(BaseModel):
+    """Body accepted by POST /extract-document."""
+
+    filename: str
+    base64Data: str
+    mimeType: str
+
+
+class DocumentExtractResponse(BaseModel):
+    """Response from POST /extract-document."""
+
+    text: str
+    success: bool
+    error: Optional[str] = None
+
+
 # ─── Response models ───────────────────────────────────────────────────────────
 
 class AgentResult(BaseModel):

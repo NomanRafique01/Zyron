@@ -29,7 +29,8 @@ class ZyronState(TypedDict, total=False):
     agent_configs:  Dict[str, Any]               # role → AgentConfig dict
     user_profile:   Optional[Dict[str, Any]]     # UserProfile dict
     persona:        Optional[str]                # e.g. "creative" | "precise"
-    search_results: Optional[Dict[str, Any]]     # web search result from web_search.py
+    search_results:   Optional[Dict[str, Any]]   # web search result from web_search.py
+    document_context: Optional[Dict[str, Any]]   # uploaded doc { text, filename }
 
     # ── Specialist outputs ────────────────────────────────────────────────────
     specialist_outputs: Dict[str, str]           # role → raw text

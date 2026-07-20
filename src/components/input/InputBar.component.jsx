@@ -540,6 +540,64 @@ export default function InputBar({
   };
 
   // ── Document picker & text extraction ─────────────────────────────────────
+
+  // Converts a local file URI to a base64 string by reading it as an ArrayBuffer.
+  const _uriToBase64 = async (uri) => {
+    const res = await fetch(uri);
+    const buf = await res.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  };
+
+  // Step 1: backend extraction. Step 2: TXT-only frontend fallback.
+  const extractDocumentText = async (uri, filename, mimeType) => {
+    const BACKEND_URL = 'https://zyron-production-7af1.up.railway.app';
+
+    // ── Backend ──────────────────────────────────────────────────────────────
+    try {
+      const base64Data = await _uriToBase64(uri);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
+      let response;
+      try {
+        response = await fetch(`${BACKEND_URL}/extract-document`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename, base64Data, mimeType }),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timer);
+      }
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.text?.trim().length > 10) {
+          console.log('[DocumentExtract] Backend extraction success — chars:', data.text.length);
+          return data.text;
+        }
+      }
+    } catch (err) {
+      console.log('[DocumentExtract] Backend extraction failed — trying frontend fallback:', err.message);
+    }
+
+    // ── Frontend TXT fallback ─────────────────────────────────────────────────
+    if (mimeType === 'text/plain' || filename?.endsWith('.txt')) {
+      try {
+        const text = await fetch(uri).then(r => r.text());
+        if (text?.trim().length > 10) {
+          console.log('[DocumentExtract] Frontend TXT fallback success');
+          return text;
+        }
+      } catch (err) {
+        console.log('[DocumentExtract] Frontend TXT fallback failed:', err.message);
+      }
+    }
+
+    return null;
+  };
+
   const handlePickDocument = useCallback(async () => {
     if (!DocumentPicker) {
       showToast?.('Not Available', 'Document picker is not available on this build.', 'warning');
@@ -563,85 +621,15 @@ export default function InputBar({
 
       setExtracting(true);
       try {
-        let extractedText = '';
+        const extractedText = await extractDocumentText(uri, filename, mimeType);
 
-        if (mimeType === 'text/plain' || filename?.endsWith('.txt')) {
-          // TXT: read directly
-          const response = await fetch(uri);
-          extractedText = await response.text();
-        } else if (
-          mimeType === 'application/pdf' ||
-          filename?.endsWith('.pdf')
-        ) {
-          // PDF: read raw and attempt basic text extraction
-          // For a full Expo build, expo-file-system + a PDF lib can be added.
-          // Here we fetch and extract readable unicode text as a best-effort approach.
-          const response = await fetch(uri);
-          const arrayBuffer = await response.arrayBuffer();
-          const bytes = new Uint8Array(arrayBuffer);
-          // Extract printable ASCII/UTF-8 strings from PDF binary (best-effort)
-          let raw = '';
-          for (let i = 0; i < bytes.length; i++) {
-            const c = bytes[i];
-            if (c >= 32 && c < 127) raw += String.fromCharCode(c);
-            else if (c === 10 || c === 13) raw += '\n';
-          }
-          // Extract text between BT and ET PDF operators, and Tj/TJ strings
-          const textBlocks = [];
-          // Match PDF text strings: (text) Tj or [(text)] TJ patterns
-          const pdfTextRe = /\(([^)]*)\)\s*Tj|\[([^\]]*)\]\s*TJ/g;
-          let m;
-          while ((m = pdfTextRe.exec(raw)) !== null) {
-            const chunk = (m[1] || m[2] || '').replace(/\\n/g, '\n').replace(/\\r/g, '').trim();
-            if (chunk.length > 1) textBlocks.push(chunk);
-          }
-          extractedText = textBlocks.length > 0
-            ? textBlocks.join(' ')
-            : raw.replace(/[^\x20-\x7E\n]/g, ' ').replace(/\s{3,}/g, '\n').trim();
-        } else if (
-          mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-          filename?.endsWith('.docx')
-        ) {
-          // DOCX: read as arraybuffer and extract text from XML inside the zip
-          const response = await fetch(uri);
-          const arrayBuffer = await response.arrayBuffer();
-          const bytes = new Uint8Array(arrayBuffer);
-          // Convert to binary string for zip parsing
-          let binaryStr = '';
-          for (let i = 0; i < bytes.length; i++) {
-            binaryStr += String.fromCharCode(bytes[i]);
-          }
-          // DOCX is a zip — find word/document.xml by looking for its XML content
-          // Simple approach: scan for w:t XML tag content which holds all text
-          const xmlMatch = binaryStr.match(/word\/document\.xml/);
-          if (xmlMatch) {
-            // Extract all text within <w:t> tags using a raw scan
-            const wTRe = /<w:t[^>]*>([^<]*)<\/w:t>/g;
-            const parts = [];
-            let wm;
-            while ((wm = wTRe.exec(binaryStr)) !== null) {
-              if (wm[1].trim()) parts.push(wm[1]);
-            }
-            extractedText = parts.join(' ');
-          }
-          if (!extractedText) {
-            // Fallback: extract any readable text
-            extractedText = binaryStr
-              .replace(/[^\x20-\x7E\n]/g, ' ')
-              .replace(/\s{3,}/g, '\n')
-              .trim()
-              .slice(0, 8000);
-          }
-        }
-
-        if (!extractedText || extractedText.trim().length < 10) {
-          showToast?.('Extraction Failed', 'Could not extract readable text from this file.', 'warning');
+        if (!extractedText) {
+          showToast?.('Extraction Failed', 'Could not extract text from this file. Try a TXT file instead.', 'warning');
           return;
         }
 
         // Trim to a sensible token budget (~6000 chars ≈ ~1500 tokens)
         const trimmed = extractedText.trim().slice(0, 6000);
-        console.log('[DocumentContext] Extracted document text — length:', trimmed.length, 'file:', filename);
         onDocumentAttached?.({ text: trimmed, filename: filename || 'document' });
       } finally {
         setExtracting(false);
@@ -712,6 +700,27 @@ export default function InputBar({
     ]}>
       <AgentStrip agents={simulatedAgents} isTyping={isTyping} />
 
+      {/* ── Attachment chip row ──────────────────────────────────────────── */}
+      {hasAttachment && (
+        <View style={s.attachChipRow}>
+          {documentContext && (
+            <AttachmentChip
+              label={documentContext.filename}
+              isImage={false}
+              onRemove={() => onAttachmentRemoved?.('document')}
+            />
+          )}
+          {imageAttachment && (
+            <AttachmentChip
+              label={imageAttachment.filename}
+              isImage
+              imageUri={imageAttachment.uri}
+              onRemove={() => onAttachmentRemoved?.('image')}
+            />
+          )}
+        </View>
+      )}
+
       {/* ── Input container row ─────────────────────────────────────────── */}
       <View style={s.inputRow}>
 
@@ -721,32 +730,7 @@ export default function InputBar({
           floating    && s.inputContainerFloating,
           offline     && s.inputContainerOffline,
           isListening && s.inputContainerListening,
-          hasAttachment && s.inputContainerWithAttachment,
         ]}>
-
-          {/* ── Attachment chip row — inside pill, above text field ──────── */}
-          {hasAttachment && (
-            <View style={s.attachChipRow}>
-              {documentContext && (
-                <AttachmentChip
-                  label={documentContext.filename}
-                  isImage={false}
-                  onRemove={() => onAttachmentRemoved?.('document')}
-                />
-              )}
-              {imageAttachment && (
-                <AttachmentChip
-                  label={imageAttachment.filename}
-                  isImage
-                  imageUri={imageAttachment.uri}
-                  onRemove={() => onAttachmentRemoved?.('image')}
-                />
-              )}
-            </View>
-          )}
-
-          {/* ── Input row inside pill: plus btn + text field + actions ──── */}
-          <View style={s.inputPillRow}>
 
           {/* ── Plus / attach button — far left inside pill ──────────────── */}
           <TouchableOpacity
@@ -850,7 +834,6 @@ export default function InputBar({
               </TouchableOpacity>
             </>
           )}
-          </View>{/* end inputPillRow */}
         </View>
       </View>
 
@@ -927,16 +910,13 @@ const s = StyleSheet.create({
   miniAgentName: { fontSize: fontScale(9), fontWeight: '700', letterSpacing: 0.3 },
   stripStatus: { fontSize: fontScale(9), fontWeight: '600', color: C.textMuted, letterSpacing: 0.3 },
 
-  // ── Attachment chip row — sits inside the pill above the text input ──────
+  // ── Attachment chip row ──────────────────────────────────────────────────
   attachChipRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing(6),
-    paddingTop: spacing(4),
-    paddingBottom: spacing(6),
-    paddingHorizontal: spacing(6),
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(123,47,255,0.2)',
+    marginBottom: spacing(8),
+    paddingHorizontal: spacing(4),
   },
   attachChip: {
     flexDirection: 'row',
@@ -977,19 +957,10 @@ const s = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // ── Input row (wraps the pill) ─────────────────────────────────────────
+  // ── Input row (pill only — plus is now inside pill) ──────────────────────
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-  },
-
-  // ── Inner row inside pill: plus btn + text field + action buttons ────────
-  inputPillRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    flex: 1,
-    paddingLeft: spacing(10),
-    paddingRight: spacing(14),
   },
 
   // Plus button — bare icon, no background/border, sits inside pill at left
@@ -1006,28 +977,26 @@ const s = StyleSheet.create({
     opacity: 0.35,
   },
 
-  // Input container (the main pill) — column layout to host chip row + input row
+  // Input container row (the main pill)
   inputContainer: {
     flex: 1,
-    flexDirection: 'column',
+    flexDirection: 'row',
+    alignItems: 'flex-end',
     backgroundColor: '#0D0D16',
     borderWidth: 1.5,
     borderColor: 'rgba(123,47,255,0.45)',
     borderRadius: radius(26),
+    paddingLeft: spacing(10),
+    paddingRight: spacing(14),
     paddingVertical: spacing(6),
     minHeight: verticalScale(48),
-    maxHeight: verticalScale(180),
+    maxHeight: verticalScale(140),
     shadowColor: '#7B2FFF',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.55,
     shadowRadius: 12,
     elevation: 10,
     overflow: 'hidden',   // clips the waveform inside the pill
-  },
-
-  // When an attachment chip is present, allow extra height
-  inputContainerWithAttachment: {
-    maxHeight: verticalScale(220),
   },
   inputContainerFloating: {
     backgroundColor: '#0D0D16',
