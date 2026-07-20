@@ -279,6 +279,59 @@ function AttachmentChip({ label, isImage, imageUri, onRemove }) {
 
 // ─── AttachMenu ───────────────────────────────────────────────────────────────
 // Bottom sheet modal with two options: Document and Image.
+// ─── SVG icons for AttachMenu ─────────────────────────────────────────────────
+const { Svg, Path, Rect, Polyline, Line, Circle: SvgCircle } = (() => {
+  try { return require('react-native-svg'); } catch (_) { return {}; }
+})();
+
+function DocSvgIcon({ size = 24, color = '#A78BFA' }) {
+  if (!Svg) return null;
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+        stroke={color}
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Polyline
+        points="14 2 14 8 20 8"
+        stroke={color}
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Line x1="16" y1="13" x2="8" y2="13" stroke={color} strokeWidth="1.75" strokeLinecap="round" />
+      <Line x1="16" y1="17" x2="8" y2="17" stroke={color} strokeWidth="1.75" strokeLinecap="round" />
+      <Polyline points="10 9 9 9 8 9" stroke={color} strokeWidth="1.75" strokeLinecap="round" />
+    </Svg>
+  );
+}
+
+function ImageSvgIcon({ size = 24, color = '#A78BFA' }) {
+  if (!Svg) return null;
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Rect
+        x="3" y="3" width="18" height="18" rx="2" ry="2"
+        stroke={color}
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <SvgCircle cx="8.5" cy="8.5" r="1.5" stroke={color} strokeWidth="1.75" />
+      <Polyline
+        points="21 15 16 10 5 21"
+        stroke={color}
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 function AttachMenu({ visible, onClose, onPickDocument, onPickImage, visionEnabled }) {
   return (
     <Modal
@@ -301,7 +354,7 @@ function AttachMenu({ visible, onClose, onPickDocument, onPickImage, visionEnabl
             activeOpacity={0.75}
           >
             <View style={s.attachMenuIconBox}>
-              <Text style={s.attachMenuIconEmoji}>📄</Text>
+              <DocSvgIcon size={22} color="#A78BFA" />
             </View>
             <View style={s.attachMenuRowText}>
               <Text style={s.attachMenuRowTitle}>Upload Document</Text>
@@ -316,7 +369,7 @@ function AttachMenu({ visible, onClose, onPickDocument, onPickImage, visionEnabl
             activeOpacity={visionEnabled ? 0.75 : 1}
           >
             <View style={[s.attachMenuIconBox, !visionEnabled && s.attachMenuIconBoxDisabled]}>
-              <Text style={s.attachMenuIconEmoji}>🖼️</Text>
+              <ImageSvgIcon size={22} color={visionEnabled ? '#A78BFA' : '#444455'} />
             </View>
             <View style={s.attachMenuRowText}>
               <Text style={[s.attachMenuRowTitle, !visionEnabled && s.attachMenuRowTitleDisabled]}>
@@ -679,19 +732,8 @@ export default function InputBar({
         </View>
       )}
 
-      {/* ── Plus button + input container row ──────────────────────────── */}
+      {/* ── Input container row ─────────────────────────────────────────── */}
       <View style={s.inputRow}>
-
-        {/* ── Plus / attach button — left of input pill ─────────────────── */}
-        <TouchableOpacity
-          style={[s.plusBtn, (blocked || extracting) && s.plusBtnDisabled]}
-          onPress={() => setAttachMenuOpen(true)}
-          disabled={blocked || extracting}
-          activeOpacity={0.75}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <PlusIcon size={scale(18)} color={blocked || extracting ? '#444455' : '#A78BFA'} />
-        </TouchableOpacity>
 
         {/* ── Main input pill ─────────────────────────────────────────────── */}
         <View style={[
@@ -700,6 +742,17 @@ export default function InputBar({
           offline     && s.inputContainerOffline,
           isListening && s.inputContainerListening,
         ]}>
+
+          {/* ── Plus / attach button — far left inside pill ──────────────── */}
+          <TouchableOpacity
+            style={[s.plusBtn, (blocked || extracting) && s.plusBtnDisabled]}
+            onPress={() => setAttachMenuOpen(true)}
+            disabled={blocked || extracting}
+            activeOpacity={0.75}
+            hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
+          >
+            <PlusIcon size={scale(18)} color={blocked || extracting ? '#444455' : '#ECECF1'} />
+          </TouchableOpacity>
 
           {/* ── Waveform + label (absolutely overlays the text field) ──── */}
           {isListening && (
@@ -915,32 +968,27 @@ const s = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // ── Input row (plus btn + pill) ──────────────────────────────────────────
+  // ── Input row (pill only — plus is now inside pill) ──────────────────────
   inputRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: spacing(10),
   },
 
-  // Plus button
+  // Plus button — bare icon, no background/border, sits inside pill at left
   plusBtn: {
-    width: verticalScale(36),
-    height: verticalScale(36),
-    borderRadius: verticalScale(18),
-    backgroundColor: 'rgba(123,47,255,0.12)',
-    borderWidth: 1.5,
-    borderColor: 'rgba(123,47,255,0.4)',
     alignItems: 'center',
     justifyContent: 'center',
+    width: scale(28),
+    height: scale(28),
+    marginRight: spacing(2),
     marginBottom: spacing(2),
     flexShrink: 0,
   },
   plusBtnDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderColor: 'rgba(255,255,255,0.08)',
+    opacity: 0.35,
   },
 
-  // Input container row (the main pill — now flex:1 inside inputRow)
+  // Input container row (the main pill)
   inputContainer: {
     flex: 1,
     flexDirection: 'row',
@@ -949,7 +997,7 @@ const s = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'rgba(123,47,255,0.45)',
     borderRadius: radius(26),
-    paddingLeft: spacing(16),
+    paddingLeft: spacing(10),
     paddingRight: spacing(14),
     paddingVertical: spacing(6),
     minHeight: verticalScale(48),
@@ -996,8 +1044,8 @@ const s = StyleSheet.create({
   // Waveform overlay — sits over the invisible TextInput, never adds height
   waveformOverlay: {
     ...StyleSheet.absoluteFillObject,
-    // Align with the text field's left padding; pull back before the buttons
-    left: spacing(16),
+    // Align after plus button; pull back before the action buttons
+    left: spacing(10) + scale(28) + spacing(2),
     right: verticalScale(32) * 2 + spacing(4) + spacing(6) + spacing(6),
     flexDirection: 'row',
     alignItems: 'center',
@@ -1137,7 +1185,6 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderColor: 'rgba(255,255,255,0.08)',
   },
-  attachMenuIconEmoji: { fontSize: fontScale(22) },
   attachMenuRowText: { flex: 1 },
   attachMenuRowTitle: {
     color: '#ECECF1',
