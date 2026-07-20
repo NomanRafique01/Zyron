@@ -11,11 +11,11 @@
  */
 
 import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
+import { View, StyleSheet, Animated, Easing } from 'react-native';
 
 // ── Ticker content ────────────────────────────────────────────────────────────
 const TICKER_TEXT =
-  '🔍 Web Searching...  ·  Fetching live data  ·  Scanning sources  ·  Retrieving results  ·  Analyzing web content  ·  Cross-referencing information  ·  ';
+  'Web Searching...  ·  Fetching live data  ·  Scanning sources  ·  Retrieving results  ·  Analyzing web content  ·  Cross-referencing information  ·  ';
 
 // Duplicate the string so the scroll loop is seamless.
 const TICKER_LOOP = TICKER_TEXT + TICKER_TEXT;
@@ -114,7 +114,6 @@ export default function WebSearchTicker({ isWebSearching }) {
       {/* Left accent indicator */}
       <View style={s.leftIndicator}>
         <Animated.View style={[s.pulseDot, { opacity: pulseAnim }]} />
-        <Text style={s.searchIcon}>🔍</Text>
       </View>
 
       {/* Scrolling marquee */}
@@ -159,9 +158,6 @@ const s = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: '#7B2FFF',
-  },
-  searchIcon: {
-    fontSize: 11,
   },
   marqueeClip: {
     flex: 1,

@@ -268,6 +268,9 @@ export default function useAgentExecution({
         }
         return [...prev, newAiMsg];
       });
+      // Ticker stays visible until the final bubble is committed to the
+      // message list above — drop it now, not on agent completion.
+      setIsWebSearching(false);
 
       // Backend path: no writer streaming was ever inserted, so the live
       // AgentCoordinationTable footer is still visible.  Allow one animation
@@ -296,6 +299,8 @@ export default function useAgentExecution({
 
     } catch (err) {
       if (err.name === 'AbortError' || err.message === 'Aborted') {
+        // User aborted — no bubble rendered, dismiss ticker immediately.
+        setIsWebSearching(false);
         console.log('Generation stopped by user.');
       } else {
         console.error('Generation failed:', err);
@@ -331,6 +336,8 @@ export default function useAgentExecution({
           const withoutStreaming = prev.filter((m) => m.id !== STREAMING_MSG_ID);
           return [...withoutStreaming, newErrorMsg];
         });
+        // Error bubble is now committed — dismiss ticker.
+        setIsWebSearching(false);
 
         latestAnswerFocusPendingRef.current = true;
         const errorList = [...activeMessagesList, newErrorMsg];
@@ -346,7 +353,6 @@ export default function useAgentExecution({
       streamingWriterTextRef.current = '';
       streamingInsertedRef.current = false;
       streamingPendingFlushRef.current = false;
-      setIsWebSearching(false);
       setIsTyping(false);
       // Only clear agents immediately for abort/error paths.  The success path
       // sets _successHandledCleanup = true and schedules clearSimulatedAgents()
