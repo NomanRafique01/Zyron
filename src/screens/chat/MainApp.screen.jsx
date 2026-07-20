@@ -665,24 +665,14 @@ export default function MainApp({ splashVisible = true, onSignedOut }) {
           }}
         />
 
-        {/* CHAT INTERFACE AREA
-            Android: plain View — softwareKeyboardLayoutMode="resize" (app.json) shrinks
-            the OS window height when the keyboard opens, exactly like ChatGPT / Claude.
-            KeyboardAvoidingView with behavior="height" on Android fights that OS resize
-            and produces a double-offset gap. iOS keeps standard padding behavior.
-
-            Huawei / OEM adjustResize fallback:
-            On devices that ignore adjustResize (Huawei EMUI, some Xiaomi/Oppo/Vivo ROMs)
-            the window never shrinks. `adjustResizeFailed` is set true by the hook and
-            `keyboardAvoidingPadding` is applied as explicit paddingBottom on the chatShell
-            so the flex layout manually pushes the composer above the keyboard.
-            This is a no-op on well-behaved devices (keyboardAvoidingPadding === 0). */}
         {Platform.OS === 'android' ? (
           /* ── ANDROID PATH ────────────────────────────────────────────────────────── */
+          /* softwareKeyboardLayoutMode="pan" — the OS does NOT shrink the window.
+             We manually pad the chatShell bottom by keyboardHeight so the flex
+             layout pushes composerDock flush above the keyboard with zero gap.
+             When keyboard is hidden, safeBottom clears the nav bar. */
           <>
-            {/* Welcome hero — pinned absolutely inside mainWrapper so it is
-                completely outside the chatShell flex flow. It never moves when
-                keyboard opens — whether via OS resize or manual JS padding. */}
+            {/* Welcome hero — pinned absolutely so it never moves in flex flow */}
             {conversations.messages.length === 0 && !conversations.currentSessionId && !conversations.chatLoading && (
               <View style={[s.welcomeHeroAnchor, { pointerEvents: 'none' }]}>
                 <View style={s.welcomeContent}>
@@ -695,12 +685,9 @@ export default function MainApp({ splashVisible = true, onSignedOut }) {
 
             <View style={[
               s.chatShell,
-              adjustResizeFailed && keyboardAvoidingPadding > 0
-                ? { paddingBottom: keyboardAvoidingPadding }
-                : null,
+              { paddingBottom: keyboardVisible ? keyboardHeight : insets.bottom },
             ]}>
-              {/* On welcome screen: empty flex placeholder keeps composer at bottom.
-                  On chat screen: normal message list. */}
+              {/* flex:1 spacer — empty on welcome screen, message list on chat */}
               <View style={{ flex: 1 }}>
                 {conversations.messages.length > 0 || conversations.currentSessionId ? (
                   <View style={s.chatConversation}>
@@ -722,11 +709,8 @@ export default function MainApp({ splashVisible = true, onSignedOut }) {
                 ) : null}
               </View>
 
-              {/* Composer — extra safe clearance when hardware keyboard active */}
-              <View style={[
-                s.composerDock,
-                { paddingBottom: isHardwareKeyboard ? spacing(8) : Math.max(spacing(4), safeBottom) },
-              ]}>
+              {/* Composer — always last in flex column = always at bottom */}
+              <View style={s.composerDock}>
                 <InputBar
                   inputRef={inputRef}
                   inputText={agentExec.inputText}

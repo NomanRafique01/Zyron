@@ -150,8 +150,6 @@ export default function SettingsModal({
 
   const handleToggleTeamPanel = (teamId) => {
     const next = expandedTeamId === teamId ? null : teamId;
-    const { LayoutAnimation } = require('react-native');
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpandedTeamId(next);
     if (next) scrollTeamIntoView(next, 160);
   };
@@ -269,17 +267,16 @@ export default function SettingsModal({
                   </View>
                 </View>
               </TouchableOpacity>
-              {agentLibraryPanelOpen && (
-                <AgentLibraryPanel
-                  activeTeamId={activeTeamId}
-                  activeTeam={activeTeam}
-                  expandedTeamId={expandedTeamId}
-                  teamNodeRef={teamNodeRef}
-                  teamLayoutRef={teamLayoutRef}
-                  onToggleTeam={handleToggleTeamPanel}
-                  onSelectTeam={(teamId) => sockets.handleSelectTeam(teamId, scrollTeamIntoView)}
-                />
-              )}
+              <AgentLibraryPanel
+                style={{ display: agentLibraryPanelOpen ? 'flex' : 'none' }}
+                activeTeamId={activeTeamId}
+                activeTeam={activeTeam}
+                expandedTeamId={expandedTeamId}
+                teamNodeRef={teamNodeRef}
+                teamLayoutRef={teamLayoutRef}
+                onToggleTeam={handleToggleTeamPanel}
+                onSelectTeam={(teamId) => sockets.handleSelectTeam(teamId, scrollTeamIntoView)}
+              />
 
               {/* ── Agents Workshop ── */}
               <TouchableOpacity

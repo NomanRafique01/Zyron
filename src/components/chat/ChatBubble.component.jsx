@@ -1,6 +1,6 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, LayoutAnimation } from 'react-native';
-import Clipboard from '@react-native-clipboard/clipboard';
+import * as Clipboard from 'expo-clipboard';
 import * as Speech from 'expo-speech';
 import C from '../../config/colors.config';
 import SyntaxCode from './SyntaxCode.component.jsx';
@@ -156,10 +156,10 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
     speakLine(0);
   }, [msg, isSpeaking, speakLine, stopSpeak, setSpeaking, buildSpokenLines, onSpeakStart]);
 
-  const handleCopyResponse = () => {
+  const handleCopyResponse = async () => {
     if (!msg?.text) return;
     try {
-      Clipboard.setString(msg.text);
+      await Clipboard.setStringAsync(msg.text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -167,10 +167,10 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
     }
   };
 
-  const handleCopyUser = () => {
+  const handleCopyUser = async () => {
     if (!msg?.text) return;
     try {
-      Clipboard.setString(msg.text);
+      await Clipboard.setStringAsync(msg.text);
       setUserCopied(true);
       setTimeout(() => setUserCopied(false), 2000);
     } catch (err) {

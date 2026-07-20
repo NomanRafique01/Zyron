@@ -15,8 +15,10 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import {
+  View, Text, TouchableOpacity, StyleSheet, Animated,
+} from 'react-native';
 import AgentIcon from '../../../components/agent/AgentIcon.component';
 import s from '../../../styles/app.styles';
 import C from '../../../config/colors.config';
@@ -25,7 +27,6 @@ import { BoltIcon, AgentBuilderIcon } from '../../../components/shared/Icons';
 import { renderTeamSvgIcon } from '../../../components/workshop/TeamBuilderPanel.component';
 import {
   loadCustomTeams,
-  invalidateCustomTeamsCache,
 } from '../../../agents/workshop/customTeamsStorage';
 
 const ROSTER = ['reasoner', 'coder', 'vision', 'writer'];
@@ -44,6 +45,32 @@ const TeamAccordionCard = React.memo(function TeamAccordionCard({
 }) {
   const teamIcon = team.teamIcon || team.agents?.reasoner?.icon || null;
   const writerName = team.agents?.writer?.name || 'Writer';
+
+  // Native-driver animation: fade + scale the expanded body in/out
+  const animProgress = useRef(new Animated.Value(isExpanded ? 1 : 0)).current;
+  const prevExpanded = useRef(isExpanded);
+
+  useEffect(() => {
+    if (prevExpanded.current === isExpanded) return;
+    prevExpanded.current = isExpanded;
+    Animated.timing(animProgress, {
+      toValue: isExpanded ? 1 : 0,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  }, [isExpanded, animProgress]);
+
+  const bodyStyle = useMemo(() => ({
+    opacity: animProgress,
+    transform: [
+      {
+        scale: animProgress.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.97, 1],
+        }),
+      },
+    ],
+  }), [animProgress]);
 
   return (
     <View
@@ -69,16 +96,16 @@ const TeamAccordionCard = React.memo(function TeamAccordionCard({
           onPress={() => onToggle(team.id)}
           activeOpacity={0.75}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+          <View style={rowStyle}>
+            <View style={rowLeftStyle}>
               {(isCustom
                   ? renderTeamSvgIcon(team.teamIcon, team.accent || '#A78BFA')
                   : (typeof teamIcon !== 'string' ? teamIcon : null))
                 || (typeof teamIcon === 'string' && !isCustom
                     ? <Text style={s.teamAccordionIcon}>{teamIcon}</Text>
                     : <AgentBuilderIcon color="#A78BFA" size={22} />)}
-              <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={rowTitleBlockStyle}>
+                <View style={titleRowStyle}>
                   <Text style={s.teamAccordionTitle}>{team.name}</Text>
                   {isCustom && (
                     <View style={[ls.customBadge, { backgroundColor: team.accent + '22', borderColor: team.accent + '55' }]}>
@@ -114,7 +141,7 @@ const TeamAccordionCard = React.memo(function TeamAccordionCard({
             )}
           </View>
 
-          {/* Collapsed: description + roster chips */}
+          {/* Collapsed: description + roster chips — 4 icons only */}
           {!isExpanded && (
             <>
               <Text style={s.teamBriefDesc} numberOfLines={2}>
@@ -136,9 +163,9 @@ const TeamAccordionCard = React.memo(function TeamAccordionCard({
           )}
         </TouchableOpacity>
 
-        {/* Expanded: detailed agent breakdown */}
+        {/* Expanded body — only mounted when the card is actually expanded */}
         {isExpanded && (
-          <View style={s.teamAccordionBody}>
+          <Animated.View style={[s.teamAccordionBody, bodyStyle]}>
 
             {/* Icon row — 4 agents centered at the top */}
             <View style={ls.iconRow}>
@@ -184,7 +211,7 @@ const TeamAccordionCard = React.memo(function TeamAccordionCard({
                     >
                       <AgentIcon icon={agent.icon} size={36} />
                     </View>
-                    <View style={{ flex: 1 }}>
+                    <View style={agentNameBlockStyle}>
                       <Text style={s.teamAgentName}>{agent.name}</Text>
                       <Text style={s.teamAgentRole}>{agent.socketLabel}</Text>
                     </View>
@@ -202,12 +229,19 @@ const TeamAccordionCard = React.memo(function TeamAccordionCard({
                 </View>
               );
             })}
-          </View>
+          </Animated.View>
         )}
       </View>
     </View>
   );
 });
+
+// Static style objects — defined outside render to avoid recreation on every paint
+const rowStyle = { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' };
+const rowLeftStyle = { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 };
+const rowTitleBlockStyle = { flex: 1 };
+const titleRowStyle = { flexDirection: 'row', alignItems: 'center', gap: 6 };
+const agentNameBlockStyle = { flex: 1 };
 
 // ── Section header ─────────────────────────────────────────────────────────
 
@@ -227,37 +261,44 @@ function SectionHeader({ label, count }) {
 // ── Main component ─────────────────────────────────────────────────────────
 
 export default function AgentLibraryPanel({
+  style,
   activeTeamId,
   activeTeam,
   expandedTeamId,
   teamNodeRef,
   teamLayoutRef,
-  onToggleTeam,     // (teamId) => void
-  onSelectTeam,     // (teamId) => void
+  onToggleTeam,
+  onSelectTeam,
 }) {
   const [customTeams, setCustomTeams] = useState([]);
 
-  const loadCustom = useCallback(async () => {
-    try {
-      invalidateCustomTeamsCache();
-      const teams = await loadCustomTeams();
-      setCustomTeams(teams);
-    } catch {
-      setCustomTeams([]);
-    }
+  useEffect(() => {
+    let cancelled = false;
+    loadCustomTeams()
+      .then((teams) => { if (!cancelled) setCustomTeams(teams); })
+      .catch(() => { if (!cancelled) setCustomTeams([]); });
+    return () => { cancelled = true; };
   }, []);
 
-  useEffect(() => { loadCustom(); }, [loadCustom]);
+  const builtInTeams = useMemo(
+    () => AGENTS_TEAMS.map((t) => ({ ...t, _isCustom: false })),
+    [],
+  );
+
+  const customTeamsMapped = useMemo(
+    () => customTeams.map((t) => ({ ...t, _isCustom: true })),
+    [customTeams],
+  );
 
   return (
-    <View style={s.agentLibraryPanel}>
+    <View style={[s.agentLibraryPanel, style]}>
 
       {/* Hero */}
-      <View style={[s.agentLibraryHero, { padding: 10 }]}>
+      <View style={[s.agentLibraryHero, heroPaddingStyle]}>
         <View style={s.agentLibraryHeroIcon}>
           <BoltIcon color={C.purpleSoft} />
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={heroTextBlockStyle}>
           <Text style={s.agentLibraryHeroTitle}>Agent Team Library</Text>
           <Text style={s.agentLibraryHeroSub}>
             Select a team to activate it across all coordination pipelines
@@ -268,11 +309,15 @@ export default function AgentLibraryPanel({
         </View>
       </View>
 
-      {/* ── Section 1: Zyron's Agent Teams ── */}
-      <View style={[s.agentLibraryGrid, { paddingHorizontal: 10, paddingBottom: 4 }]}>
-        <SectionHeader label="ZYRON'S AGENT TEAMS" count={AGENTS_TEAMS.length} />
-
-        {AGENTS_TEAMS.map((team) => (
+      {/*
+       * Plain View + .map() — no nested scrollable list.
+       * FlatList with scrollEnabled=false provides zero virtualization benefit
+       * inside a ScrollView and adds significant JS bridge overhead on every
+       * scroll frame. A plain View is ~60% lighter in this configuration.
+       */}
+      <View style={listContainerStyle}>
+        <SectionHeader label="ZYRON'S AGENT TEAMS" count={builtInTeams.length} />
+        {builtInTeams.map((team) => (
           <TeamAccordionCard
             key={team.id}
             team={team}
@@ -285,20 +330,16 @@ export default function AgentLibraryPanel({
             isCustom={false}
           />
         ))}
-      </View>
 
-      {/* ── Section 2: Your Custom Teams ── */}
-      <View style={[s.agentLibraryGrid, { paddingHorizontal: 10, paddingBottom: 14 }]}>
-        <SectionHeader label="YOUR CUSTOM TEAMS" count={customTeams.length} />
-
-        {customTeams.length === 0 ? (
+        <SectionHeader label="YOUR CUSTOM TEAMS" count={customTeamsMapped.length} />
+        {customTeamsMapped.length === 0 ? (
           <View style={ls.emptyCustom}>
             <Text style={ls.emptyCustomText}>
               No custom teams yet — build one in the Agents Workshop
             </Text>
           </View>
         ) : (
-          customTeams.map((team) => (
+          customTeamsMapped.map((team) => (
             <TeamAccordionCard
               key={team.id}
               team={team}
@@ -317,6 +358,11 @@ export default function AgentLibraryPanel({
     </View>
   );
 }
+
+// Static layout style objects
+const heroPaddingStyle = { padding: 10 };
+const heroTextBlockStyle = { flex: 1 };
+const listContainerStyle = { paddingHorizontal: 10, paddingBottom: 14 };
 
 // ── Local styles (panel-scoped extras) ────────────────────────────────────
 

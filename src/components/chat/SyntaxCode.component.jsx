@@ -1,6 +1,6 @@
 import React, { useState, useMemo, memo } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform } from 'react-native';
-import Clipboard from '@react-native-clipboard/clipboard';
+import * as Clipboard from 'expo-clipboard';
 import C from '../../config/colors.config';
 
 // ─── Simple syntax tokenizer (VS Code style colors) ───
@@ -86,9 +86,9 @@ const tokenizeLine = (line) => {
 function SyntaxCode({ code, language }) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     try {
-      Clipboard.setString(code);
+      await Clipboard.setStringAsync(code);
     } catch (err) {
       console.warn("Clipboard setString failed:", err);
     }

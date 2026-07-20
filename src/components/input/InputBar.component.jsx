@@ -794,8 +794,8 @@ const s = StyleSheet.create({
   },
   inputBarDocked: {
     paddingTop: 0,
-    paddingBottom: spacing(8),
-    marginBottom: spacing(8),
+    paddingBottom: 0,
+    marginBottom: 0,
   },
   inputBarFloating: {
     width: '96%',
@@ -911,8 +911,8 @@ const s = StyleSheet.create({
     borderRadius: radius(26),
     paddingLeft: spacing(10),
     paddingRight: spacing(14),
-    paddingVertical: spacing(6),
-    minHeight: verticalScale(48),
+    paddingVertical: spacing(4),
+    minHeight: verticalScale(42),
     maxHeight: verticalScale(140),
     shadowColor: '#7B2FFF',
     shadowOffset: { width: 0, height: 0 },
