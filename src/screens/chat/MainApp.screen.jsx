@@ -96,9 +96,8 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-export default function MainApp({ splashVisible = true, currentUser = null, onSignedOut }) {
+export default function MainApp({ splashVisible = true, onSignedOut }) {
   const insets = useSafeAreaInsets();
-  const safeBottom = Platform.OS === 'android' ? Math.max(insets.bottom, navBarHeightRef?.current ?? 0) : insets.bottom;
 
   // ── Shared cross-subsystem refs ──────────────────────────────────────────
   const scrollRef = useRef(null);
@@ -165,6 +164,11 @@ export default function MainApp({ splashVisible = true, currentUser = null, onSi
     adjustResizeFailed,
     keyboardAvoidingPadding,
   } = useKeyboardLayout(insets.bottom, inputRef);
+
+  // safeBottom — computed here, after navBarHeightRef is available from the hook
+  const safeBottom = Platform.OS === 'android'
+    ? Math.max(insets.bottom, navBarHeightRef?.current ?? 0)
+    : insets.bottom;
 
   // ── Toast hook ───────────────────────────────────────────────────────────
   const {
@@ -868,7 +872,6 @@ export default function MainApp({ splashVisible = true, currentUser = null, onSi
         handleDeactivateAllApiKeys={sockets.handleDeactivateAllApiKeys}
         handleDeleteSavedApiKeys={sockets.handleDeleteSavedApiKeys}
         getMissingAgentsList={getMissingAgentsList}
-        currentUser={currentUser}
         onSignedOut={onSignedOut}
         renderToast={renderToast}
       />

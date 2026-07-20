@@ -70,9 +70,6 @@ export default function SettingsModal({
   handleDeactivateAllApiKeys,
   handleDeleteSavedApiKeys,
   getMissingAgentsList,
-  // Auth
-  currentUser,
-  onSignedOut,
   // Utilities
   renderToast,
 }) {
@@ -248,14 +245,11 @@ export default function SettingsModal({
               </TouchableOpacity>
               {profilePanelOpen && (
                 <AccountPanel
-                  currentUser={currentUser}
                   userProfile={userProfile}
                   profileHasUnsavedChanges={profileHasUnsavedChangesComputed}
                   onUpdateField={handleUpdateUserProfile}
                   onSaveNow={handleSaveUserProfileNow}
-                  showToast={showToast}
-                  showConfirmDialog={showConfirmDialog}
-                  onSignedOut={onSignedOut}
+                  onReset={handleResetUserProfile}
                 />
               )}
 

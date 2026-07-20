@@ -2,19 +2,8 @@
  * src/agents/telemetry/metrics.js
  *
  * Session-local telemetry: latency, token cost, and error rate per provider+role.
- * Data lives in memory for the current session.
- * Optionally forwarded to Firebase Analytics if already integrated in the app.
- *
- * No new backend, no new SDK required. All writes are fire-and-forget.
+ * Data lives in memory for the current session only.
  */
-
-// ─── Firebase Analytics (optional) ───────────────────────────────────────────
-let analytics = null;
-try {
-  analytics = require('@react-native-firebase/analytics').default;
-} catch {
-  // Firebase not installed — metrics stay in-memory only.
-}
 
 // ─── In-session store ─────────────────────────────────────────────────────────
 // provider:role → { calls, totalLatencyMs, totalPromptTokens, totalCompletionTokens, errors }
@@ -44,13 +33,6 @@ export const recordCall = (provider, role, latencyMs, usage = {}) => {
   s.totalPromptTokens += usage.prompt_tokens || 0;
   s.totalCompletionTokens += usage.completion_tokens || 0;
 
-  analytics?.()?.logEvent?.('agent_call', {
-    provider,
-    role,
-    latency_ms: Math.round(latencyMs),
-    prompt_tokens: usage.prompt_tokens || 0,
-    completion_tokens: usage.completion_tokens || 0,
-  }).catch(() => {});
 };
 
 // ─── Record a call error ──────────────────────────────────────────────────────
@@ -63,7 +45,6 @@ export const recordError = (provider, role, errorType = 'error') => {
   const s = _get(provider, role);
   s.errors += 1;
 
-  analytics?.()?.logEvent?.('agent_error', { provider, role, error_type: errorType }).catch(() => {});
 };
 
 // ─── Session summary ──────────────────────────────────────────────────────────
