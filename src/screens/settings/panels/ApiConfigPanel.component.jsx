@@ -75,7 +75,7 @@ export default function ApiConfigPanel({
           activeOpacity={0.8}
         >
           <Text style={s.activateEngineBtnText}>
-            {isEngineLive ? '⚡ COORDINATION ACTIVE' : '🔌 ACTIVATE COORDINATION'}
+            {isEngineLive ? 'COORDINATION ACTIVE' : 'ACTIVATE COORDINATION'}
           </Text>
         </TouchableOpacity>
       </View>

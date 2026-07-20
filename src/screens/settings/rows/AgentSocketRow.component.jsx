@@ -90,16 +90,16 @@ export default function AgentSocketRow({
           <View style={{
             flexDirection: 'row',
             alignItems: 'center',
-            backgroundColor: 'rgba(0,212,255,0.08)',
+            backgroundColor: 'rgba(255,255,255,0.04)',
             borderRadius: 6,
             borderWidth: 1,
-            borderColor: 'rgba(0,212,255,0.22)',
+            borderColor: 'rgba(255,255,255,0.12)',
             paddingHorizontal: 8,
             paddingVertical: 3,
             marginBottom: 2,
           }}>
-            <Text style={{ fontSize: 9, fontWeight: '700', color: '#00D4FF', letterSpacing: 0.6 }}>
-              📡 LIVE TALK
+            <Text style={{ fontSize: 9, fontWeight: '700', color: '#CFCFE6', letterSpacing: 0.6 }}>
+              LIVE TALK
             </Text>
           </View>
         )}
