@@ -55,7 +55,16 @@ Unlike standard AI apps where one model does everything, Zyron assigns each agen
 ---
 
 <div align="center">
-  <img src="https://github.com/NomanRafique01/Zyron/blob/main/assets/demo/demo.gif?raw=true" alt="Zyron Demo" width="250"/>
+  <table>
+    <tr>
+      <th align="center">Agent Coordination</th>
+      <th align="center">Live Talk Mode of Zyron</th>
+    </tr>
+    <tr>
+      <td align="center"><img src="https://github.com/NomanRafique01/Zyron/blob/main/assets/demo/demo.gif?raw=true" alt="Agent Coordination Demo" width="250"/></td>
+      <td align="center"><img src="https://github.com/NomanRafique01/Zyron/blob/main/assets/demo/livetalk.demo.gif?raw=true" alt="Live Talk Mode Demo" width="250"/></td>
+    </tr>
+  </table>
 </div>
 
 ---
