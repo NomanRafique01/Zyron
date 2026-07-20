@@ -27,6 +27,8 @@ COPY orchestrator.py      .
 COPY orchestrator/        ./orchestrator/
 COPY prompt_builder.py    .
 COPY prompt_builder/      ./prompt_builder/
+COPY db/                  ./db/
+COPY memory/              ./memory/
 
 # ── Runtime ───────────────────────────────────────────────────────────────────
 EXPOSE 8000
