@@ -1,5 +1,5 @@
-import React, { useRef, useState, useCallback, useEffect } from 'react';
-import { View, Text, TouchableOpacity, LayoutAnimation, Clipboard, Animated, Image } from 'react-native';
+import React, { useRef, useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, LayoutAnimation, Clipboard } from 'react-native';
 import * as Speech from 'expo-speech';
 import C from '../../config/colors.config';
 import SyntaxCode from './SyntaxCode.component.jsx';
@@ -16,102 +16,36 @@ import { VisualLegend, TokenUsagePanel, UserAvatar, AiAvatar, PulsingDots } from
 import { InfoIcon, CopyIcon, RefreshIcon, SpeakIcon, EyeIcon, ThreeDotIcon } from '../shared/Icons';
 
 // ═══════════════════════════════════════════════════════
-// DOC ATTACHMENT BUBBLE — 120×80, centered SVG icon, optional spinner
+// DOC ATTACHMENT BUBBLE — emoji + truncated filename pill
 // ═══════════════════════════════════════════════════════
-function DocAttachmentBubble({ extracting = false, error = false, thumbnail = null }) {
-  const spinAnim = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    if (!extracting) {
-      spinAnim.stopAnimation();
-      spinAnim.setValue(0);
-      return;
-    }
-    const loop = Animated.loop(
-      Animated.timing(spinAnim, {
-        toValue: 1,
-        duration: 900,
-        useNativeDriver: true,
-      })
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [extracting, spinAnim]);
-
-  const rotate = spinAnim.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
-
-  return (
-    <View style={s.docBubble}>
-      {/* PDF thumbnail or fallback SVG icon */}
-      {thumbnail ? (
-        <Image
-          source={{ uri: `data:image/png;base64,${thumbnail}` }}
-          style={s.docBubbleThumbnail}
-          resizeMode="cover"
-        />
-      ) : (
-        <DocFileIcon size={38} error={error} />
-      )}
-
-      {/* Spinner overlay while extracting */}
-      {extracting && (
-        <View style={s.docBubbleSpinnerOverlay}>
-          <Animated.View style={[s.docBubbleSpinner, { transform: [{ rotate }] }]} />
-        </View>
-      )}
-
-      {/* Error dot */}
-      {error && !extracting && (
-        <View style={s.docBubbleErrorDot} />
-      )}
-    </View>
-  );
+/**
+ * Truncates a filename to show at most `maxBase` chars of the basename,
+ * then appends the original extension.
+ * e.g. "emergent-security-report.pdf" → "emergent-sec...pdf"
+ */
+function truncateFilename(filename, maxBase = 15) {
+  if (!filename) return 'document';
+  const lastDot = filename.lastIndexOf('.');
+  if (lastDot <= 0) {
+    // No extension
+    return filename.length > maxBase ? filename.slice(0, maxBase) + '...' : filename;
+  }
+  const base = filename.slice(0, lastDot);
+  const ext  = filename.slice(lastDot + 1); // without the dot
+  if (base.length > maxBase) {
+    return `${base.slice(0, maxBase)}...${ext}`;
+  }
+  return filename;
 }
 
-// Simple inline SVG-style doc icon using View geometry
-function DocFileIcon({ size = 38, error = false }) {
-  const color = error ? '#EF4444' : '#A78BFA';
-  const w = size * 0.72;
-  const h = size;
-  const fold = size * 0.22;
+function DocAttachmentBubble({ filename = 'document' }) {
   return (
-    <View style={{ width: w, height: h, justifyContent: 'center', alignItems: 'center' }}>
-      {/* Page body */}
-      <View style={{
-        width: w,
-        height: h,
-        backgroundColor: 'rgba(167,139,250,0.08)',
-        borderRadius: 5,
-        borderWidth: 1.5,
-        borderColor: `${color}55`,
-        overflow: 'hidden',
-        justifyContent: 'flex-end',
-        paddingBottom: 7,
-        paddingHorizontal: 7,
-      }}>
-        {/* Fold corner — top-right */}
-        <View style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: fold,
-          height: fold,
-          backgroundColor: error ? 'rgba(239,68,68,0.15)' : 'rgba(167,139,250,0.18)',
-          borderBottomLeftRadius: 4,
-          borderTopRightRadius: 5,
-        }} />
-        {/* Lines representing text */}
-        {[1, 0.75, 0.55].map((opacity, i) => (
-          <View key={i} style={{
-            height: 2,
-            borderRadius: 1,
-            backgroundColor: color,
-            opacity,
-            marginTop: i === 0 ? 0 : 4,
-            width: i === 2 ? '55%' : '85%',
-          }} />
-        ))}
-      </View>
+    <View style={s.docPill}>
+      <Text style={s.docPillEmoji}>📄</Text>
+      <Text style={s.docPillName} numberOfLines={1}>
+        {truncateFilename(filename)}
+      </Text>
     </View>
   );
 }
@@ -298,11 +232,7 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
             <Text style={s.userSenderName}>You</Text>
           </View>
           {msg.attachedDoc && (
-            <DocAttachmentBubble
-              extracting={msg.docExtracting}
-              error={msg.docExtractError}
-              thumbnail={msg.docThumbnail ?? null}
-            />
+            <DocAttachmentBubble filename={msg.attachedDoc} />
           )}
           <View style={[s.bubble, s.bubbleUser]}>
             <Text style={s.userText}>{msg.text}</Text>
