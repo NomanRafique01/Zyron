@@ -190,6 +190,10 @@ export default function useAgentExecution({
       }
     };
 
+    // Flag set by the success path to suppress the finally-block cleanup
+    // that would otherwise race the deferred 100 % progress paint.
+    let _successHandledCleanup = false;
+
     try {
       const agentResult = await runAgentsPipeline(
         userText,
@@ -228,11 +232,29 @@ export default function useAgentExecution({
         streaming: false,
       };
 
-      // Replace streaming placeholder (if any) with finalized message, or append.
-      // When there is no streaming placeholder (backend path — no writer streaming),
-      // collapse the live coordination footer BEFORE inserting the final message so
-      // the AgentCoordinationTable and the AgentPanel inside the bubble are never
-      // visible at the same time (which caused a layout expansion jump).
+      // ── Force all agent progress bars to 100 % before the response renders ──
+      // The pipeline's onStateChange already emits progress:100 for every agent,
+      // but that goes through updateSimulatedAgents() which queues a RAF.
+      // The finally block's clearSimulatedAgents() used to cancel that RAF before
+      // it could paint, leaving every bar frozen at whatever percentage it reached
+      // (typically ~34-78 %).  Writing the completed state synchronously here —
+      // in the same React batch as setMessages — guarantees the live coordination
+      // footer shows 100 % on the same frame the response bubble appears.
+      const completedAgents = (agentResult.agents ?? []).map((a) => ({
+        ...a,
+        progress: 100,
+        status: a.status === 'error' || a.status === 'exhausted' ? a.status : 'done',
+      }));
+      if (completedAgents.length > 0) {
+        // Cancel any queued RAF so stale mid-progress values don't overwrite 100 %
+        if (simulatedAgentsRafRef.current) {
+          cancelAnimationFrame(simulatedAgentsRafRef.current);
+          simulatedAgentsRafRef.current = null;
+        }
+        pendingSimulatedAgentsRef.current = null;
+        setSimulatedAgents(completedAgents);
+      }
+
       const hadStreamingPlaceholder = streamingInsertedRef.current;
       setMessages((prev) => {
         const idx = prev.findIndex((m) => m.id === STREAMING_MSG_ID);
@@ -243,13 +265,25 @@ export default function useAgentExecution({
         }
         return [...prev, newAiMsg];
       });
+
       // Backend path: no writer streaming was ever inserted, so the live
-      // AgentCoordinationTable footer is still visible. Tear it down immediately
-      // (same render cycle as the message insert) so the footer and the in-bubble
-      // AgentPanel summary are never shown at the same time.
+      // AgentCoordinationTable footer is still visible.  Allow one animation
+      // frame for the 100 % state to paint before tearing the panel down so
+      // the footer and the in-bubble AgentPanel summary are never shown at the
+      // same time.
       if (!hadStreamingPlaceholder) {
-        clearSimulatedAgents();
-        setIsTyping(false);
+        _successHandledCleanup = true;
+        requestAnimationFrame(() => {
+          clearSimulatedAgents();
+          setIsTyping(false);
+        });
+      } else {
+        // Streaming path: the streaming placeholder was replaced — the
+        // coordination footer collapses naturally when isTyping goes false
+        // in the finally block.  Just mark cleanup handled so the finally
+        // block does NOT call clearSimulatedAgents() and wipe the 100 % state
+        // before the Animated.timing(progressAnim → 100) has had time to run.
+        _successHandledCleanup = true;
       }
 
       latestAnswerFocusPendingRef.current = true;
@@ -300,7 +334,8 @@ export default function useAgentExecution({
         saveActiveSessionMessages(errorList, '', sessionId);
       }
     } finally {
-      // Cancel any pending RAF flush
+      // Cancel any pending writer-token RAF flush (the agents RAF was already
+      // handled in the success path above to ensure 100 % paints first).
       if (streamingRafRef.current) {
         cancelAnimationFrame(streamingRafRef.current);
         streamingRafRef.current = null;
@@ -309,7 +344,14 @@ export default function useAgentExecution({
       streamingInsertedRef.current = false;
       streamingPendingFlushRef.current = false;
       setIsTyping(false);
-      clearSimulatedAgents();
+      // Only clear agents immediately for abort/error paths.  The success path
+      // sets _successHandledCleanup = true and schedules clearSimulatedAgents()
+      // inside a requestAnimationFrame so the 100 % state has one frame to paint
+      // before the panel fades out.  Calling clearSimulatedAgents() here on the
+      // success path would race that RAF and leave bars frozen mid-way.
+      if (!_successHandledCleanup) {
+        clearSimulatedAgents();
+      }
       abortControllerRef.current = null;
     }
   };

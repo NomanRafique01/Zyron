@@ -151,8 +151,10 @@ export const runOrchestration = async (
           };
         });
 
-      // Progress-bar interval — hoisted so the catch block can always clear it.
-      let _progressIntervalId = null;
+      // Progress-bar interval — stored on an object so the catch block and the
+      // success path can always clear it, even when it was assigned asynchronously
+      // inside the setTimeout below.
+      const _progressTimer = { id: null };
 
       if (hasStateCallback) {
         // ── Phase 1: PENDING — show all agents queued at 0 % ─────────────────
@@ -162,7 +164,15 @@ export const runOrchestration = async (
         );
 
         // ── Phase 2: WORKING — transition to animated bars after one frame ───
+        // The setTimeout gives React one tick to render the queued state before
+        // we start the exponential-approach animation.
         setTimeout(() => {
+          // Guard: if the response already arrived before this timeout fired,
+          // the interval would be cleared immediately after being set.  Skip
+          // starting it entirely to avoid a stale "working" tick overwriting
+          // the "done" state the success path already emitted.
+          if (_progressTimer.cleared) return;
+
           const _startMs = Date.now();
           const _tau     = 28_000;
           const _limit   = 78;
@@ -173,7 +183,7 @@ export const runOrchestration = async (
             { coordinationMode: 'full' }
           );
 
-          _progressIntervalId = setInterval(() => {
+          _progressTimer.id = setInterval(() => {
             const elapsed = Date.now() - _startMs;
             const next    = Math.min(_limit, Math.round(5 + (_limit - 5) * (1 - Math.exp(-elapsed / _tau))));
             if (next === _lastPct) return;
@@ -212,7 +222,8 @@ export const runOrchestration = async (
         signal: combinedSignal,
       });
 
-      clearInterval(_progressIntervalId);
+      _progressTimer.cleared = true;
+      clearInterval(_progressTimer.id);
       clearTimeout(timeoutId);
 
       if (response.ok) {
@@ -250,7 +261,8 @@ export const runOrchestration = async (
       // Network error, timeout (AbortError), or any other fetch failure →
       // fall through to local fallback silently.
       // Re-throw only if the caller explicitly cancelled (user pressed Stop).
-      clearInterval(_progressIntervalId);
+      _progressTimer.cleared = true;
+      clearInterval(_progressTimer.id);
       if (signal?.aborted) throw new Error('Aborted');
       console.log('[Zyron Backend] ❌ Backend unavailable — switching to local engine');
     }
