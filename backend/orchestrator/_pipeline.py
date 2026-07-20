@@ -149,17 +149,19 @@ async def run_pipeline(
     usage_by_role: Dict[str, Any]       = final_state.get("usage_by_role", {})
     errors:        List[str]            = final_state.get("errors", [])
     writer_output: str                  = final_state.get("writer_output", "")
+    suggestions:   List[str]            = final_state.get("suggestions", [])
 
     token_usage = build_token_usage(agent_results, usage_by_role)
 
     log.info(
-        "[Pipeline] done — writer=%d chars, elapsed=%dms, errors=%d",
-        len(writer_output), elapsed_ms, len(errors),
+        "[Pipeline] done — writer=%d chars, suggestions=%d, elapsed=%dms, errors=%d",
+        len(writer_output), len(suggestions), elapsed_ms, len(errors),
     )
 
     return {
-        "text":   writer_output,
-        "agents": agent_results,
+        "text":        writer_output,
+        "suggestions": suggestions,
+        "agents":      agent_results,
         "token_usage": token_usage,
         "meta": {
             "analysis":        analysis,

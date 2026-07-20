@@ -214,6 +214,7 @@ async def orchestrate(body: OrchestrateRequest) -> OrchestrateResponse:
 
     return OrchestrateResponse(
         text        = result.get("text", ""),
+        suggestions = result.get("suggestions", []),
         agents      = agents,
         token_usage = result.get("token_usage"),
         meta        = result.get("meta"),

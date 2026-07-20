@@ -2,7 +2,7 @@ import { analyzeQuery } from './analysis/queryAnalyzer';
 import { callAgent } from './api/agentCaller.service';
 import { createProgressTracker } from './progress/progressTracker';
 import { buildSpecialistPrompt, buildWriterPrompt } from './prompts/promptBuilder';
-import { runSynthesisPhase } from './synthesis/synthesizer';
+import { runSynthesisPhase, generateLocalSuggestions } from './synthesis/synthesizer';
 import { getPipelinePhases, getAgentMeta } from './registry/agentRegistry';
 import { COORDINATION_MODES } from './registry/teamMetadata';
 import { isKeyExhaustedError } from './utils/agentErrors.utils';
@@ -391,10 +391,16 @@ export const runAgentsOrchestrator = async (
             }
           }
 
+          // Generate follow-up suggestion chips after streaming writer completes
+          const streamSuggestions = writerDone
+            ? await generateLocalSuggestions(userText, writerText, agentConfigs)
+            : [];
+
           const agents = progress.agents();
           console.log(`[Zyron Local] ✅ Response ready in ${Date.now() - _orchestratorStart}ms`);
           return {
             text: writerText,
+            suggestions: streamSuggestions,
             agents,
             tokenUsage: buildTokenUsage(agents, usageByRole),
             meta: { coordinationMode: analysis.coordinationMode, analysis },
@@ -416,6 +422,7 @@ export const runAgentsOrchestrator = async (
         console.log(`[Zyron Local] ✅ Response ready in ${Date.now() - _orchestratorStart}ms`);
         return {
           text: synthesis.text,
+          suggestions: synthesis.suggestions || [],
           agents,
           tokenUsage: buildTokenUsage(agents, usageByRole),
           meta: { coordinationMode: analysis.coordinationMode, analysis },

@@ -26,6 +26,7 @@ from typing import Any, Dict, List, Optional
 from prompt_builder import build_specialist_prompt, build_writer_prompt
 from providers      import call_agent, ProviderApiError
 from query_analyzer import analyze_query
+from memory.suggestions import generate_suggestions
 
 from ._utils import (
     MIN_SPECIALIST_CHARS,
@@ -341,9 +342,19 @@ async def writer_node(state: Dict[str, Any]) -> Dict[str, Any]:
         "token_usage": writer_usage or None,
     }
 
+    # ── Generate follow-up suggestion chips (non-blocking) ────────────────────
+    suggestions: List[str] = []
+    if writer_text.strip():
+        suggestions = await generate_suggestions(
+            query        = state["query"],
+            writer_output= writer_text,
+            agent_configs= agent_configs,
+        )
+
     return {
         "writer_output":  writer_text,
         "writer_usage":   writer_usage,
         "usage_by_role":  usage_by_role,
         "agent_results":  state.get("agent_results", []) + [writer_result],
+        "suggestions":    suggestions,
     }

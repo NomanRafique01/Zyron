@@ -43,6 +43,7 @@ class ZyronState(TypedDict, total=False):
     # ── Writer output ─────────────────────────────────────────────────────────
     writer_output:  str
     writer_usage:   Optional[Dict[str, int]]
+    suggestions:    List[str]                       # 2-3 AI-generated follow-up chips
 
     # ── Aggregate token accounting ────────────────────────────────────────────
     usage_by_role:  Dict[str, Dict[str, int]]   # role → {prompt_tokens, completion_tokens, total_tokens}

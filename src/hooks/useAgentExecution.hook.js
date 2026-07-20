@@ -140,6 +140,7 @@ export default function useAgentExecution({
   const [coordinationMode, setCoordinationMode] = useState(COORDINATION_MODES.FULL);
   const [lastTokenUsage, setLastTokenUsage] = useState(null);
   const [inputText, setInputText] = useState('');
+  const [suggestions, setSuggestions] = useState([]);   // AI follow-up chips
   const abortControllerRef = useRef(null);
   const simulatedAgentsRafRef = useRef(null);
   const pendingSimulatedAgentsRef = useRef(null);
@@ -330,6 +331,10 @@ export default function useAgentExecution({
         setLastTokenUsage(agentResult.tokenUsage);
       }
 
+      // Extract and store follow-up suggestion chips
+      const incomingSuggestions = Array.isArray(agentResult.suggestions) ? agentResult.suggestions : [];
+      setSuggestions(incomingSuggestions);
+
       const finalText = agentResult.text || streamingWriterTextRef.current;
       const finalMsgId = String(Date.now() + 1);
       const newAiMsg = {
@@ -495,6 +500,8 @@ export default function useAgentExecution({
       return;
     }
 
+    // Clear chips when user manually sends a new message
+    setSuggestions([]);
     const userMsgText = inputText.trim();
     // documentContext is { uri, filename, mimeType } when pending (not yet extracted),
     // or { text, filename } when already extracted from a prior send.
@@ -548,6 +555,7 @@ export default function useAgentExecution({
       abortControllerRef.current = null;
     }
     setIsTyping(false);
+    setSuggestions([]);   // clear chips on stop
     clearSimulatedAgents();
   };
 
@@ -594,6 +602,8 @@ export default function useAgentExecution({
     lastTokenUsage,
     inputText,
     setInputText,
+    suggestions,
+    setSuggestions,
     abortControllerRef,
     updateSimulatedAgents,
     clearSimulatedAgents,

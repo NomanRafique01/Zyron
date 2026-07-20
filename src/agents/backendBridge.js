@@ -258,8 +258,10 @@ export const runOrchestration = async (
         }
         // Remap agents to the active team's UI metadata (name, icon, colours)
         // so the coordination panel reflects the correct team — not the backend default.
+        // Forward suggestions from the backend response (identical format to local).
         return {
           ...data,
+          suggestions: Array.isArray(data.suggestions) ? data.suggestions : [],
           agents: remapAgentsToActiveTeam(data.agents, activeTeam, agentConfigs),
         };
       }

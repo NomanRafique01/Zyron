@@ -83,6 +83,7 @@ import { bootstrapCustomTeams } from '../../agents/workshop/customTeamRegistry';
 import { getForceLocal, setForceLocal } from '../../agents/backendBridge';
 
 // ── Extracted components ─────────────────────────────────────────────────────
+import SuggestionChips from '../../components/chat/SuggestionChips.component.jsx';
 import WelcomeLogo from '../../components/shared/WelcomeLogo.component.jsx';
 import SidebarDrawer from '../../components/layout/SidebarDrawer.component.jsx';
 import SetupGuideModal from '../../components/modals/SetupGuideModal.modal.jsx';
@@ -566,6 +567,18 @@ export default function MainApp({ splashVisible = true, currentUser = null, onSi
     setForceLocalState(next);
   }, [forceLocal]);
 
+  // ── Suggestion chip press — send chip text as next message ────────────────
+  const handleChipPress = useCallback((chipText) => {
+    if (agentExec.isTyping || !chipText?.trim()) return;
+    // Clear chips immediately so they vanish on tap before the pipeline starts.
+    agentExec.setSuggestions([]);
+    // Drive handleSend directly with the chip text by temporarily setting
+    // inputText and triggering send in the same interaction batch.
+    agentExec.setInputText(chipText);
+    // Use InteractionManager to let React flush the state update before send.
+    InteractionManager.runAfterInteractions(() => agentExec.handleSend());
+  }, [agentExec]);
+
   // ── Derived values ────────────────────────────────────────────────────────
   const welcomeGreeting = getLocalWelcomeGreeting(settings.userProfile.displayName);
   const profileHasUnsavedChanges = JSON.stringify(settings.userProfile) !== JSON.stringify(settings.savedUserProfile);
@@ -718,6 +731,14 @@ export default function MainApp({ splashVisible = true, currentUser = null, onSi
                 ) : null}
               </View>
 
+              {/* Follow-up suggestion chips — visible after AI response, hide while typing */}
+              {!agentExec.isTyping && conversations.messages.length > 0 && (
+                <SuggestionChips
+                  suggestions={agentExec.suggestions}
+                  onChipPress={handleChipPress}
+                />
+              )}
+
               {/* Composer — extra safe clearance when hardware keyboard active */}
               <View style={[
                 s.composerDock,
@@ -799,6 +820,14 @@ export default function MainApp({ splashVisible = true, currentUser = null, onSi
                 </View>
               )}
             </View>
+
+            {/* Follow-up suggestion chips — visible after AI response, hide while typing */}
+            {!agentExec.isTyping && conversations.messages.length > 0 && (
+              <SuggestionChips
+                suggestions={agentExec.suggestions}
+                onChipPress={handleChipPress}
+              />
+            )}
 
             <View style={[s.composerDock, { paddingBottom: spacing(8) }]}>
               <InputBar
