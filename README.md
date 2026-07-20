@@ -149,10 +149,10 @@ Zyron uses a **dual-engine architecture** — a Railway-hosted Python FastAPI ba
 │         │              → return fused response          │
 │         │                                               │
 │         └── ❌ Timeout │ Network error │ Non-200        │
-│                        │                               │
-│                        ▼                               │
+│                        │                                │
+│                        ▼                                │
 │         Local runAgentsOrchestrator() — silent fallback │
-│         Full SSE streaming, circuit-breakers, dedup    │
+│         Full SSE streaming, circuit-breakers, dedup     │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -314,7 +314,13 @@ Practical STEM team for physics, chemistry, mathematics, statistics, and enginee
 
 Knowledgeable history team for events, eras, biographies, and geopolitical context.
 
-<table>
+<table width="100%">
+<colgroup>
+<col width="25%"/>
+<col width="25%"/>
+<col width="25%"/>
+<col width="25%"/>
+</colgroup>
 <tr>
 <th align="center">Agent 1 — Archivist</th>
 <th align="center">Agent 2 — Contextualist</th>
