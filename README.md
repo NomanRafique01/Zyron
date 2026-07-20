@@ -54,6 +54,33 @@ Unlike standard AI apps where one model does everything, Zyron assigns each agen
 
 ---
 
+<div align="center">
+  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/demo/demo.gif" alt="Zyron Demo" width="100%"/>
+</div>
+
+---
+
+<details>
+<summary><strong>📸 Screenshots</strong> — click to expand</summary>
+<br/>
+<div align="center">
+  <table>
+    <tr>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s1.png" width="100%" alt="Screenshot 1"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s2.png" width="100%" alt="Screenshot 2"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s3.png" width="100%" alt="Screenshot 3"/></td>
+    </tr>
+    <tr>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s4.png" width="100%" alt="Screenshot 4"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s5.png" width="100%" alt="Screenshot 5"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s6.png" width="100%" alt="Screenshot 6"/></td>
+    </tr>
+  </table>
+</div>
+</details>
+
+---
+
 ## Core Architecture
 
 ```
@@ -140,6 +167,27 @@ Zyron uses a **dual-engine architecture** — a Railway-hosted Python FastAPI ba
 ## All 6 Teams — All 24 Agents
 
 Every team has **4 agents** (Roles: Analyst · Executor · Validator · Synthesizer) with individual PNG icons, distinct accent colors, and specialist directives.
+
+
+<details>
+<summary><strong>📱 Agent Library Panel</strong> — click to expand</summary>
+<br/>
+<div align="center">
+  <table>
+    <tr>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/agnetpanel.screenshots/a1.png" width="100%" alt="Agent Panel 1"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/agnetpanel.screenshots/a2.png" width="100%" alt="Agent Panel 2"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/agnetpanel.screenshots/a3.png" width="100%" alt="Agent Panel 3"/></td>
+    </tr>
+    <tr>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/agnetpanel.screenshots/a4.png" width="100%" alt="Agent Panel 4"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/agnetpanel.screenshots/a5.png" width="100%" alt="Agent Panel 5"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/agnetpanel.screenshots/a6.png" width="100%" alt="Agent Panel 6"/></td>
+    </tr>
+  </table>
+</div>
+</details>
+
 
 ---
 
@@ -545,17 +593,14 @@ User attaches file / image
 ## App in Action
 
 <div align="center">
-  <a href="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/demo/demo.mp4">
-    <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/images/banner.png" width="100%" alt="▶ Watch Demo — click to play"/>
-  </a>
-  <br/>
-  <sub>▶ Click the banner above to watch the full demo video</sub>
+  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/demo/demo.gif" alt="Zyron Demo" width="100%"/>
 </div>
 
 ---
 
-## Screenshots
-
+<details>
+<summary><strong>📸 Screenshots</strong> — click to expand</summary>
+<br/>
 <div align="center">
   <table>
     <tr>
@@ -570,6 +615,7 @@ User attaches file / image
     </tr>
   </table>
 </div>
+</details>
 
 ---
 
