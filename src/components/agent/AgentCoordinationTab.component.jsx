@@ -219,9 +219,9 @@ function AgentRow({ agent, index, activeTeam }) {
                 {
                   borderColor: config.accent,
                   opacity: glowBorderAnim,
+                  pointerEvents: 'none',
                 },
               ]}
-              pointerEvents="none"
             />
           )}
         </View>

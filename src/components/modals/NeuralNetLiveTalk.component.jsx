@@ -441,7 +441,7 @@ function NodeWeb({ canvasW, canvasH, reducedMotion, phase }) {
   if (reducedMotion) {
     const layout = getLayout();
     return (
-      <View style={[StyleSheet.absoluteFillObject, { zIndex: 0 }]} pointerEvents="none">
+      <View style={[StyleSheet.absoluteFillObject, { zIndex: 0, pointerEvents: 'none' }]}>
         <Svg width={canvasW} height={canvasH} style={StyleSheet.absoluteFillObject}>
           {layout.edges.map((e, i) => (
             <Line
@@ -460,7 +460,7 @@ function NodeWeb({ canvasW, canvasH, reducedMotion, phase }) {
   }
 
   return (
-    <View style={[StyleSheet.absoluteFillObject, { zIndex: 0 }]} pointerEvents="none">
+    <View style={[StyleSheet.absoluteFillObject, { zIndex: 0, pointerEvents: 'none' }]}>
       <Svg width={canvasW} height={canvasH} style={StyleSheet.absoluteFillObject}>
 
         {/* Dim idle web — always visible */}

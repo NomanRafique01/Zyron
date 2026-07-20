@@ -179,9 +179,9 @@ function AgentRow({ role, name, model, progress, status, statusColor, variant = 
               {
                 borderColor: C.green,
                 opacity: glowBorderAnim,
+                pointerEvents: 'none',
               },
             ]}
-            pointerEvents="none"
           />
         )}
       </View>

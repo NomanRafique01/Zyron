@@ -219,7 +219,7 @@ function VoiceWaveform({ volumeRef }) {
   }, [volumeRef, driveFromAmplitude, startIdle]);
 
   return (
-    <View style={s.waveformContainer} pointerEvents="none">
+    <View style={[s.waveformContainer, { pointerEvents: 'none' }]}>
       {bars.map((bar, i) => (
         <Animated.View
           key={i}
@@ -674,7 +674,7 @@ export default function InputBar({
 
           {/* ── Waveform + label (absolutely overlays the text field) ──── */}
           {isListening && (
-            <View style={s.waveformOverlay} pointerEvents="none">
+            <View style={[s.waveformOverlay, { pointerEvents: 'none' }]}>
               <VoiceWaveform volumeRef={volumeRef} />
               <Text style={s.listeningLabel}>Listening…</Text>
             </View>

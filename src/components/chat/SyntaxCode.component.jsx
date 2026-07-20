@@ -1,5 +1,6 @@
 import React, { useState, useMemo, memo } from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform, Clipboard } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
 import C from '../../config/colors.config';
 
 // ─── Simple syntax tokenizer (VS Code style colors) ───
@@ -197,7 +198,6 @@ const s = StyleSheet.create({
     width: 24,
     textAlign: 'right',
     marginRight: 10,
-    userSelect: 'none',
   },
   codeText: {
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',

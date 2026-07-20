@@ -10,10 +10,12 @@ function getKatex() {
   if (!_katex) {
     try {
       _katex = require('katex');
-      require('katex/contrib/mhchem');
     } catch (e) {
       // katex unavailable — display formulas will fall back to plain text
       _katex = null;
+    }
+    if (_katex) {
+      try { require('katex/contrib/mhchem'); } catch (_) {}
     }
   }
   return _katex;

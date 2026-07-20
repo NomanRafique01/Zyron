@@ -1,5 +1,6 @@
 import React, { useRef, useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, LayoutAnimation, Clipboard } from 'react-native';
+import { View, Text, TouchableOpacity, LayoutAnimation } from 'react-native';
+import Clipboard from '@react-native-clipboard/clipboard';
 import * as Speech from 'expo-speech';
 import C from '../../config/colors.config';
 import SyntaxCode from './SyntaxCode.component.jsx';
