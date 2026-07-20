@@ -10,13 +10,12 @@ POST /orchestrate  — run the full multi-agent LangGraph pipeline
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import os
 from typing import Any, Dict, List
 
 import uvicorn
-from fastapi import FastAPI, Request
+from fastapi import BackgroundTasks, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -126,7 +125,7 @@ async def extract_document(body: DocumentExtractRequest) -> DocumentExtractRespo
     tags=["agents"],
     response_description="Final synthesised answer plus per-agent results and token usage.",
 )
-async def orchestrate(body: OrchestrateRequest) -> OrchestrateResponse:
+async def orchestrate(body: OrchestrateRequest, background_tasks: BackgroundTasks) -> OrchestrateResponse:
     """
     Run the full Zyron pipeline for a single user query.
 
@@ -184,19 +183,17 @@ async def orchestrate(body: OrchestrateRequest) -> OrchestrateResponse:
             content={"detail": f"Pipeline error: {exc}"},
         )
 
-    # ── Async post-processing: summarize conversation if threshold reached ────
-    # Fired after the response is assembled so it never slows down the reply.
-    # We reconstruct a minimal messages list from the request + the writer answer
-    # so the summarizer can count and compress turns without a separate DB read.
+    # ── Post-response background work ─────────────────────────────────────────
+    # FastAPI BackgroundTasks run AFTER the response is sent to the client so
+    # they never add latency.  Much safer than asyncio.create_task() which can
+    # silently fail when called outside a properly-scoped event loop task.
     if body.session_id:
-        _messages_for_summary = []
-        _messages_for_summary.append({"sender": "user", "text": body.query})
+        _messages_for_summary = [{"sender": "user", "text": body.query}]
         _writer_text = result.get("text", "")
         if _writer_text:
             _messages_for_summary.append({"sender": "ai", "text": _writer_text})
-        # maybe_summarize is a fire-and-forget task — errors are caught inside
-        asyncio.create_task(
-            maybe_summarize(body.session_id, _messages_for_summary, agent_configs_dict)
+        background_tasks.add_task(
+            maybe_summarize, body.session_id, _messages_for_summary, agent_configs_dict
         )
 
     # ── Map raw agent_results dicts → AgentResult pydantic models ────────────
