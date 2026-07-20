@@ -6,7 +6,7 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import C from '../../config/colors.config';
 import { TrashIcon, AgentIcon } from '../shared/Icons';
@@ -19,6 +19,9 @@ const STRENGTH_KEYS = [
   ['codingStrength',     '⚡', 'Coding'],
   ['teachingStrength',   '📝', 'Teaching'],
 ];
+
+// Static layout constants — never recreated
+const flexOneStyle = { flex: 1 };
 
 function StrengthBadge({ value, label, accent }) {
   if (!value || value < 50) return null;
@@ -37,14 +40,93 @@ function TraitChip({ label, color = '#6A6A7D' }) {
   );
 }
 
-export default function CustomAgentsLibrary({
+// ── Single agent card — memoized so it only re-renders when its own data changes ─
+
+const AgentCard = React.memo(function AgentCard({ agent, onEdit, onDuplicate, onDelete }) {
+  const accent = agent.accent || '#A78BFA';
+
+  const iconSrc = useMemo(
+    () => ICON_OPTIONS.find((o) => o.key === agent.icon)?.src,
+    [agent.icon],
+  );
+
+  const traits = useMemo(
+    () => [
+      ...(agent.tone || []),
+      ...(agent.communicationStyle || []),
+      ...(agent.personality || []),
+    ].slice(0, 4),
+    [agent.tone, agent.communicationStyle, agent.personality],
+  );
+
+  return (
+    <View style={[lib.agentCard, { borderColor: `${accent}33` }]}>
+      {/* Card header */}
+      <View style={lib.cardHeader}>
+        <View style={[lib.agentIconBox, { backgroundColor: `${accent}18`, borderColor: `${accent}44` }]}>
+          {agent.icon
+            ? <Image source={iconSrc} style={lib.agentIconImage} resizeMode="cover" />
+            : <AgentIcon color={accent} size={20} />
+          }
+        </View>
+        <View style={flexOneStyle}>
+          <Text style={lib.agentName}>{agent.name}</Text>
+          <Text style={lib.agentDesc} numberOfLines={2}>{agent.description || 'No description'}</Text>
+        </View>
+        <TouchableOpacity
+          style={lib.deleteBtn}
+          onPress={() => onDelete && onDelete(agent.id)}
+          activeOpacity={0.75}
+        >
+          <TrashIcon color="#EF4444" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Trait chips */}
+      {traits.length > 0 && (
+        <View style={lib.traitsRow}>
+          {traits.map((t) => (
+            <TraitChip key={t} label={t} color={accent} />
+          ))}
+        </View>
+      )}
+
+      {/* Strength badges (only show ≥50) */}
+      <View style={lib.strengthsRow}>
+        {STRENGTH_KEYS.map(([key, , label]) => (
+          <StrengthBadge key={key} value={agent[key]} label={label} accent={accent} />
+        ))}
+      </View>
+
+      {/* Actions */}
+      <View style={lib.actionsRow}>
+        <TouchableOpacity
+          style={lib.actionBtn}
+          onPress={() => onEdit && onEdit(agent)}
+          activeOpacity={0.75}
+        >
+          <Text style={lib.actionBtnText}>EDIT</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={lib.actionBtn}
+          onPress={() => onDuplicate && onDuplicate(agent.id)}
+          activeOpacity={0.75}
+        >
+          <Text style={lib.actionBtnText}>DUPLICATE</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+});
+
+export default React.memo(function CustomAgentsLibrary({
   customAgents = [],
   onEdit,
   onDuplicate,
   onDelete,
   onCreate,
 }) {
-  // ── Empty state — centred panel, disappears after first agent ────────────────
+  // ── Empty state ──────────────────────────────────────────────────────────────
   if (customAgents.length === 0) {
     return (
       <View style={lib.emptyState}>
@@ -67,11 +149,10 @@ export default function CustomAgentsLibrary({
   // ── Populated list ────────────────────────────────────────────────────────────
   return (
     <View style={lib.container}>
-      {/* Header row with agent count + quick-add button */}
       <View style={lib.titleRow}>
         <Text style={lib.sectionTitle}>YOUR AGENTS</Text>
         <Text style={lib.agentCount}>{customAgents.length}</Text>
-        <View style={{ flex: 1 }} />
+        <View style={flexOneStyle} />
         {onCreate && (
           <TouchableOpacity style={lib.addBtn} onPress={onCreate} activeOpacity={0.75}>
             <Text style={lib.addBtnText}>+ New Agent</Text>
@@ -79,80 +160,18 @@ export default function CustomAgentsLibrary({
         )}
       </View>
 
-      {customAgents.map((agent) => {
-        const accent = agent.accent || '#A78BFA';
-        const traits = [
-          ...(agent.tone || []),
-          ...(agent.communicationStyle || []),
-          ...(agent.personality || []),
-        ].slice(0, 4);
-
-        return (
-          <View key={agent.id} style={[lib.agentCard, { borderColor: `${accent}33` }]}>
-            {/* Card header */}
-            <View style={lib.cardHeader}>
-              <View style={[lib.agentIconBox, { backgroundColor: `${accent}18`, borderColor: `${accent}44` }]}>
-                {agent.icon
-                  ? <Image
-                      source={ICON_OPTIONS.find(o => o.key === agent.icon)?.src}
-                      style={lib.agentIconImage}
-                      resizeMode="cover"
-                    />
-                  : <AgentIcon color={accent} size={20} />
-                }
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={lib.agentName}>{agent.name}</Text>
-                <Text style={lib.agentDesc} numberOfLines={2}>{agent.description || 'No description'}</Text>
-              </View>
-              <TouchableOpacity
-                style={lib.deleteBtn}
-                onPress={() => onDelete && onDelete(agent.id)}
-                activeOpacity={0.75}
-              >
-                <TrashIcon color="#EF4444" />
-              </TouchableOpacity>
-            </View>
-
-            {/* Trait chips */}
-            {traits.length > 0 && (
-              <View style={lib.traitsRow}>
-                {traits.map((t) => (
-                  <TraitChip key={t} label={t} color={accent} />
-                ))}
-              </View>
-            )}
-
-            {/* Strength badges (only show ≥50) */}
-            <View style={lib.strengthsRow}>
-              {STRENGTH_KEYS.map(([key, , label]) => (
-                <StrengthBadge key={key} value={agent[key]} label={label} accent={accent} />
-              ))}
-            </View>
-
-            {/* Actions */}
-            <View style={lib.actionsRow}>
-              <TouchableOpacity
-                style={lib.actionBtn}
-                onPress={() => onEdit && onEdit(agent)}
-                activeOpacity={0.75}
-              >
-                <Text style={lib.actionBtnText}>EDIT</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={lib.actionBtn}
-                onPress={() => onDuplicate && onDuplicate(agent.id)}
-                activeOpacity={0.75}
-              >
-                <Text style={lib.actionBtnText}>DUPLICATE</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        );
-      })}
+      {customAgents.map((agent) => (
+        <AgentCard
+          key={agent.id}
+          agent={agent}
+          onEdit={onEdit}
+          onDuplicate={onDuplicate}
+          onDelete={onDelete}
+        />
+      ))}
     </View>
   );
-}
+});
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 

@@ -22,6 +22,10 @@ import { CrossIcon, TeamBuilderIcon } from '../shared/Icons';
 import { ICON_OPTIONS } from './AgentBuilderPanel.component';
 
 const ROLE_SLOTS = ['reasoner', 'coder', 'vision', 'writer'];
+
+// Static layout constant — avoids inline object creation on every render
+const tbFlexOneStyle = { flex: 1 };
+
 const ROLE_LABELS = {
   reasoner: 'Agent 1',
   coder:    'Agent 2',
@@ -321,12 +325,12 @@ function AgentSlotPicker({ role, selectedAgent, customAgents, usedIds, onSelect,
         activeOpacity={0.75}
       >
         {selectedAgent ? (
-          <View style={ts.slotBtnContent}>
-            <AgentIconImage iconKey={selectedAgent.icon} style={ts.slotBtnIcon} />
-            <View style={{ flex: 1 }}>
-              <Text style={ts.slotBtnName}>{selectedAgent.name}</Text>
-              <Text style={ts.slotBtnDesc} numberOfLines={1}>{selectedAgent.description}</Text>
-            </View>
+            <View style={ts.slotBtnContent}>
+              <AgentIconImage iconKey={selectedAgent.icon} style={ts.slotBtnIcon} />
+              <View style={tbFlexOneStyle}>
+                <Text style={ts.slotBtnName}>{selectedAgent.name}</Text>
+                <Text style={ts.slotBtnDesc} numberOfLines={1}>{selectedAgent.description}</Text>
+              </View>
             <Text style={[ts.slotChevron, open && { transform: [{ rotate: '180deg' }] }]}>▾</Text>
           </View>
         ) : (
@@ -348,20 +352,20 @@ function AgentSlotPicker({ role, selectedAgent, customAgents, usedIds, onSelect,
             </Text>
           ) : (
             availableAgents.map((agent) => (
-              <TouchableOpacity
-                key={agent.id}
-                style={[
-                  ts.dropdownItem,
-                  selectedAgent?.id === agent.id && { backgroundColor: `${accent}14` },
-                ]}
-                onPress={() => { onSelect(role, agent); setOpen(false); }}
-                activeOpacity={0.75}
-              >
-                <AgentIconImage iconKey={agent.icon} style={ts.dropdownIcon} />
-                <View style={{ flex: 1 }}>
-                  <Text style={ts.dropdownName}>{agent.name}</Text>
-                  <Text style={ts.dropdownDesc} numberOfLines={1}>{agent.description}</Text>
-                </View>
+            <TouchableOpacity
+              key={agent.id}
+              style={[
+                ts.dropdownItem,
+                selectedAgent?.id === agent.id && { backgroundColor: `${accent}14` },
+              ]}
+              onPress={() => { onSelect(role, agent); setOpen(false); }}
+              activeOpacity={0.75}
+            >
+              <AgentIconImage iconKey={agent.icon} style={ts.dropdownIcon} />
+              <View style={tbFlexOneStyle}>
+                <Text style={ts.dropdownName}>{agent.name}</Text>
+                <Text style={ts.dropdownDesc} numberOfLines={1}>{agent.description}</Text>
+              </View>
                 {selectedAgent?.id === agent.id && (
                   <Text style={[ts.dropdownCheck, { color: accent }]}>✓</Text>
                 )}
@@ -463,7 +467,7 @@ export default function TeamBuilderPanel({ customAgents = [], onRegistered, onCl
         <View style={[ts.headerIconBox, { backgroundColor: `${accent}18`, borderColor: `${accent}44` }]}>
           <TeamBuilderIcon color={accent} size={22} />
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={tbFlexOneStyle}>
           <Text style={ts.headerTitle}>Team Builder</Text>
           <Text style={ts.headerSub}>Compose 4 custom agents into a team</Text>
         </View>

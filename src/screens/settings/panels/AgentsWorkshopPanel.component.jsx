@@ -22,12 +22,10 @@ import {
   loadCustomAgents,
   deleteCustomAgent,
   duplicateCustomAgent,
-  invalidateCustomAgentsCache,
 } from '../../../agents/workshop/customAgentsStorage';
 import {
   loadCustomTeams,
   deleteCustomTeam,
-  invalidateCustomTeamsCache,
 } from '../../../agents/workshop/customTeamsStorage';
 import { invalidateCustomTeams } from '../../../agents/workshop/customTeamRegistry';
 import AgentBuilderPanel from '../../../components/workshop/AgentBuilderPanel.component.jsx';
@@ -37,33 +35,34 @@ import CustomAgentsLibrary from '../../../components/workshop/CustomAgentsLibrar
 const TAB_AGENTS = 'agents';
 const TAB_TEAMS  = 'teams';
 
+// Static style objects — defined once outside render
+const teamCardFlexStyle = { flex: 1 };
+
 export default function AgentsWorkshopPanel({ showToast, scrollRef, scrollOffsetRef, workshopPanelNodeRef }) {
   const [activeTab, setActiveTab] = useState(TAB_AGENTS);
   const [customAgents, setCustomAgents] = useState([]);
   const [customTeams, setCustomTeams] = useState([]);
   const [showBuilder, setShowBuilder] = useState(false);
   const [showTeamBuilder, setShowTeamBuilder] = useState(false);
-  const [editingAgent, setEditingAgent] = useState(null); // null = create mode
-  const [loading, setLoading] = useState(true);
-  const builderNodeRef       = useRef(null); // ref on the AgentBuilderPanel wrapper
-  const teamBuilderNodeRef   = useRef(null); // ref on the TeamBuilderPanel wrapper
-  const scrollRafRef         = useRef(null); // rAF handle for scrollNodeIntoView
-  const backScrollTimerRef   = useRef(null); // setTimeout handle for scrollBackToPanel
-  const openScrollYRef       = useRef(0);    // scroll offset captured when builder opens
+  const [editingAgent, setEditingAgent] = useState(null);
+  const builderNodeRef       = useRef(null);
+  const teamBuilderNodeRef   = useRef(null);
+  const scrollRafRef         = useRef(null);
+  const backScrollTimerRef   = useRef(null);
+  const openScrollYRef       = useRef(0);
 
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    try {
-      invalidateCustomAgentsCache();
-      invalidateCustomTeamsCache();
-      const [agents, teams] = await Promise.all([loadCustomAgents(), loadCustomTeams()]);
-      setCustomAgents(agents);
-      setCustomTeams(teams);
-    } catch {}
-    setLoading(false);
+  // Load once on mount — no cache invalidation needed on every open
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([loadCustomAgents(), loadCustomTeams()])
+      .then(([agents, teams]) => {
+        if (cancelled) return;
+        setCustomAgents(agents);
+        setCustomTeams(teams);
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
   }, []);
-
-  useEffect(() => { refresh(); }, [refresh]);
 
   // Cancel any pending scroll operations on unmount
   useEffect(() => () => {
@@ -71,11 +70,6 @@ export default function AgentsWorkshopPanel({ showToast, scrollRef, scrollOffset
     if (backScrollTimerRef.current) clearTimeout(backScrollTimerRef.current);
   }, []);
 
-  /**
-   * Scroll a node to the top of the settings ScrollView.
-   * Uses requestAnimationFrame so native layout is committed before measuring —
-   * this gives the same instant, jank-free feel as other settings panel scrolls.
-   */
   const scrollNodeIntoView = useCallback((nodeRef) => {
     if (scrollRafRef.current) cancelAnimationFrame(scrollRafRef.current);
     scrollRafRef.current = requestAnimationFrame(() => {
@@ -118,8 +112,6 @@ export default function AgentsWorkshopPanel({ showToast, scrollRef, scrollOffset
     }, 120);
   }, [scrollRef, scrollOffsetRef, workshopPanelNodeRef]);
 
-  // Scroll the builder panel into view after it mounts — called via useEffect
-  // watching showBuilder/showTeamBuilder so layout is always fully committed.
   useEffect(() => {
     if (showBuilder) scrollNodeIntoView(builderNodeRef);
   }, [showBuilder]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -129,20 +121,22 @@ export default function AgentsWorkshopPanel({ showToast, scrollRef, scrollOffset
   }, [showTeamBuilder]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAgentSaved = useCallback(() => {
-    refresh();
+    // Reload only agents after a save
+    loadCustomAgents()
+      .then((agents) => setCustomAgents(agents))
+      .catch(() => {});
     setShowBuilder(false);
     setEditingAgent(null);
     if (showToast) showToast('Workshop', 'Agent saved', 'success');
     scrollBackToPanel();
-  }, [refresh, showToast, scrollBackToPanel]);
+  }, [showToast, scrollBackToPanel]);
 
   const handleDeleteAgent = useCallback(async (id) => {
     try {
       await deleteCustomAgent(id);
-      invalidateCustomAgentsCache();
       setCustomAgents((prev) => prev.filter((a) => a.id !== id));
       if (showToast) showToast('Workshop', 'Agent deleted', 'success');
-    } catch (err) {
+    } catch {
       if (showToast) showToast('Workshop', 'Could not delete agent', 'error');
     }
   }, [showToast]);
@@ -152,7 +146,7 @@ export default function AgentsWorkshopPanel({ showToast, scrollRef, scrollOffset
       const copy = await duplicateCustomAgent(id);
       setCustomAgents((prev) => [...prev, copy]);
       if (showToast) showToast('Workshop', 'Agent duplicated', 'success');
-    } catch (err) {
+    } catch {
       if (showToast) showToast('Workshop', 'Could not duplicate agent', 'error');
     }
   }, [showToast]);
@@ -160,14 +154,16 @@ export default function AgentsWorkshopPanel({ showToast, scrollRef, scrollOffset
   const handleTeamRegistered = useCallback((team) => {
     setShowTeamBuilder(false);
     invalidateCustomTeams();
-    refresh();
+    // Reload only teams after registration
+    loadCustomTeams()
+      .then((teams) => setCustomTeams(teams))
+      .catch(() => {});
     if (showToast) showToast('Workshop', `Team "${team.name}" registered`, 'success');
-  }, [refresh, showToast]);
+  }, [showToast]);
 
   const handleDeleteTeam = useCallback(async (id) => {
     try {
       await deleteCustomTeam(id);
-      invalidateCustomTeamsCache();
       invalidateCustomTeams();
       setCustomTeams((prev) => prev.filter((t) => t.id !== id));
       if (showToast) showToast('Workshop', 'Team deleted', 'success');
@@ -199,7 +195,7 @@ export default function AgentsWorkshopPanel({ showToast, scrollRef, scrollOffset
           <Text style={[ws.tabText, activeTab === TAB_AGENTS && ws.tabTextActive]}>Agent Builder</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[ws.tab, activeTab === TAB_TEAMS && ws.tabActive, activeTab === TAB_TEAMS && { borderColor: 'rgba(123, 47, 255, 0.5)' }]}
+          style={[ws.tab, activeTab === TAB_TEAMS && ws.tabActive, activeTab === TAB_TEAMS && ws.tabActiveTeams]}
           onPress={() => switchTab(TAB_TEAMS)}
           activeOpacity={0.75}
         >
@@ -212,16 +208,14 @@ export default function AgentsWorkshopPanel({ showToast, scrollRef, scrollOffset
       {/* ── Agent Builder tab ── */}
       {activeTab === TAB_AGENTS && (
         <View style={ws.tabContent}>
-          {/* Your Agents library — always visible */}
           <CustomAgentsLibrary
             customAgents={customAgents}
-            onEdit={(agent) => openBuilder(agent)}
+            onEdit={openBuilder}
             onDuplicate={handleDuplicateAgent}
             onDelete={handleDeleteAgent}
             onCreate={() => openBuilder(null)}
           />
 
-          {/* Create/Edit form — key on editingAgent.id so form resets after save */}
           {showBuilder ? (
             <View ref={builderNodeRef} collapsable={false}>
               <AgentBuilderPanel
@@ -232,7 +226,6 @@ export default function AgentsWorkshopPanel({ showToast, scrollRef, scrollOffset
               />
             </View>
           ) : (
-            /* Dashed banner — only shown once at least one agent exists */
             customAgents.length > 0 && (
               <TouchableOpacity
                 style={ws.createBtn}
@@ -250,7 +243,6 @@ export default function AgentsWorkshopPanel({ showToast, scrollRef, scrollOffset
       {/* ── Team Builder tab ── */}
       {activeTab === TAB_TEAMS && (
         <View style={ws.tabContent}>
-          {/* Existing custom teams */}
           {customTeams.length > 0 && (
             <View style={ws.teamsSection}>
               <View style={ws.teamsSectionHeader}>
@@ -258,46 +250,15 @@ export default function AgentsWorkshopPanel({ showToast, scrollRef, scrollOffset
                 <Text style={ws.agentCount}>{customTeams.length}</Text>
               </View>
               {customTeams.map((team) => (
-                <View key={team.id} style={[ws.teamCard, { borderColor: `${team.accent}33` }]}>
-                  <View style={ws.teamCardHeader}>
-                    {renderTeamSvgIcon(team.teamIcon, team.accent || '#A78BFA')
-                      || <AgentsWorkshopIcon color="#A78BFA" size={20} />}
-                    <View style={{ flex: 1 }}>
-                      <Text style={ws.teamCardName}>{team.name}</Text>
-                      <Text style={ws.teamCardTagline} numberOfLines={1}>{team.tagline}</Text>
-                    </View>
-                    <View style={[ws.customBadge, { backgroundColor: `${team.accent}22`, borderColor: `${team.accent}55` }]}>
-                      <Text style={[ws.customBadgeText, { color: team.accent }]}>CUSTOM</Text>
-                    </View>
-                    <TouchableOpacity
-                      style={ws.teamDeleteBtn}
-                      onPress={() => handleDeleteTeam(team.id)}
-                      activeOpacity={0.75}
-                    >
-                      <Text style={ws.teamDeleteBtnText}>✕</Text>
-                    </TouchableOpacity>
-                  </View>
-                  <View style={ws.teamRosterRow}>
-                    {['reasoner','coder','vision','writer'].map((role) => {
-                      const a = team.agents?.[role];
-                      if (!a) return null;
-                      const iconOption = ICON_OPTIONS.find((o) => o.key === a.icon);
-                      return (
-                        <View key={role} style={ws.rosterChip}>
-                          {iconOption
-                            ? <Image source={iconOption.src} style={ws.rosterChipIcon} resizeMode="cover" />
-                            : <Text style={ws.rosterChipIconText}>{a.icon || '🤖'}</Text>}
-                          <Text style={ws.rosterChipName}>{a.name}</Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-                </View>
+                <TeamCard
+                  key={team.id}
+                  team={team}
+                  onDelete={handleDeleteTeam}
+                />
               ))}
             </View>
           )}
 
-          {/* Empty state — no teams yet and builder is closed */}
           {customTeams.length === 0 && !showTeamBuilder && (
             <View style={ws.teamEmptyState}>
               <View style={ws.teamEmptyIconBox}>
@@ -317,7 +278,6 @@ export default function AgentsWorkshopPanel({ showToast, scrollRef, scrollOffset
             </View>
           )}
 
-          {/* Team builder form — shown when builder is open */}
           {showTeamBuilder && (
             <View ref={teamBuilderNodeRef} collapsable={false}>
               <TeamBuilderPanel
@@ -329,7 +289,6 @@ export default function AgentsWorkshopPanel({ showToast, scrollRef, scrollOffset
             </View>
           )}
 
-          {/* Dashed create banner — only shown when at least one team exists and builder is closed */}
           {customTeams.length > 0 && !showTeamBuilder && (
             <TouchableOpacity
               style={ws.createBtn}
@@ -345,6 +304,48 @@ export default function AgentsWorkshopPanel({ showToast, scrollRef, scrollOffset
     </View>
   );
 }
+
+// ── Extracted TeamCard — memoized so re-renders only when its own team changes ─
+
+const TeamCard = React.memo(function TeamCard({ team, onDelete }) {
+  return (
+    <View style={[ws.teamCard, { borderColor: `${team.accent}33` }]}>
+      <View style={ws.teamCardHeader}>
+        {renderTeamSvgIcon(team.teamIcon, team.accent || '#A78BFA')
+          || <AgentsWorkshopIcon color="#A78BFA" size={20} />}
+        <View style={teamCardFlexStyle}>
+          <Text style={ws.teamCardName}>{team.name}</Text>
+          <Text style={ws.teamCardTagline} numberOfLines={1}>{team.tagline}</Text>
+        </View>
+        <View style={[ws.customBadge, { backgroundColor: `${team.accent}22`, borderColor: `${team.accent}55` }]}>
+          <Text style={[ws.customBadgeText, { color: team.accent }]}>CUSTOM</Text>
+        </View>
+        <TouchableOpacity
+          style={ws.teamDeleteBtn}
+          onPress={() => onDelete(team.id)}
+          activeOpacity={0.75}
+        >
+          <Text style={ws.teamDeleteBtnText}>✕</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={ws.teamRosterRow}>
+        {['reasoner', 'coder', 'vision', 'writer'].map((role) => {
+          const a = team.agents?.[role];
+          if (!a) return null;
+          const iconOption = ICON_OPTIONS.find((o) => o.key === a.icon);
+          return (
+            <View key={role} style={ws.rosterChip}>
+              {iconOption
+                ? <Image source={iconOption.src} style={ws.rosterChipIcon} resizeMode="cover" />
+                : <Text style={ws.rosterChipIconText}>{a.icon || '🤖'}</Text>}
+              <Text style={ws.rosterChipName}>{a.name}</Text>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+});
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
@@ -382,14 +383,11 @@ const ws = StyleSheet.create({
     backgroundColor: 'rgba(123, 47, 255, 0.12)',
     borderColor: 'rgba(123, 47, 255, 0.5)',
   },
+  tabActiveTeams: {
+    borderColor: 'rgba(123, 47, 255, 0.5)',
+  },
   tabText: { fontSize: 10, fontWeight: '800', color: '#6A6A7D' },
   tabTextActive: { color: C.purpleSoft },
-  premiumDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#FBBF24',
-  },
   tabContent: { padding: 10, paddingTop: 12 },
   createBtn: {
     flexDirection: 'row',
@@ -427,7 +425,6 @@ const ws = StyleSheet.create({
     marginBottom: 8,
   },
   teamCardHeader: { flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 8 },
-  teamCardIcon: { fontSize: 20 },
   teamCardName: { color: '#FFFFFF', fontSize: 12, fontWeight: '800' },
   teamCardTagline: { color: '#6A6A7D', fontSize: 9, marginTop: 1 },
   customBadge: {

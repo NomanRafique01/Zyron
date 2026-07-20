@@ -44,6 +44,9 @@ const FIXED_ACCENT = '#A78BFA';
 const ACCENT_DIM   = 'rgba(167, 139, 250, 0.12)';
 const ACCENT_GLOW  = 'rgba(167, 139, 250, 0.35)';
 
+// Static layout constant
+const flexOneStyle = { flex: 1 };
+
 const DEFAULT_FORM = {
   name: '',
   description: '',
@@ -185,17 +188,19 @@ export default function AgentBuilderPanel({ onSaved, onClose, editAgent = null }
     }
   }, [form, editAgent, onSaved]);
 
+  const headerIconSrc = ICON_OPTIONS.find((o) => o.key === form.icon)?.src;
+
   return (
     <View style={bs.panel}>
       {/* Header */}
       <View style={bs.header}>
         <View style={[bs.headerIconBox, { backgroundColor: `${accent}18`, borderColor: `${accent}44` }]}>
           {form.icon
-            ? <Image source={ICON_OPTIONS.find(o => o.key === form.icon)?.src} style={bs.headerIconImage} resizeMode="cover" />
+            ? <Image source={headerIconSrc} style={bs.headerIconImage} resizeMode="cover" />
             : <AgentIcon color={accent} size={20} />
           }
         </View>
-        <View style={{ flex: 1 }}>
+        <View style={flexOneStyle}>
           <Text style={bs.headerTitle}>{editAgent ? 'Edit Agent' : 'Create Agent'}</Text>
           <Text style={bs.headerSub}>Metadata-only persona · no model changes</Text>
         </View>
