@@ -180,4 +180,8 @@ if __name__ == "__main__":
         port=port,
         reload=False,
         log_level="info",
+        # Keep HTTP connections alive long enough for complex multi-agent
+        # queries (target ≤ 120 s client-side).  Default is 5 s which would
+        # cause Railway / nginx to close the socket mid-response.
+        timeout_keep_alive=130,
     )

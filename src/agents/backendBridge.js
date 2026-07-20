@@ -4,7 +4,7 @@
  * Single entry point for all orchestration calls.
  *
  * Strategy:
- *   1. POST to the Railway backend /orchestrate endpoint (8-second timeout).
+ *   1. POST to the Railway backend /orchestrate endpoint (120-second timeout).
  *   2. On any failure — timeout, non-200, network error — fall back silently
  *      to the local runAgentsOrchestrator() without surfacing anything to the UI.
  *
@@ -30,7 +30,7 @@ import { analyzeQuery } from './analysis/queryAnalyzer';
 const BACKEND_URL = 'https://zyron-production-7af1.up.railway.app';
 
 // Milliseconds to wait for the backend before giving up and falling back.
-const BACKEND_TIMEOUT_MS = 30000;
+const BACKEND_TIMEOUT_MS = 120000;
 
 // ── DEV TEST TOGGLE — remove when no longer needed ───────────────────────────
 // When true, skip the backend entirely and run local orchestration directly.
@@ -124,8 +124,14 @@ export const runOrchestration = async (
 
   // ── Attempt backend ───────────────────────────────────────────────────────
   if (BACKEND_URL) {
+    // Progress-bar interval — declared outside try/catch so the catch block
+    // can always reference it (Hermes does not expose try-block `const`s to
+    // the sibling catch block).
+    const _progressTimer = { id: null };
+
     try {
       const controller = new AbortController();
+      console.log('[Zyron Backend] ⏱ Long query detected — waiting up to 120s...');
       const timeoutId = setTimeout(() => {
         console.log('[Zyron Backend] ⏱️ Request timed out — switching to local engine');
         controller.abort();
@@ -168,10 +174,6 @@ export const runOrchestration = async (
           };
         });
 
-      // Progress-bar interval — stored on an object so the catch block and the
-      // success path can always clear it, even when it was assigned asynchronously
-      // inside the setTimeout below.
-      const _progressTimer = { id: null };
 
       if (hasStateCallback) {
         // ── Phase 1: PENDING — show all agents queued at 0 % ─────────────────
