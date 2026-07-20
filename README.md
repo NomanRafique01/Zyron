@@ -55,7 +55,7 @@ Unlike standard AI apps where one model does everything, Zyron assigns each agen
 ---
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/demo/demo.gif" alt="Zyron Demo" width="100%"/>
+  <img src="https://github.com/NomanRafique01/Zyron/blob/main/assets/demo/demo.gif?raw=true" alt="Zyron Demo" width="100%"/>
 </div>
 
 ---
@@ -586,32 +586,6 @@ User attaches file / image
 - **Reset panel** — wipe conversation history, clear API keys, full factory reset
 ---
 
-## App in Action
-
-<div align="center">
-  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/demo/demo.gif" alt="Zyron Demo" width="100%"/>
-</div>
-
----
-
-## Screenshots
-
-<div align="center">
-  <table>
-    <tr>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s1.png" width="100%" alt="Screenshot 1"/></td>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s2.png" width="100%" alt="Screenshot 2"/></td>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s3.png" width="100%" alt="Screenshot 3"/></td>
-    </tr>
-    <tr>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s4.png" width="100%" alt="Screenshot 4"/></td>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s5.png" width="100%" alt="Screenshot 5"/></td>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s6.png" width="100%" alt="Screenshot 6"/></td>
-    </tr>
-  </table>
-</div>
-
----
 
 
 ## Supported AI Providers
