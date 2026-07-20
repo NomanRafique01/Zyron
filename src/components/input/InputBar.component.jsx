@@ -529,6 +529,9 @@ export default function InputBar({
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSend = () => {
+    // Clear the text field immediately so the send button disappears on the
+    // same frame the keyboard dismisses — prevents the bar looking "stuck".
+    setInputText('');
     inputRef?.current?.blur();
     requestAnimationFrame(onSend);
   };

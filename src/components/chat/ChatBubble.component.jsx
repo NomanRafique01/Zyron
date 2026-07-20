@@ -196,6 +196,11 @@ export default function ChatBubble({ msg, isTyping, mode, simulatedAgents, onReg
           <View style={[s.bubbleHeader, s.bubbleHeaderUser]}>
             <Text style={s.userSenderName}>You</Text>
           </View>
+          {msg.attachedDoc && (
+            <View style={s.docIndicatorRow}>
+              <Text style={s.docIndicatorText}>📄 {msg.attachedDoc}</Text>
+            </View>
+          )}
           <View style={[s.bubble, s.bubbleUser]}>
             <Text style={s.userText}>{msg.text}</Text>
             <Text style={[s.timestamp, s.timestampUser]}>{msg.timestamp}</Text>

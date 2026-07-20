@@ -158,6 +158,26 @@ export const bubbleStyles = StyleSheet.create({
     elevation: 6,
     alignSelf: 'flex-end',
   },
+  // ─── Document file indicator (above user bubble) ──
+  docIndicatorRow: {
+    alignSelf: 'flex-end',
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: 'rgba(167, 139, 250, 0.1)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.2)',
+    maxWidth: '84%',
+  },
+  docIndicatorText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#A78BFA',
+    letterSpacing: 0.1,
+  },
   bubbleAiFull: {
     backgroundColor: C.bgBubbleAi,
     borderWidth: 1,

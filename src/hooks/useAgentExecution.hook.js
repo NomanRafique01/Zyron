@@ -387,12 +387,16 @@ export default function useAgentExecution({
     }
 
     const userMsgText = inputText.trim();
+    console.log('[Send] documentContext attached:', documentContext != null, documentContext?.filename);
     Keyboard.dismiss();
     const userMsg = {
       id: String(Date.now()),
       sender: 'user',
       text: userMsgText,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }),
+      // Stamp the attached document filename so the bubble can show a file indicator.
+      // The actual text is injected into prompts via documentContext — this is UI only.
+      attachedDoc: documentContext ? documentContext.filename : null,
     };
 
     const newMessages = [...messages, userMsg];
