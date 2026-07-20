@@ -61,7 +61,7 @@ const layoutStyles = {
     // to the OS adjustResize window shrink that only affects chatShell's flex children.
     welcomeHeroAnchor: {
     position: 'absolute',
-    top: hp(35),
+    top: hp(38),
     left: 0,
     right: 0,
     alignItems: 'center',

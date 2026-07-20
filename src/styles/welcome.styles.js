@@ -12,7 +12,7 @@ const welcomeStyles = {
     justifyContent: 'flex-start',
     alignItems: 'center',
     paddingHorizontal: spacing(25),
-    paddingTop: spacing(80),
+    paddingTop: spacing(83),
   },
   welcomeHeroStatic: {
     width: '100%',
