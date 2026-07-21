@@ -921,32 +921,26 @@ Target SDK: **34 (Android 14)**
 
 ---
 
-## AI Tools Used as Assistant in Developing Zyron
+## AI Tools Used in Building Zyron
 
 <div align="center">
 
-<table style="border:none; border-collapse:collapse">
-<tr>
-<td align="center" style="padding:16px 20px; border:none">
-  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/IBMbob.png" width="48" height="48" style="object-fit:contain"/><br/>
-  <sub><b>IBM Bob</b></sub>
-</td>
-<td align="center" style="padding:16px 20px; border:none">
-  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/antigravity.png" width="48" height="48" style="object-fit:contain"/><br/>
-  <sub><b>Codex Antigravity</b></sub>
-</td>
-<td align="center" style="padding:16px 20px; border:none">
-  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/codex.png" width="48" height="48" style="object-fit:contain"/><br/>
-  <sub><b>Codex</b></sub>
-</td>
-<td align="center" style="padding:16px 20px; border:none">
-  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/claude.png" width="48" height="48" style="object-fit:contain"/><br/>
-  <sub><b>Claude</b></sub>
-</td>
-</tr>
-</table>
+<img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/codex.png" width="64" height="64" style="object-fit:contain"/><br/>
+<b>OpenAI Codex</b> &nbsp;·&nbsp; <sub>powered by <b>GPT‑4o / o3</b> — alongside <b>GPT‑5.5</b></sub>
 
 </div>
+
+Codex (with GPT‑5.5 alongside it) was the primary AI assistant throughout the entire development lifecycle of Zyron:
+
+| Area | What Codex handled |
+|------|--------------------|
+| **UI logic & planning** | Architecting component hierarchy, state-management patterns, hook extraction strategy, and overall screen flow |
+| **Dynamic & responsive UI** | Building animated coordination panels, adaptive layouts, keyboard-avoidance logic, and gesture-driven interactions that feel native on every Android device |
+| **Debugging** | Tracing race conditions in the agent pipeline, RAF-batching issues, animation driver conflicts, and storage-migration edge cases |
+| **Documentation** | Writing and maintaining this README, `SECURITY.md`, `CHANGELOG.md`, `STRUCTURE.md`, and all in-code JSDoc |
+| **Backend design** | Designing the FastAPI / LangGraph orchestration layer, circuit-breaker fallback chains, and document-extraction endpoint |
+| **Deployment** | EAS build profiles, Play Store AAB configuration, Railway production deployment, and environment-variable strategy |
+| **Git & version control** | Commit message authoring, branch strategy, release tagging, and changelog generation |
 
 ---
 
