@@ -135,40 +135,132 @@ The pipeline runs three phases:
 
 ---
 
+## Agent Orchestration
+
+Every query sent to Zyron passes through a multi-stage coordination pipeline. The orchestration layer is fully implemented in JavaScript and runs entirely on-device — no internet connection is required for the logic itself, only for the AI API calls.
+
+### Phase 1 — Query Analysis (`queryAnalyzer.js`)
+
+Before any agent is invoked, `analyzeQuery()` performs a zero-latency local classification of the incoming query. No API call is made — it is pure pattern matching and heuristics.
+
+It produces a rich `analysis` object that every downstream component reads:
+
+| Output flag | What it controls |
+|---|---|
+| `primaryType` | Dominant query category — `coding`, `stem`, `writing`, `analytical`, `financial`, `legal`, `creative`, `conversational`, `swarm_meta`, `general` |
+| `complexity` | `low` / `medium` / `high` — drives how much context is injected into prompts |
+| `responseLength` | `SHORT` / `MEDIUM` / `LONG` — guides the writer's output depth |
+| `coordinationMode` | `FULL` (all 4 agents) · `COMPACT` (shorter prompts) · `NONE` (simple greetings, pass-through) |
+| `needsWebSearch` | `true` if the query signals real-time data need — triggers the Tavily → Serper search before the pipeline |
+| `agentFocus` | Per-role `{ emphasis, deliver }` — each agent gets a strictly scoped deliverable so outputs never overlap |
+| `sharedBrief` | One-paragraph context block injected into every specialist system prompt |
+| `verbosityLevel` | `detailed` when explicit depth is requested; `simple` otherwise |
+
+**Agent focus is strictly partitioned.** For a coding query:
+- **Reasoner** → architectural decisions, interface contracts, edge-case inventory — *zero code*
+- **Coder** → complete runnable implementation with typed signatures — *zero architecture prose*
+- **Vision** → adversarial audit, vulnerability catalog, Big-O analysis, threat model — *zero implementation*
+- **Writer** → integrates all three into one authoritative final answer
+
+This strict partitioning prevents redundant output and forces genuine multi-angle coverage regardless of query type.
+
+---
+
+### Phase 2 — Specialist Execution (parallel, `orchestrator.js`)
+
+The three specialist agents (`reasoner`, `coder`, `vision`) are dispatched simultaneously using `Promise.allSettled`. Each agent:
+
+1. Receives its own system prompt built by `buildSpecialistPrompt()` — containing its scoped `deliver` directive, the `sharedBrief`, web search results (if any), document context (if uploaded), and the user's query
+2. Streams tokens through `streamManager.js` → real token chunks are forwarded to the UI via the `onStreamDelta(role, chunk)` callback as they arrive
+3. Has an independent progress bar driven by actual chars received (`streamProgress(role, charCount, 6_000)`) — bars fill organically based on real output, not fake timers
+4. Falls through the **fallback chain** (`fallbackChain.js`) if its primary provider fails — the next configured provider for that role is tried automatically without user intervention
+
+**Empty-output guard:** After all three streams settle, any agent that produced fewer than 10 characters is retried with a blocking `callAgent()` call. Only if the retry also fails is the agent marked as failed in the UI. The writer still runs regardless — it uses whatever partial text each specialist produced.
+
+**Large-prompt chunking:** When the query is long and at least one specialist is on a weak/small model, `promptChunker.js` splits the user message into per-role focused slices. Each specialist receives its own scoped chunk; the writer receives all specialist outputs and assembles the full answer.
+
+---
+
+### Phase 3 — Circuit Breakers (`circuitBreaker.js`)
+
+Every provider call is wrapped in a session-scoped circuit breaker:
+
+- A provider that fails **3 consecutive times** within a session has its breaker **opened** — all subsequent calls to that provider are skipped immediately without a network round-trip
+- After **60 seconds**, the breaker enters half-open state — one retry is permitted
+- On success, the failure counter resets to zero
+- The breaker state is **in-memory only** — it resets on app restart
+
+This prevents a single bad provider from causing repeated timeout delays across all agents in a session.
+
+---
+
+### Phase 4 — Synthesis (`synthesizer.js`, `qualityJudge.js`)
+
+Once all specialists complete, Agent 4 (the Writer) runs:
+
+1. `deduplicateOutputs()` is called on specialist outputs — currently a pass-through (no suppression), ensuring all specialist content reaches the writer unchanged
+2. `trimOutput()` trims each specialist's text to remove leading/trailing noise
+3. `buildQualityReport()` generates a quality brief — flags which specialists produced strong vs. weak output so the writer can weight them accordingly
+4. `buildWriterPrompt()` assembles the final synthesis prompt: user query + analysis + persona instruction + user profile + all specialist outputs + quality report + search results + document context
+5. The writer streams its response in real time. If the stream stalls or fails, a **blocking retry** is attempted before giving up. If the retry also fails, any partial streamed text is used; if there is none, `buildFallbackAnswer()` concatenates the specialist outputs directly as a last resort
+
+---
+
+### Abort propagation
+
+Every phase checks `signal.aborted` (from the user's Stop button) at the start of each iteration. A mid-stream abort cancels the active fetch, exits the pipeline immediately, and clears all progress intervals — no partial state is left in the UI.
+
+---
+
 ## Backend + Local Fallback Logic
 
-Zyron uses a **dual-engine architecture** — a Railway-hosted Python FastAPI backend as the primary orchestrator, with a fully self-contained local JS engine as a silent fallback. The user never sees the switch happen.
+Zyron uses a **dual-engine architecture** — a Railway-hosted Python FastAPI backend as the primary orchestrator, with a fully self-contained local JS engine as a silent fallback. The user never sees the switch happen. The entry point for all orchestration calls is `backendBridge.js`.
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                   backendBridge.js                      │
-│                                                         │
-│  1. POST /orchestrate → Railway backend (30 s timeout)  │
-│         │                                               │
-│         ├── ✅ 200 OK  → remap agents to active team    │
-│         │              → return fused response          │
-│         │                                               │
-│         └── ❌ Timeout │ Network error │ Non-200        │
-│                        │                                │
-│                        ▼                                │
-│         Local runAgentsOrchestrator() — silent fallback │
-│         Full SSE streaming, circuit-breakers, dedup     │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                      backendBridge.js                        │
+│                                                              │
+│  Every message → POST /orchestrate (no timeout, waits)       │
+│                           │                                  │
+│           ┌───────────────┴───────────────┐                  │
+│           │                               │                  │
+│      ✅ 200 OK                    ❌ Network error            │
+│           │                        Non-200 response          │
+│           │                               │                  │
+│   Remap agents to active                  ▼                  │
+│   team UI metadata            Local runAgentsOrchestrator()  │
+│   Return fused response       Full pipeline — streaming,     │
+│                               circuit-breakers, fallbacks,   │
+│                               synthesis — runs on-device     │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ### What the backend does
-- **Python FastAPI** on Railway (`https://zyron-production-7af1.up.railway.app`)
-- `POST /orchestrate` — accepts `{ query, agentConfigs, team, persona, userProfile, searchResults, documentContext }`
-- Runs three specialist agents in parallel via `LangGraph` then synthesizes via the writer agent
-- Returns structured `{ text, agents[], tokenUsage, meta }` JSON
-- `POST /extract-document` — accepts a base64-encoded file (PDF, DOCX, TXT) and returns extracted plain text for prompt injection
-- **Web search** — `web_search.py` fires a Tavily → Serper fallback search before the pipeline executes; `key_facts` from raw results (up to 5) are injected into every specialist prompt; returns `None` silently when both providers fail
+
+The backend is a Python FastAPI service deployed on Railway. It mirrors the local orchestration pipeline using LangGraph.
+
+- **Endpoint:** `POST /orchestrate` — accepts `{ query, agentConfigs, team, persona, userProfile, searchResults, documentContext }`
+- Runs three specialist agents in parallel via a LangGraph graph, then runs the writer synthesis node
+- Returns `{ text, agents[], tokenUsage, meta }` JSON
+- **Endpoint:** `POST /extract-document` — accepts a base64-encoded file (PDF, DOCX, TXT) and returns extracted plain text for prompt injection into the agent pipeline
+- **Web search:** `web_search.py` runs a Tavily → Serper fallback search before the pipeline; up to 5 `key_facts` from results are injected into every specialist prompt. Returns `None` silently when both providers are unavailable
+
+### Coordination panel during backend call
+
+While the backend request is in-flight, the frontend drives its own coordination panel animation so the UI is never frozen:
+
+1. **Queued state** — all 4 active-team agents appear immediately at 0 % progress
+2. **Working state** — after one tick, all bars begin an exponential-approach animation: `progress = 5 + 73 × (1 − e^(−t/28000))`, capped at 78 %
+3. **Complete** — on `200 OK`, all bars jump to 100 % and badges flip to "Done" simultaneously
+
+Agent names, icons, and accent colors are always **remapped to the active team** after a backend response via `remapAgentsToActiveTeam()` — the backend drives the logic, the frontend owns the visual identity.
 
 ### Fallback guarantee
-- Timeout is **30 seconds**. If the backend doesn't respond in time, the local engine starts immediately — no error is ever shown to the user
-- If the user pressed **Stop** while waiting, the abort propagates cleanly across both paths
-- **Progress bar animation** starts on the frontend while the backend call is in-flight: agents animate from 0 % → 78 % (exponential approach, τ = 28 s), then jump to 100 % on response
-- Agent names, icons, and accent colors are always **remapped to the active team** after a backend response — the backend drives logic, the frontend owns visual identity
+
+- The backend fetch has **no timeout** — it waits indefinitely for the server to respond. The only triggers for fallback are a network error or a non-200 response
+- If the user presses **Stop** while waiting, the abort signal propagates to both the fetch call and the local engine — no partial state is left
+- The local `runAgentsOrchestrator()` is feature-complete: it runs the full Phase 1–4 pipeline described above, including web search, circuit breakers, fallback chains, streaming, and synthesis
+- A **dev toggle** (`setForceLocal(true)`) skips the backend entirely and routes directly to the local engine — used during development to test local orchestration without needing the Railway service
 
 ---
 
