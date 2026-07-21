@@ -850,42 +850,28 @@ Target SDK: **34 (Android 14)**
 
 <div align="center">
 
-*Built with the intelligence of the world's most advanced AI coding assistants.*
-
-</div>
-
-<br/>
-
-<table width="100%" style="table-layout:fixed; border-collapse:separate; border-spacing:0">
-<colgroup>
-<col width="25%"/>
-<col width="25%"/>
-<col width="25%"/>
-<col width="25%"/>
-</colgroup>
+<table style="border:none; border-collapse:collapse">
 <tr>
-<td align="center" width="25%" style="padding:24px 16px; vertical-align:top; border:none">
-  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/IBMbob.png" width="80" height="80" style="object-fit:contain"/><br/><br/>
-  <b>IBM Bob</b><br/>
-  <sub>Primary AI coding assistant — architecture design, multi-agent orchestration logic, FastAPI/LangGraph backend, and full-stack code review.</sub>
+<td align="center" style="padding:16px 20px; border:none">
+  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/IBMbob.png" width="48" height="48" style="object-fit:contain"/><br/>
+  <sub><b>IBM Bob</b></sub>
 </td>
-<td align="center" width="25%" style="padding:24px 16px; vertical-align:top; border:none">
-  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/antigravity.png" width="80" height="80" style="object-fit:contain"/><br/><br/>
-  <b>Codex Antigravity</b><br/>
-  <sub>Advanced code generation — complex agent prompt engineering, API integration scaffolding, and logic optimisation.</sub>
+<td align="center" style="padding:16px 20px; border:none">
+  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/antigravity.png" width="48" height="48" style="object-fit:contain"/><br/>
+  <sub><b>Codex Antigravity</b></sub>
 </td>
-<td align="center" width="25%" style="padding:24px 16px; vertical-align:top; border:none">
-  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/codex.png" width="80" height="80" style="object-fit:contain"/><br/><br/>
-  <b>Cursor</b><br/>
-  <sub>IDE-integrated AI pair programming — inline completions, context-aware edits, and rapid iteration across React Native and Python files.</sub>
+<td align="center" style="padding:16px 20px; border:none">
+  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/codex.png" width="48" height="48" style="object-fit:contain"/><br/>
+  <sub><b>Codex</b></sub>
 </td>
-<td align="center" width="25%" style="padding:24px 16px; vertical-align:top; border:none">
-  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/claude.png" width="80" height="80" style="object-fit:contain"/><br/><br/>
-  <b>Claude</b><br/>
-  <sub>Long-context reasoning, documentation drafting, edge-case analysis, and reviewing multi-agent coordination strategies.</sub>
+<td align="center" style="padding:16px 20px; border:none">
+  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/claude.png" width="48" height="48" style="object-fit:contain"/><br/>
+  <sub><b>Claude</b></sub>
 </td>
 </tr>
 </table>
+
+</div>
 
 ---
 
