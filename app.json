@@ -32,6 +32,8 @@
       "softwareKeyboardLayoutMode": "pan",
       "package": "com.nomanrafique.zyron",
       "allowBackup": false,
+      "enableProguardInReleaseBuilds": true,
+      "enableShrinkResourcesInReleaseBuilds": true,
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.VIBRATE",
@@ -49,8 +51,10 @@
       }
     },
     "assetBundlePatterns": [
-      "**/*",
-      "assets/agent-icons/*"
+      "assets/images/*",
+      "assets/splash/*",
+      "assets/icons/*",
+      "assets/agent-icons/**/*"
     ],
     "plugins": [
       "expo-secure-store",
