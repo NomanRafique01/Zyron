@@ -55,40 +55,6 @@ Unlike standard AI apps where one model does everything, Zyron assigns each agen
 
 ---
 
-<div align="center">
-  <table>
-    <tr>
-      <th align="center">Agent Coordination</th>
-      <th align="center">Live Talk Mode of Zyron</th>
-    </tr>
-    <tr>
-      <td align="center"><img src="https://github.com/NomanRafique01/Zyron/blob/main/assets/demo/demo.gif?raw=true" alt="Agent Coordination Demo" width="250"/></td>
-      <td align="center"><img src="https://github.com/NomanRafique01/Zyron/blob/main/assets/demo/livetalk.demo.gif?raw=true" alt="Live Talk Mode Demo" width="250"/></td>
-    </tr>
-  </table>
-</div>
-
----
-
-## Screenshots
-
-<div align="center">
-  <table>
-    <tr>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s1.png" width="100%" alt="Screenshot 1"/></td>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s2.png" width="100%" alt="Screenshot 2"/></td>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s3.png" width="100%" alt="Screenshot 3"/></td>
-    </tr>
-    <tr>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s4.png" width="100%" alt="Screenshot 4"/></td>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s5.png" width="100%" alt="Screenshot 5"/></td>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s6.png" width="100%" alt="Screenshot 6"/></td>
-    </tr>
-  </table>
-</div>
-
----
-
 ## Core Architecture
 
 ```
@@ -261,6 +227,40 @@ Agent names, icons, and accent colors are always **remapped to the active team**
 - If the user presses **Stop** while waiting, the abort signal propagates to both the fetch call and the local engine — no partial state is left
 - The local `runAgentsOrchestrator()` is feature-complete: it runs the full Phase 1–4 pipeline described above, including web search, circuit breakers, fallback chains, streaming, and synthesis
 - A **dev toggle** (`setForceLocal(true)`) skips the backend entirely and routes directly to the local engine — used during development to test local orchestration without needing the Railway service
+
+---
+
+<div align="center">
+  <table>
+    <tr>
+      <th align="center">Agent Coordination</th>
+      <th align="center">Live Talk Mode of Zyron</th>
+    </tr>
+    <tr>
+      <td align="center"><img src="https://github.com/NomanRafique01/Zyron/blob/main/assets/demo/demo.gif?raw=true" alt="Agent Coordination Demo" width="250"/></td>
+      <td align="center"><img src="https://github.com/NomanRafique01/Zyron/blob/main/assets/demo/livetalk.demo.gif?raw=true" alt="Live Talk Mode Demo" width="250"/></td>
+    </tr>
+  </table>
+</div>
+
+---
+
+## Screenshots
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s1.png" width="100%" alt="Welcome Screen"/><br/><sub>Time-aware welcome screen with smart greeting</sub></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s2.png" width="100%" alt="Agent Coordination Panel"/><br/><sub>Live agent coordination panel — 4 specialists running in parallel</sub></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s3.png" width="100%" alt="Settings Panel"/><br/><sub>Settings control center — all configuration panels</sub></td>
+    </tr>
+    <tr>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s4.png" width="100%" alt="API Configuration"/><br/><sub>API Configuration Panel — per-agent socket and model setup</sub></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s5.png" width="100%" alt="Agents Workshop"/><br/><sub>Agents Workshop — build custom agents and assemble custom teams</sub></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s6.png" width="100%" alt="Live Talk Mode"/><br/><sub>Live Talk Mode — neural-net animation in speaking state</sub></td>
+    </tr>
+  </table>
+</div>
 
 ---
 
@@ -463,81 +463,6 @@ Master finance team for personal, corporate, and business finance.
 
 ---
 
-## Technologies Used
-
-A full-stack overview of every layer Zyron is built on — from the on-device UI to the cloud orchestration backend.
-
-### Backend — Python / FastAPI / LangGraph
-
-| Technology | Version | Integration |
-|---|---|---|
-| **Python** | 3.13 | Backend runtime on Railway |
-| **FastAPI** | 0.115.12 | REST API server — `/health` + `/orchestrate` endpoints |
-| **LangGraph** | 1.2.9 | Multi-agent pipeline graph — three parallel specialist nodes + writer synthesis node |
-| **LangChain** | 1.3.14 | LLM abstraction layer used inside LangGraph nodes for prompt building and provider calls |
-| **Pydantic** | 2.11.4 | Request / response model validation (`models.py`) |
-| **Uvicorn** | 0.34.3 | ASGI server for FastAPI |
-| **Docker** | — | Containerised backend — consistent builds and local dev environment |
-| **Railway** | — | Cloud deployment platform — auto-deploy from `main` branch |
-
-### Frontend — React Native / Expo
-
-| Technology | Version | Integration |
-|---|---|---|
-| **React Native** | 0.81.5 | Core UI framework — all screens, navigation, animations |
-| **React** | 19.1.0 | UI component runtime |
-| **Expo SDK** | 54.0.36 | Build toolchain, native module access, OTA updates |
-| **expo-secure-store** | 15.0.8 | Android Keystore-backed encrypted API key storage |
-| **expo-sqlite** | 16.0.10 | On-device SQLite database for conversation + memory persistence |
-| **expo-speech** | 14.0.8 | Text-to-speech output for Live Talk voice responses |
-| **expo-speech-recognition** | 3.1.3 | Real-time STT — mic dictation and Live Talk input |
-| **expo-local-authentication** | 17.0.8 | Biometric / PIN gate for API Config Lock |
-| **expo-blur** | 15.0.8 | Settings modal blur backgrounds |
-| **expo-linear-gradient** | 15.0.8 | Agent glow accent effects |
-| **expo-clipboard** | 8.0.8 | Copy-to-clipboard on code blocks |
-| **expo-web-browser** | 15.0.11 | GitHub OAuth redirect handler |
-| **expo-document-picker** | 14.0.8 | File attachment for document analysis |
-| **expo-image-picker** | 17.0.11 | Image attachment for vision analysis |
-| **react-native-webview** | 13.15.0 | KaTeX LaTeX rendering sandbox |
-| **react-native-svg** | 15.12.1 | SVG team icons, decorative elements, Live Talk neural animation |
-| **react-native-keyboard-controller** | 1.22.1 | Cross-platform keyboard layout tracking |
-| **react-native-safe-area-context** | 5.6.0 | Edge-to-edge safe area insets |
-| **@react-native-async-storage/async-storage** | 2.2.0 | User profile, team selection, custom agents + teams |
-| **@react-native-community/netinfo** | 11.4.1 | Offline detection |
-| **TypeScript** | 5.9.2 | Static typing across the entire frontend codebase |
-
-### AI Providers
-
-| Provider | Models Used | Role |
-|---|---|---|
-| **OpenRouter** | `nvidia/nemotron-3-super-120b-a12b:free` + 100+ | Default free-tier agent socket |
-| **OpenAI** | `gpt-4o-mini`, `gpt-4o`, o-series | General reasoning and synthesis |
-| **Anthropic** | `claude-3-5-haiku-latest`, `claude-3-5-sonnet` | High-quality analysis and writing |
-| **Google Gemini** | `gemini-2.5-flash`, `gemini-pro` | STEM, multimodal |
-| **Groq** | `llama-3.3-70b-versatile` | Ultra-low-latency inference for Live Talk |
-| **Mistral** | `mistral-small-latest` | Writer / synthesis agent default |
-| **DeepSeek** | `deepseek-chat`, `deepseek-reasoner` | Extended chain-of-thought reasoning |
-| **GLM / Zhipu** | `glm-4-flash`, `glm-4-air` | Low-cost high-speed inference |
-
-### Data & Storage
-
-| Technology | Integration |
-|---|---|
-| **SQLite** (`expo-sqlite`) | Full conversation history, session index, user memory facts — all stored on-device |
-| **AsyncStorage** | Non-sensitive user preferences — active team, profile settings, custom agents, custom teams |
-| **Android Keystore** (`EncryptedSharedPreferences`) | All API keys — hardware-backed encryption, never stored in JS bundle or AsyncStorage |
-
-### Rendering & Math
-
-| Technology | Integration |
-|---|---|
-| **KaTeX 0.17** | LaTeX formula typesetting — inline (`$...$`) and display (`$$...$$`) math rendered in a sandboxed WebView |
-| **react-native-webview** | WebView host for KaTeX rendering |
-| **mathParser.utils.js** | Custom parser that detects and splits LaTeX and chemical formulae out of raw LLM text before rendering |
-| **SyntaxCode component** | Syntax-highlighted code blocks with language auto-detection and copy-to-clipboard |
-
----
-
 ## Feature Overview
 
 ### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><circle cx="5.5" cy="5" r="1.5" stroke="#7B2FFF" stroke-width="1.4"/><circle cx="18.5" cy="5" r="1.5" stroke="#7B2FFF" stroke-width="1.4"/><circle cx="12" cy="12" r="2.2" stroke="#7B2FFF" stroke-width="1.6"/><path d="M10.2 10.2L7 7" stroke="#7B2FFF" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 10.2L17 7" stroke="#7B2FFF" stroke-width="1.2" stroke-linecap="round"/><circle cx="5.5" cy="19" r="1.5" stroke="#7B2FFF" stroke-width="1.4"/><circle cx="18.5" cy="19" r="1.5" stroke="#7B2FFF" stroke-width="1.4"/><path d="M10.2 13.8L7 17" stroke="#7B2FFF" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 13.8L17 17" stroke="#7B2FFF" stroke-width="1.2" stroke-linecap="round"/></svg> Multi-Agent Swarm Engine
@@ -692,9 +617,83 @@ User attaches file / image
 - **API Config panel** — per-provider key entry, model selection, key status verification, share-key-across-agents toggle
 - **Privacy panel** — privacy mode, profile context injection toggle
 - **Reset panel** — wipe conversation history, clear API keys, full factory reset
+
 ---
 
+## Technologies Used
 
+A full-stack overview of every layer Zyron is built on — from the on-device UI to the cloud orchestration backend.
+
+### Backend — Python / FastAPI / LangGraph
+
+| Technology | Version | Integration |
+|---|---|---|
+| **Python** | 3.13 | Backend runtime on Railway |
+| **FastAPI** | 0.115.12 | REST API server — `/health` + `/orchestrate` endpoints |
+| **LangGraph** | 1.2.9 | Multi-agent pipeline graph — three parallel specialist nodes + writer synthesis node |
+| **LangChain** | 1.3.14 | LLM abstraction layer used inside LangGraph nodes for prompt building and provider calls |
+| **Pydantic** | 2.11.4 | Request / response model validation (`models.py`) |
+| **Uvicorn** | 0.34.3 | ASGI server for FastAPI |
+| **Docker** | — | Containerised backend — consistent builds and local dev environment |
+| **Railway** | — | Cloud deployment platform — auto-deploy from `main` branch |
+
+### Frontend — React Native / Expo
+
+| Technology | Version | Integration |
+|---|---|---|
+| **React Native** | 0.81.5 | Core UI framework — all screens, navigation, animations |
+| **React** | 19.1.0 | UI component runtime |
+| **Expo SDK** | 54.0.36 | Build toolchain, native module access, OTA updates |
+| **expo-secure-store** | 15.0.8 | Android Keystore-backed encrypted API key storage |
+| **expo-sqlite** | 16.0.10 | On-device SQLite database for conversation + memory persistence |
+| **expo-speech** | 14.0.8 | Text-to-speech output for Live Talk voice responses |
+| **expo-speech-recognition** | 3.1.3 | Real-time STT — mic dictation and Live Talk input |
+| **expo-local-authentication** | 17.0.8 | Biometric / PIN gate for API Config Lock |
+| **expo-blur** | 15.0.8 | Settings modal blur backgrounds |
+| **expo-linear-gradient** | 15.0.8 | Agent glow accent effects |
+| **expo-clipboard** | 8.0.8 | Copy-to-clipboard on code blocks |
+| **expo-web-browser** | 15.0.11 | GitHub OAuth redirect handler |
+| **expo-document-picker** | 14.0.8 | File attachment for document analysis |
+| **expo-image-picker** | 17.0.11 | Image attachment for vision analysis |
+| **react-native-webview** | 13.15.0 | KaTeX LaTeX rendering sandbox |
+| **react-native-svg** | 15.12.1 | SVG team icons, decorative elements, Live Talk neural animation |
+| **react-native-keyboard-controller** | 1.22.1 | Cross-platform keyboard layout tracking |
+| **react-native-safe-area-context** | 5.6.0 | Edge-to-edge safe area insets |
+| **@react-native-async-storage/async-storage** | 2.2.0 | User profile, team selection, custom agents + teams |
+| **@react-native-community/netinfo** | 11.4.1 | Offline detection |
+| **TypeScript** | 5.9.2 | Static typing across the entire frontend codebase |
+
+### AI Providers
+
+| Provider | Models Used | Role |
+|---|---|---|
+| **OpenRouter** | `nvidia/nemotron-3-super-120b-a12b:free` + 100+ | Default free-tier agent socket |
+| **OpenAI** | `gpt-4o-mini`, `gpt-4o`, o-series | General reasoning and synthesis |
+| **Anthropic** | `claude-3-5-haiku-latest`, `claude-3-5-sonnet` | High-quality analysis and writing |
+| **Google Gemini** | `gemini-2.5-flash`, `gemini-pro` | STEM, multimodal |
+| **Groq** | `llama-3.3-70b-versatile` | Ultra-low-latency inference for Live Talk |
+| **Mistral** | `mistral-small-latest` | Writer / synthesis agent default |
+| **DeepSeek** | `deepseek-chat`, `deepseek-reasoner` | Extended chain-of-thought reasoning |
+| **GLM / Zhipu** | `glm-4-flash`, `glm-4-air` | Low-cost high-speed inference |
+
+### Data & Storage
+
+| Technology | Integration |
+|---|---|
+| **SQLite** (`expo-sqlite`) | Full conversation history, session index, user memory facts — all stored on-device |
+| **AsyncStorage** | Non-sensitive user preferences — active team, profile settings, custom agents, custom teams |
+| **Android Keystore** (`EncryptedSharedPreferences`) | All API keys — hardware-backed encryption, never stored in JS bundle or AsyncStorage |
+
+### Rendering & Math
+
+| Technology | Integration |
+|---|---|
+| **KaTeX 0.17** | LaTeX formula typesetting — inline (`$...$`) and display (`$$...$$`) math rendered in a sandboxed WebView |
+| **react-native-webview** | WebView host for KaTeX rendering |
+| **mathParser.utils.js** | Custom parser that detects and splits LaTeX and chemical formulae out of raw LLM text before rendering |
+| **SyntaxCode component** | Syntax-highlighted code blocks with language auto-detection and copy-to-clipboard |
+
+---
 
 ## Supported AI Providers
 
@@ -712,36 +711,6 @@ Zyron connects to **eight AI providers**. Each agent socket is independently con
 | **GLM / Zhipu** | `glm-4-flash` | GLM-4 Flash, Air, Plus |
 
 All providers support free model tiers where available. Keys are stored per-agent and can be shared across agents via the share-key setting.
-
----
-
-## Tech Stack
-
-```
-React Native 0.81.5 + Expo SDK 54.0.36
-├── expo-secure-store        15.0.8   Android Keystore-backed key storage
-├── expo-sqlite              16.0.10  On-device conversation + memory persistence
-├── expo-speech              14.0.8   TTS — Live Talk voice output
-├── expo-speech-recognition   3.1.3   STT — Mic input + Live Talk voice input
-├── expo-local-authentication 17.0.8  Biometric/PIN API lock gate
-├── expo-blur                15.0.8   Settings modal blur backgrounds
-├── expo-linear-gradient     15.0.8   Agent glow effects
-├── expo-clipboard            8.0.8   Code block copy-to-clipboard
-├── expo-web-browser         15.0.11  GitHub OAuth redirect handler
-├── expo-document-picker     14.0.8   File attachment — PDF / DOCX / TXT
-├── expo-image-picker        17.0.11  Image attachment — vision analysis
-├── react-native-webview     13.15.0  KaTeX LaTeX rendering
-├── react-native-svg         15.12.1  SVG icons, decorative elements, team icons
-├── react-native-keyboard-controller  1.22.1  Keyboard layout tracking
-├── react-native-safe-area-context    5.6.0   Edge-to-edge safe area handling
-├── @react-native-async-storage       2.2.0   User profile, team selection, custom teams/agents
-├── @react-native-community/netinfo   11.4.1  Offline detection
-└── katex                     0.17.0  LaTeX math typesetting
-```
-
-**Backend:** Python 3.13 · FastAPI 0.115.12 · LangGraph 1.2.9 · LangChain 1.3.14 · Pydantic 2.11.4 · Uvicorn 0.34.3 · Railway deployment
-
-**Build toolchain:** EAS Build with development / preview / production-APK / production-AAB profiles.
 
 ---
 
