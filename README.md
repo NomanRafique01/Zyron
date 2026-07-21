@@ -864,6 +864,19 @@ eas build --profile production --platform android
 
 ---
 
+## Download
+
+| Version | Status | Download |
+|---------|--------|----------|
+| v1.0.0 | ✅ Stable (Recommended) | [Download APK](https://github.com/NomanRafique01/Zyron/releases/download/v1.0.0/zyron.apk) |
+| v0.9.0-beta | 🧪 Beta (Legacy) | [Download APK](https://github.com/NomanRafique01/Zyron/releases/download/beta/Zyron.apk) |
+
+> **Minimum requirement:** Android 5.0 (SDK 21) or higher.
+>
+> For full release notes and version history, visit the [Releases page](https://github.com/NomanRafique01/Zyron/releases).
+
+---
+
 ## Configuration
 
 API keys are entered directly in the app's **Settings → API Config** panel after launch. Keys are stored in Android Keystore-backed encrypted storage — never in source code or config files.
