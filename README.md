@@ -379,36 +379,40 @@ A full-stack overview of every layer Zyron is built on — from the on-device UI
 
 | Technology | Version | Integration |
 |---|---|---|
-| **Python** | 3.11 | Backend runtime on Railway |
-| **FastAPI** | 0.111 | REST API server — `/health` + `/orchestrate` endpoints |
-| **LangGraph** | latest | Multi-agent pipeline graph — three parallel specialist nodes + writer synthesis node |
-| **LangChain** | latest | LLM abstraction layer used inside LangGraph nodes for prompt building and provider calls |
-| **Pydantic** | v2 | Request / response model validation (`models.py`) |
+| **Python** | 3.13 | Backend runtime on Railway |
+| **FastAPI** | 0.115.12 | REST API server — `/health` + `/orchestrate` endpoints |
+| **LangGraph** | 1.2.9 | Multi-agent pipeline graph — three parallel specialist nodes + writer synthesis node |
+| **LangChain** | 1.3.14 | LLM abstraction layer used inside LangGraph nodes for prompt building and provider calls |
+| **Pydantic** | 2.11.4 | Request / response model validation (`models.py`) |
+| **Uvicorn** | 0.34.3 | ASGI server for FastAPI |
 | **Docker** | — | Containerised backend — consistent builds and local dev environment |
 | **Railway** | — | Cloud deployment platform — auto-deploy from `main` branch |
-| **Uvicorn** | — | ASGI server for FastAPI |
 
 ### Frontend — React Native / Expo
 
 | Technology | Version | Integration |
 |---|---|---|
 | **React Native** | 0.81.5 | Core UI framework — all screens, navigation, animations |
-| **Expo SDK** | 54 | Build toolchain, native module access, OTA updates |
-| **expo-secure-store** | — | Android Keystore-backed encrypted API key storage |
-| **expo-sqlite** | — | On-device SQLite database for conversation + memory persistence |
-| **expo-speech** | — | Text-to-speech output for Live Talk voice responses |
-| **expo-speech-recognition** | — | Real-time STT — mic dictation and Live Talk input |
-| **expo-local-authentication** | — | Biometric / PIN gate for API Config Lock |
-| **expo-blur** | — | Settings modal blur backgrounds |
-| **expo-linear-gradient** | — | Agent glow accent effects |
-| **expo-clipboard** | — | Copy-to-clipboard on code blocks |
-| **expo-web-browser** | — | GitHub OAuth redirect handler |
-| **react-native-webview** | — | KaTeX LaTeX rendering sandbox |
-| **react-native-svg** | — | SVG team icons, decorative elements, Live Talk neural animation |
-| **react-native-keyboard-controller** | — | Cross-platform keyboard layout tracking |
-| **react-native-safe-area-context** | — | Edge-to-edge safe area insets |
-| **@react-native-async-storage** | — | User profile, team selection, custom agents + teams |
-| **@react-native-community/netinfo** | — | Offline detection |
+| **React** | 19.1.0 | UI component runtime |
+| **Expo SDK** | 54.0.36 | Build toolchain, native module access, OTA updates |
+| **expo-secure-store** | 15.0.8 | Android Keystore-backed encrypted API key storage |
+| **expo-sqlite** | 16.0.10 | On-device SQLite database for conversation + memory persistence |
+| **expo-speech** | 14.0.8 | Text-to-speech output for Live Talk voice responses |
+| **expo-speech-recognition** | 3.1.3 | Real-time STT — mic dictation and Live Talk input |
+| **expo-local-authentication** | 17.0.8 | Biometric / PIN gate for API Config Lock |
+| **expo-blur** | 15.0.8 | Settings modal blur backgrounds |
+| **expo-linear-gradient** | 15.0.8 | Agent glow accent effects |
+| **expo-clipboard** | 8.0.8 | Copy-to-clipboard on code blocks |
+| **expo-web-browser** | 15.0.11 | GitHub OAuth redirect handler |
+| **expo-document-picker** | 14.0.8 | File attachment for document analysis |
+| **expo-image-picker** | 17.0.11 | Image attachment for vision analysis |
+| **react-native-webview** | 13.15.0 | KaTeX LaTeX rendering sandbox |
+| **react-native-svg** | 15.12.1 | SVG team icons, decorative elements, Live Talk neural animation |
+| **react-native-keyboard-controller** | 1.22.1 | Cross-platform keyboard layout tracking |
+| **react-native-safe-area-context** | 5.6.0 | Edge-to-edge safe area insets |
+| **@react-native-async-storage/async-storage** | 2.2.0 | User profile, team selection, custom agents + teams |
+| **@react-native-community/netinfo** | 11.4.1 | Offline detection |
+| **TypeScript** | 5.9.2 | Static typing across the entire frontend codebase |
 
 ### AI Providers
 
@@ -477,11 +481,6 @@ The input bar now includes a **microphone button** alongside the text field. Tap
 - Requests `RECORD_AUDIO` permission on first use
 - Live partial results update the input field in real time as you speak
 - Tap the mic button again (or tap Stop) to end dictation early
-
-### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="#7B2FFF" stroke="#7B2FFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Real-Time Streaming
-- **Server-Sent Events (SSE)** for all supporting providers — tokens stream live to screen
-- **Per-agent streaming state** — each agent has its own progress bar and status label (Thinking / Building / Stress-testing / Documenting / etc.)
-- **Graceful abort** — stop mid-generation, cancels cleanly across all active sockets
 
 ### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><circle cx="11" cy="11" r="7" stroke="#7B2FFF" stroke-width="1.8"/><path d="M16.5 16.5L21 21" stroke="#7B2FFF" stroke-width="2" stroke-linecap="round"/><path d="M8 11h6M11 8v6" stroke="#7B2FFF" stroke-width="1.6" stroke-linecap="round"/></svg> Web Search *(New)*
 Zyron enriches every query with live web results before the agent pipeline runs — no manual "search mode" toggle required.
@@ -627,26 +626,28 @@ All providers support free model tiers where available. Keys are stored per-agen
 ## Tech Stack
 
 ```
-React Native 0.81.5 + Expo SDK 54
-├── expo-secure-store              Android Keystore-backed key storage
-├── expo-sqlite                    On-device conversation + memory persistence
-├── expo-speech                    TTS — Live Talk voice output
-├── expo-speech-recognition        STT — Mic input + Live Talk voice input
-├── expo-local-authentication      Biometric/PIN API lock gate
-├── expo-blur                      Settings modal blur backgrounds
-├── expo-linear-gradient           Agent glow effects
-├── expo-clipboard                 Code block copy-to-clipboard
-├── expo-web-browser               GitHub OAuth redirect handler
-├── react-native-webview           KaTeX LaTeX rendering
-├── react-native-svg               SVG icons, decorative elements, team icons
-├── react-native-keyboard-controller  Cross-platform keyboard layout tracking
-├── react-native-safe-area-context    Edge-to-edge safe area handling
-├── @react-native-async-storage       User profile, team selection, custom teams/agents
-├── @react-native-community/netinfo   Offline detection
-└── katex 0.17                     LaTeX math typesetting
+React Native 0.81.5 + Expo SDK 54.0.36
+├── expo-secure-store        15.0.8   Android Keystore-backed key storage
+├── expo-sqlite              16.0.10  On-device conversation + memory persistence
+├── expo-speech              14.0.8   TTS — Live Talk voice output
+├── expo-speech-recognition   3.1.3   STT — Mic input + Live Talk voice input
+├── expo-local-authentication 17.0.8  Biometric/PIN API lock gate
+├── expo-blur                15.0.8   Settings modal blur backgrounds
+├── expo-linear-gradient     15.0.8   Agent glow effects
+├── expo-clipboard            8.0.8   Code block copy-to-clipboard
+├── expo-web-browser         15.0.11  GitHub OAuth redirect handler
+├── expo-document-picker     14.0.8   File attachment — PDF / DOCX / TXT
+├── expo-image-picker        17.0.11  Image attachment — vision analysis
+├── react-native-webview     13.15.0  KaTeX LaTeX rendering
+├── react-native-svg         15.12.1  SVG icons, decorative elements, team icons
+├── react-native-keyboard-controller  1.22.1  Keyboard layout tracking
+├── react-native-safe-area-context    5.6.0   Edge-to-edge safe area handling
+├── @react-native-async-storage       2.2.0   User profile, team selection, custom teams/agents
+├── @react-native-community/netinfo   11.4.1  Offline detection
+└── katex                     0.17.0  LaTeX math typesetting
 ```
 
-**Backend:** Python 3.11 · FastAPI · LangGraph · Railway deployment
+**Backend:** Python 3.13 · FastAPI 0.115.12 · LangGraph 1.2.9 · LangChain 1.3.14 · Pydantic 2.11.4 · Uvicorn 0.34.3 · Railway deployment
 
 **Build toolchain:** EAS Build with development / preview / production-APK / production-AAB profiles.
 
