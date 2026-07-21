@@ -42,7 +42,7 @@
 
 ## What is Zyron?
 
-Zyron is a production-grade Android AI assistant that replaces a single chatbot with a **coordinated swarm of four specialist agents** running in parallel. Every query is routed to a team of domain experts — an analyst, an executor, a validator, and a synthesizer — whose outputs are fused into a single, high-quality response.
+**Zyron is the first multi-agent coordination system built for Android** — a production-grade AI assistant that replaces a single chatbot with a **coordinated swarm of four specialist agents** running in parallel. Every query is routed to a team of domain experts — an analyst, an executor, a validator, and a synthesizer — whose outputs are fused into a single, high-quality response.
 
 Unlike standard AI apps where one model does everything, Zyron assigns each agent a strict role and a constitutional directive. They compete, cross-examine each other's work, and only the synthesized result reaches the user.
 
@@ -314,7 +314,7 @@ Practical STEM team for physics, chemistry, mathematics, statistics, and enginee
 
 Knowledgeable history team for events, eras, biographies, and geopolitical context.
 
-<table width="100%">
+<table width="100%" style="table-layout:fixed">
 <colgroup>
 <col width="25%"/>
 <col width="25%"/>
@@ -322,22 +322,22 @@ Knowledgeable history team for events, eras, biographies, and geopolitical conte
 <col width="25%"/>
 </colgroup>
 <tr>
-<th align="center">Agent 1 — Archivist</th>
-<th align="center">Agent 2 — Contextualist</th>
-<th align="center">Agent 3 — Cartographer</th>
-<th align="center">Agent 4 — Biographer</th>
+<th align="center" width="25%">Agent 1 — Archivist</th>
+<th align="center" width="25%">Agent 2 — Contextualist</th>
+<th align="center" width="25%">Agent 3 — Cartographer</th>
+<th align="center" width="25%">Agent 4 — Biographer</th>
 </tr>
 <tr>
-<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/archivist.png" width="64" height="64"/><br><b>Archivist</b></td>
-<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/contextualist.png" width="64" height="64"/><br><b>Contextualist</b></td>
-<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/cartographer.png" width="64" height="64"/><br><b>Cartographer</b></td>
-<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/biographer.png" width="64" height="64"/><br><b>Biographer</b></td>
+<td align="center" width="25%"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/archivist.png" width="64" height="64"/><br><b>Archivist</b></td>
+<td align="center" width="25%"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/contextualist.png" width="64" height="64"/><br><b>Contextualist</b></td>
+<td align="center" width="25%"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/cartographer.png" width="64" height="64"/><br><b>Cartographer</b></td>
+<td align="center" width="25%"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/biographer.png" width="64" height="64"/><br><b>Biographer</b></td>
 </tr>
 <tr>
-<td>Verified chronologies, key actors and roles, ESTABLISHED/PROBABLE/CONTESTED/UNKNOWN epistemic status, source gaps</td>
-<td>Trigger → intermediate → root cause chain, agency vs. structure, counterfactual reasoning</td>
-<td>Timeline tables, comparison grids, geographic and demographic context, narrative structure blueprint</td>
-<td>Authoritative scholarly narrative — honest about uncertainty, contextual judgment, no anachronism</td>
+<td width="25%">Verified chronologies, key actors and roles, <code>ESTABLISHED</code> / <code>PROBABLE</code> / <code>CONTESTED</code> / <code>UNKNOWN</code> epistemic status, source gaps</td>
+<td width="25%">Trigger → intermediate → root cause chain, agency vs. structure, counterfactual reasoning</td>
+<td width="25%">Timeline tables, comparison grids, geographic and demographic context, narrative structure blueprint</td>
+<td width="25%">Authoritative scholarly narrative — honest about uncertainty, contextual judgment, no anachronism</td>
 </tr>
 </table>
 
@@ -843,6 +843,49 @@ The **Writer agent** (Agent 4) supports five synthesis personas, selectable in S
 
 Minimum SDK: **21 (Android 5.0)**
 Target SDK: **34 (Android 14)**
+
+---
+
+## AI Tools Used as Assistant in Developing Zyron
+
+<div align="center">
+
+*Built with the intelligence of the world's most advanced AI coding assistants.*
+
+</div>
+
+<br/>
+
+<table width="100%" style="table-layout:fixed; border-collapse:separate; border-spacing:0">
+<colgroup>
+<col width="25%"/>
+<col width="25%"/>
+<col width="25%"/>
+<col width="25%"/>
+</colgroup>
+<tr>
+<td align="center" width="25%" style="padding:24px 16px; vertical-align:top; border:none">
+  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/IBMbob.png" width="80" height="80" style="object-fit:contain"/><br/><br/>
+  <b>IBM Bob</b><br/>
+  <sub>Primary AI coding assistant — architecture design, multi-agent orchestration logic, FastAPI/LangGraph backend, and full-stack code review.</sub>
+</td>
+<td align="center" width="25%" style="padding:24px 16px; vertical-align:top; border:none">
+  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/antigravity.png" width="80" height="80" style="object-fit:contain"/><br/><br/>
+  <b>Codex Antigravity</b><br/>
+  <sub>Advanced code generation — complex agent prompt engineering, API integration scaffolding, and logic optimisation.</sub>
+</td>
+<td align="center" width="25%" style="padding:24px 16px; vertical-align:top; border:none">
+  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/codex.png" width="80" height="80" style="object-fit:contain"/><br/><br/>
+  <b>Cursor</b><br/>
+  <sub>IDE-integrated AI pair programming — inline completions, context-aware edits, and rapid iteration across React Native and Python files.</sub>
+</td>
+<td align="center" width="25%" style="padding:24px 16px; vertical-align:top; border:none">
+  <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/claude.png" width="80" height="80" style="object-fit:contain"/><br/><br/>
+  <b>Claude</b><br/>
+  <sub>Long-context reasoning, documentation drafting, edge-case analysis, and reviewing multi-agent coordination strategies.</sub>
+</td>
+</tr>
+</table>
 
 ---
 
