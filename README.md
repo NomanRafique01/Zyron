@@ -250,14 +250,14 @@ Agent names, icons, and accent colors are always **remapped to the active team**
 <div align="center">
   <table>
     <tr>
-      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s1.png" width="100%" alt="Welcome Screen"/><br/><sub>Time-aware welcome screen with smart greeting</sub></td>
-      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s2.png" width="100%" alt="Agent Coordination Panel"/><br/><sub>Live agent coordination panel — 4 specialists running in parallel</sub></td>
-      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s3.png" width="100%" alt="Settings Panel"/><br/><sub>Settings control center — all configuration panels</sub></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s1.jpg" width="100%" alt="Welcome Screen"/><br/><sub>Time-aware welcome screen with smart greeting</sub></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s2.jpg" width="100%" alt="Agent Coordination Panel"/><br/><sub>Live agent coordination panel — 4 specialists running in parallel</sub></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s3.jpg" width="100%" alt="Settings Panel"/><br/><sub>Settings control center — all configuration panels</sub></td>
     </tr>
     <tr>
-      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s4.png" width="100%" alt="API Configuration"/><br/><sub>API Configuration Panel — per-agent socket and model setup</sub></td>
-      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s5.png" width="100%" alt="Agents Workshop"/><br/><sub>Agents Workshop — build custom agents and assemble custom teams</sub></td>
-      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s6.png" width="100%" alt="Live Talk Mode"/><br/><sub>Live Talk Mode — neural-net animation in speaking state</sub></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s4.jpg" width="100%" alt="API Configuration"/><br/><sub>API Configuration Panel — per-agent socket and model setup</sub></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s5.jpg" width="100%" alt="Agents Workshop"/><br/><sub>Agents Workshop — build custom agents and assemble custom teams</sub></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s6.jpg" width="100%" alt="Live Talk Mode"/><br/><sub>Live Talk Mode — neural-net animation in speaking state</sub></td>
     </tr>
   </table>
 </div>
