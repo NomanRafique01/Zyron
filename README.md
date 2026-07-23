@@ -75,14 +75,14 @@ Unlike standard AI apps where one model does everything, Zyron assigns each agen
 <div align="center">
   <table>
     <tr>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s1.png" width="100%" alt="Screenshot 1"/></td>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s2.png" width="100%" alt="Screenshot 2"/></td>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s3.png" width="100%" alt="Screenshot 3"/></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s1.jpg" width="100%" alt="Welcome Screen"/><br/><sub>Time-aware welcome screen with smart greeting</sub></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s2.jpg" width="100%" alt="Agent Coordination Panel"/><br/><sub>Live agent coordination panel — 4 specialists running in parallel</sub></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s3.jpg" width="100%" alt="Settings Panel"/><br/><sub>Settings control center — all configuration panels</sub></td>
     </tr>
     <tr>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s4.png" width="100%" alt="Screenshot 4"/></td>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s5.png" width="100%" alt="Screenshot 5"/></td>
-      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s6.png" width="100%" alt="Screenshot 6"/></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s4.jpg" width="100%" alt="API Configuration"/><br/><sub>API Configuration Panel — per-agent socket and model setup</sub></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s5.jpg" width="100%" alt="Agents Workshop"/><br/><sub>Agents Workshop — build custom agents and assemble custom teams</sub></td>
+      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s6.jpg" width="100%" alt="Live Talk Mode"/><br/><sub>Live Talk Mode — neural-net animation in speaking state</sub></td>
     </tr>
   </table>
 </div>
@@ -858,57 +858,28 @@ For production deployments requiring keys to leave the device entirely, `SECURIT
 
 ---
 
-## AI Tools Used in Building Zyron
+## Built with IBM Bob
 
-Two AI coding assistants were used throughout the entire development lifecycle of Zyron — each with a distinct role.
+<div align="center">
+<img src="https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg" width="96" height="48" style="object-fit:contain"/><br/>
+<b>IBM Bob</b> &nbsp;·&nbsp; <sub>IBM's AI software engineering assistant</sub>
+</div>
 
-<table>
-<tr>
-<td align="center" width="50%">
-
-<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/OpenAI_Logo.svg/320px-OpenAI_Logo.svg.png" width="48" height="48" style="object-fit:contain"/><br/>
-<b>OpenAI Codex</b><br/>
-<sub>powered by <b>GPT‑4o / o3 / GPT‑5.5</b></sub>
-
-</td>
-<td align="center" width="50%">
-
-<img src="https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg" width="72" height="48" style="object-fit:contain"/><br/>
-<b>IBM Bob</b><br/>
-<sub>IBM's AI software engineering assistant</sub>
-
-</td>
-</tr>
-</table>
-
-### <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/OpenAI_Logo.svg/320px-OpenAI_Logo.svg.png" width="18" height="18" style="vertical-align:middle"/> OpenAI Codex *(Primary)*
-
-Codex (with GPT‑5.5 alongside it) was the **primary AI assistant** across the entire project:
-
-| Area | What Codex handled |
-|------|--------------------|
-| **UI logic & planning** | Component hierarchy, state-management patterns, hook extraction strategy, and overall screen flow |
-| **Dynamic & responsive UI** | Animated coordination panels, adaptive layouts, keyboard-avoidance logic, and gesture-driven interactions |
-| **Debugging** | Race conditions in the agent pipeline, RAF-batching issues, animation driver conflicts, storage-migration edge cases |
-| **Documentation** | Writing and maintaining this README, `SECURITY.md`, `CHANGELOG.md`, `STRUCTURE.md`, and all in-code JSDoc |
-| **Backend design** | FastAPI / LangGraph orchestration layer, circuit-breaker fallback chains, document-extraction endpoint |
-| **Deployment** | EAS build profiles, Play Store AAB configuration, Railway production deployment, environment-variable strategy |
-| **Git & version control** | Commit message authoring, branch strategy, release tagging, and changelog generation |
-
-### <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg" width="36" height="18" style="vertical-align:middle"/> IBM Bob *(Parallel Assistant)*
-
-IBM Bob was used **in parallel with Codex** for targeted engineering tasks throughout the project:
+IBM Bob was the **primary AI coding assistant** used throughout the entire development lifecycle of Zyron — from architecture decisions and backend design all the way to UI polish and documentation.
 
 | Area | What IBM Bob handled |
 |------|----------------------|
-| **Code review & refinement** | Reviewing component logic, identifying redundant renders, and suggesting minimal targeted fixes |
-| **Architecture decisions** | Validating agent-orchestration design, LangGraph pipeline structure, and fallback-chain strategy |
-| **README authoring** | Drafting, iterating, and polishing README sections including this AI Tools section |
-| **Feature implementation** | Screen-level feature work in `MainApp.screen.jsx` and related chat-flow components |
-| **Debugging assistance** | Cross-validating bug hypotheses raised during Codex sessions for a second-opinion resolution |
-| **Best-practice guidance** | Enforcing minimal-change discipline — every edit traces directly to a user requirement |
-
-> Both tools were run side-by-side. Codex drove the bulk of the codebase; IBM Bob contributed precision edits, architectural review, and documentation polish.
+| **UI logic & planning** | Architecting component hierarchy, state-management patterns, hook extraction strategy, and overall screen flow |
+| **Dynamic & responsive UI** | Building animated coordination panels, adaptive layouts, keyboard-avoidance logic, and gesture-driven interactions that feel native on every Android device |
+| **Feature implementation** | Screen-level feature work across `MainApp.screen.jsx`, agent pipeline screens, settings panels, and chat-flow components |
+| **Code review & refinement** | Reviewing component logic, identifying redundant renders, and applying minimal targeted fixes throughout iteration |
+| **Debugging** | Tracing race conditions in the agent pipeline, RAF-batching issues, animation driver conflicts, and storage-migration edge cases |
+| **Architecture decisions** | Validating agent-orchestration design, LangGraph pipeline structure, circuit-breaker fallback chains, and document-extraction endpoint |
+| **Backend design** | Designing the FastAPI / LangGraph orchestration layer and Railway production deployment strategy |
+| **Deployment** | EAS build profiles, Play Store AAB configuration, Railway production deployment, and environment-variable strategy |
+| **Documentation** | Writing and maintaining this README, `SECURITY.md`, `CHANGELOG.md`, `STRUCTURE.md`, and all in-code JSDoc |
+| **Git & version control** | Commit message authoring, branch strategy, release tagging, and changelog generation |
+| **Best-practice guidance** | Enforcing minimal-change discipline — every edit traces directly to a stated user requirement |
 
 ---
 
