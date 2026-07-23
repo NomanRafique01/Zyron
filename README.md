@@ -1,12 +1,12 @@
 <div align="center">
 
 ```
-                              ███████╗██╗   ██╗██████╗  ██████╗ ███╗   ██╗
-                              ╚══███╔╝╚██╗ ██╔╝██╔══██╗██╔═══██╗████╗  ██║
-                                ███╔╝  ╚████╔╝ ██████╔╝██║   ██║██╔██╗ ██║
-                               ███╔╝    ╚██╔╝  ██╔══██╗██║   ██║██║╚██╗██║
-                              ███████╗   ██║   ██║  ██║╚██████╔╝██║ ╚████║
-                              ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝
+                             ███████╗██╗   ██╗██████╗  ██████╗ ███╗   ██╗
+                             ╚══███╔╝╚██╗ ██╔╝██╔══██╗██╔═══██╗████╗  ██║
+                               ███╔╝  ╚████╔╝ ██████╔╝██║   ██║██╔██╗ ██║
+                              ███╔╝    ╚██╔╝  ██╔══██╗██║   ██║██║╚██╗██║
+                             ███████╗   ██║   ██║  ██║╚██████╔╝██║ ╚████║
+                             ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝
 ```
 
 **A multi-agent AI assistant for Android — built on a swarm of specialist models<br>that analyze, execute, and synthesize in parallel.**
@@ -42,7 +42,7 @@
 
 ## What is Zyron?
 
-**Zyron is the first multi-agent coordination system built for Android** — a production-grade AI assistant that replaces a single chatbot with a **coordinated swarm of four specialist agents** running in parallel. Every query is routed to a team of domain experts — an analyst, an executor, a validator, and a synthesizer — whose outputs are fused into a single, high-quality response.
+Zyron is a production-grade Android AI assistant that replaces a single chatbot with a **coordinated swarm of four specialist agents** running in parallel. Every query is routed to a team of domain experts — an analyst, an executor, a validator, and a synthesizer — whose outputs are fused into a single, high-quality response.
 
 Unlike standard AI apps where one model does everything, Zyron assigns each agent a strict role and a constitutional directive. They compete, cross-examine each other's work, and only the synthesized result reaches the user.
 
@@ -51,6 +51,40 @@ Unlike standard AI apps where one model does everything, Zyron assigns each agen
 ---
 <div align="center">
   <img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/images/banner.png" alt="Zyron Banner" width="100%"/>
+</div>
+
+---
+
+<div align="center">
+  <table>
+    <tr>
+      <th align="center">Agent Coordination</th>
+      <th align="center">Live Talk Mode of Zyron</th>
+    </tr>
+    <tr>
+      <td align="center"><img src="https://github.com/NomanRafique01/Zyron/blob/main/assets/demo/demo.gif?raw=true" alt="Agent Coordination Demo" width="250"/></td>
+      <td align="center"><img src="https://github.com/NomanRafique01/Zyron/blob/main/assets/demo/livetalk.demo.gif?raw=true" alt="Live Talk Mode Demo" width="250"/></td>
+    </tr>
+  </table>
+</div>
+
+---
+
+## Screenshots
+
+<div align="center">
+  <table>
+    <tr>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s1.png" width="100%" alt="Screenshot 1"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s2.png" width="100%" alt="Screenshot 2"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s3.png" width="100%" alt="Screenshot 3"/></td>
+    </tr>
+    <tr>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s4.png" width="100%" alt="Screenshot 4"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s5.png" width="100%" alt="Screenshot 5"/></td>
+      <td><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s6.png" width="100%" alt="Screenshot 6"/></td>
+    </tr>
+  </table>
 </div>
 
 ---
@@ -101,166 +135,40 @@ The pipeline runs three phases:
 
 ---
 
-## Agent Orchestration
-
-Every query sent to Zyron passes through a multi-stage coordination pipeline. The orchestration layer is fully implemented in JavaScript and runs entirely on-device — no internet connection is required for the logic itself, only for the AI API calls.
-
-### Phase 1 — Query Analysis (`queryAnalyzer.js`)
-
-Before any agent is invoked, `analyzeQuery()` performs a zero-latency local classification of the incoming query. No API call is made — it is pure pattern matching and heuristics.
-
-It produces a rich `analysis` object that every downstream component reads:
-
-| Output flag | What it controls |
-|---|---|
-| `primaryType` | Dominant query category — `coding`, `stem`, `writing`, `analytical`, `financial`, `legal`, `creative`, `conversational`, `swarm_meta`, `general` |
-| `complexity` | `low` / `medium` / `high` — drives how much context is injected into prompts |
-| `responseLength` | `SHORT` / `MEDIUM` / `LONG` — guides the writer's output depth |
-| `coordinationMode` | `FULL` (all 4 agents) · `COMPACT` (shorter prompts) · `NONE` (simple greetings, pass-through) |
-| `needsWebSearch` | `true` if the query signals real-time data need — triggers the Tavily → Serper search before the pipeline |
-| `agentFocus` | Per-role `{ emphasis, deliver }` — each agent gets a strictly scoped deliverable so outputs never overlap |
-| `sharedBrief` | One-paragraph context block injected into every specialist system prompt |
-| `verbosityLevel` | `detailed` when explicit depth is requested; `simple` otherwise |
-
-**Agent focus is strictly partitioned.** For a coding query:
-- **Reasoner** → architectural decisions, interface contracts, edge-case inventory — *zero code*
-- **Coder** → complete runnable implementation with typed signatures — *zero architecture prose*
-- **Vision** → adversarial audit, vulnerability catalog, Big-O analysis, threat model — *zero implementation*
-- **Writer** → integrates all three into one authoritative final answer
-
-This strict partitioning prevents redundant output and forces genuine multi-angle coverage regardless of query type.
-
----
-
-### Phase 2 — Specialist Execution (parallel, `orchestrator.js`)
-
-The three specialist agents (`reasoner`, `coder`, `vision`) are dispatched simultaneously using `Promise.allSettled`. Each agent:
-
-1. Receives its own system prompt built by `buildSpecialistPrompt()` — containing its scoped `deliver` directive, the `sharedBrief`, web search results (if any), document context (if uploaded), and the user's query
-2. Streams tokens through `streamManager.js` → real token chunks are forwarded to the UI via the `onStreamDelta(role, chunk)` callback as they arrive
-3. Has an independent progress bar driven by actual chars received (`streamProgress(role, charCount, 6_000)`) — bars fill organically based on real output, not fake timers
-4. Falls through the **fallback chain** (`fallbackChain.js`) if its primary provider fails — the next configured provider for that role is tried automatically without user intervention
-
-**Empty-output guard:** After all three streams settle, any agent that produced fewer than 10 characters is retried with a blocking `callAgent()` call. Only if the retry also fails is the agent marked as failed in the UI. The writer still runs regardless — it uses whatever partial text each specialist produced.
-
-**Large-prompt chunking:** When the query is long and at least one specialist is on a weak/small model, `promptChunker.js` splits the user message into per-role focused slices. Each specialist receives its own scoped chunk; the writer receives all specialist outputs and assembles the full answer.
-
----
-
-### Phase 3 — Circuit Breakers (`circuitBreaker.js`)
-
-Every provider call is wrapped in a session-scoped circuit breaker:
-
-- A provider that fails **3 consecutive times** within a session has its breaker **opened** — all subsequent calls to that provider are skipped immediately without a network round-trip
-- After **60 seconds**, the breaker enters half-open state — one retry is permitted
-- On success, the failure counter resets to zero
-- The breaker state is **in-memory only** — it resets on app restart
-
-This prevents a single bad provider from causing repeated timeout delays across all agents in a session.
-
----
-
-### Phase 4 — Synthesis (`synthesizer.js`, `qualityJudge.js`)
-
-Once all specialists complete, Agent 4 (the Writer) runs:
-
-1. `deduplicateOutputs()` is called on specialist outputs — currently a pass-through (no suppression), ensuring all specialist content reaches the writer unchanged
-2. `trimOutput()` trims each specialist's text to remove leading/trailing noise
-3. `buildQualityReport()` generates a quality brief — flags which specialists produced strong vs. weak output so the writer can weight them accordingly
-4. `buildWriterPrompt()` assembles the final synthesis prompt: user query + analysis + persona instruction + user profile + all specialist outputs + quality report + search results + document context
-5. The writer streams its response in real time. If the stream stalls or fails, a **blocking retry** is attempted before giving up. If the retry also fails, any partial streamed text is used; if there is none, `buildFallbackAnswer()` concatenates the specialist outputs directly as a last resort
-
----
-
-### Abort propagation
-
-Every phase checks `signal.aborted` (from the user's Stop button) at the start of each iteration. A mid-stream abort cancels the active fetch, exits the pipeline immediately, and clears all progress intervals — no partial state is left in the UI.
-
----
-
 ## Backend + Local Fallback Logic
 
-Zyron uses a **dual-engine architecture** — a Railway-hosted Python FastAPI backend as the primary orchestrator, with a fully self-contained local JS engine as a silent fallback. The user never sees the switch happen. The entry point for all orchestration calls is `backendBridge.js`.
+Zyron uses a **dual-engine architecture** — a Railway-hosted Python FastAPI backend as the primary orchestrator, with a fully self-contained local JS engine as a silent fallback. The user never sees the switch happen.
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                      backendBridge.js                        │
-│                                                              │
-│  Every message → POST /orchestrate (no timeout, waits)       │
-│                           │                                  │
-│           ┌───────────────┴───────────────┐                  │
-│           │                               │                  │
-│      ✅ 200 OK                    ❌ Network error          │
-│           │                        Non-200 response          │
-│           │                               │                  │
-│   Remap agents to active                  ▼                  │
-│   team UI metadata            Local runAgentsOrchestrator()  │
-│   Return fused response       Full pipeline — streaming,     │
-│                               circuit-breakers, fallbacks,   │
-│                               synthesis — runs on-device     │
-└──────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                   backendBridge.js                      │
+│                                                         │
+│  1. POST /orchestrate → Railway backend (30 s timeout)  │
+│         │                                               │
+│         ├── ✅ 200 OK  → remap agents to active team   │
+│         │              → return fused response          │
+│         │                                               │
+│         └── ❌ Timeout │ Network error │ Non-200        │
+│                        │                                │
+│                        ▼                                │
+│         Local runAgentsOrchestrator() — silent fallback │
+│         Full SSE streaming, circuit-breakers, dedup     │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ### What the backend does
-
-The backend is a Python FastAPI service deployed on Railway. It mirrors the local orchestration pipeline using LangGraph.
-
-- **Endpoint:** `POST /orchestrate` — accepts `{ query, agentConfigs, team, persona, userProfile, searchResults, documentContext }`
-- Runs three specialist agents in parallel via a LangGraph graph, then runs the writer synthesis node
-- Returns `{ text, agents[], tokenUsage, meta }` JSON
-- **Endpoint:** `POST /extract-document` — accepts a base64-encoded file (PDF, DOCX, TXT) and returns extracted plain text for prompt injection into the agent pipeline
-- **Web search:** `web_search.py` runs a Tavily → Serper fallback search before the pipeline; up to 5 `key_facts` from results are injected into every specialist prompt. Returns `None` silently when both providers are unavailable
-
-### Coordination panel during backend call
-
-While the backend request is in-flight, the frontend drives its own coordination panel animation so the UI is never frozen:
-
-1. **Queued state** — all 4 active-team agents appear immediately at 0 % progress
-2. **Working state** — after one tick, all bars begin an exponential-approach animation: `progress = 5 + 73 × (1 − e^(−t/28000))`, capped at 78 %
-3. **Complete** — on `200 OK`, all bars jump to 100 % and badges flip to "Done" simultaneously
-
-Agent names, icons, and accent colors are always **remapped to the active team** after a backend response via `remapAgentsToActiveTeam()` — the backend drives the logic, the frontend owns the visual identity.
+- **Python FastAPI** on Railway (`https://zyron-production-7af1.up.railway.app`)
+- `POST /orchestrate` — accepts `{ query, agentConfigs, team, persona, userProfile, searchResults, documentContext }`
+- Runs three specialist agents in parallel via `LangGraph` then synthesizes via the writer agent
+- Returns structured `{ text, agents[], tokenUsage, meta }` JSON
+- `POST /extract-document` — accepts a base64-encoded file (PDF, DOCX, TXT) and returns extracted plain text for prompt injection
+- **Web search** — `web_search.py` fires a Tavily → Serper fallback search before the pipeline executes; `key_facts` from raw results (up to 5) are injected into every specialist prompt; returns `None` silently when both providers fail
 
 ### Fallback guarantee
-
-- The backend fetch has **no timeout** — it waits indefinitely for the server to respond. The only triggers for fallback are a network error or a non-200 response
-- If the user presses **Stop** while waiting, the abort signal propagates to both the fetch call and the local engine — no partial state is left
-- The local `runAgentsOrchestrator()` is feature-complete: it runs the full Phase 1–4 pipeline described above, including web search, circuit breakers, fallback chains, streaming, and synthesis
-- A **dev toggle** (`setForceLocal(true)`) skips the backend entirely and routes directly to the local engine — used during development to test local orchestration without needing the Railway service
-
----
-
-<div align="center">
-  <table>
-    <tr>
-      <th align="center">Agent Coordination</th>
-      <th align="center">Live Talk Mode of Zyron</th>
-    </tr>
-    <tr>
-      <td align="center"><img src="https://github.com/NomanRafique01/Zyron/blob/main/assets/demo/demo.gif?raw=true" alt="Agent Coordination Demo" width="250"/></td>
-      <td align="center"><img src="https://github.com/NomanRafique01/Zyron/blob/main/assets/demo/livetalk.demo.gif?raw=true" alt="Live Talk Mode Demo" width="250"/></td>
-    </tr>
-  </table>
-</div>
-
----
-
-## Screenshots
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s1.jpg" width="100%" alt="Welcome Screen"/><br/><sub>Time-aware welcome screen with smart greeting</sub></td>
-      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s2.jpg" width="100%" alt="Agent Coordination Panel"/><br/><sub>Live agent coordination panel — 4 specialists running in parallel</sub></td>
-      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s3.jpg" width="100%" alt="Settings Panel"/><br/><sub>Settings control center — all configuration panels</sub></td>
-    </tr>
-    <tr>
-      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s4.jpg" width="100%" alt="API Configuration"/><br/><sub>API Configuration Panel — per-agent socket and model setup</sub></td>
-      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s5.jpg" width="100%" alt="Agents Workshop"/><br/><sub>Agents Workshop — build custom agents and assemble custom teams</sub></td>
-      <td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/screenshots/s6.jpg" width="100%" alt="Live Talk Mode"/><br/><sub>Live Talk Mode — neural-net animation in speaking state</sub></td>
-    </tr>
-  </table>
-</div>
+- Timeout is **30 seconds**. If the backend doesn't respond in time, the local engine starts immediately — no error is ever shown to the user
+- If the user pressed **Stop** while waiting, the abort propagates cleanly across both paths
+- **Progress bar animation** starts on the frontend while the backend call is in-flight: agents animate from 0 % → 78 % (exponential approach, τ = 28 s), then jump to 100 % on response
+- Agent names, icons, and accent colors are always **remapped to the active team** after a backend response — the backend drives logic, the frontend owns visual identity
 
 ---
 
@@ -406,7 +314,7 @@ Practical STEM team for physics, chemistry, mathematics, statistics, and enginee
 
 Knowledgeable history team for events, eras, biographies, and geopolitical context.
 
-<table width="100%" style="table-layout:fixed">
+<table width="100%">
 <colgroup>
 <col width="25%"/>
 <col width="25%"/>
@@ -414,22 +322,22 @@ Knowledgeable history team for events, eras, biographies, and geopolitical conte
 <col width="25%"/>
 </colgroup>
 <tr>
-<th align="center" width="25%">Agent 1 — Archivist</th>
-<th align="center" width="25%">Agent 2 — Contextualist</th>
-<th align="center" width="25%">Agent 3 — Cartographer</th>
-<th align="center" width="25%">Agent 4 — Biographer</th>
+<th align="center">Agent 1 — Archivist</th>
+<th align="center">Agent 2 — Contextualist</th>
+<th align="center">Agent 3 — Cartographer</th>
+<th align="center">Agent 4 — Biographer</th>
 </tr>
 <tr>
-<td align="center" width="25%"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/archivist.png" width="64" height="64"/><br><b>Archivist</b></td>
-<td align="center" width="25%"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/contextualist.png" width="64" height="64"/><br><b>Contextualist</b></td>
-<td align="center" width="25%"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/cartographer.png" width="64" height="64"/><br><b>Cartographer</b></td>
-<td align="center" width="25%"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/biographer.png" width="64" height="64"/><br><b>Biographer</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/archivist.png" width="64" height="64"/><br><b>Archivist</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/contextualist.png" width="64" height="64"/><br><b>Contextualist</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/cartographer.png" width="64" height="64"/><br><b>Cartographer</b></td>
+<td align="center"><img src="https://raw.githubusercontent.com/NomanRafique01/zyron/main/assets/agent-icons/historians/biographer.png" width="64" height="64"/><br><b>Biographer</b></td>
 </tr>
 <tr>
-<td width="25%">Verified chronologies, key actors and roles, <code>ESTABLISHED</code> / <code>PROBABLE</code> / <code>CONTESTED</code> / <code>UNKNOWN</code> epistemic status, source gaps</td>
-<td width="25%">Trigger → intermediate → root cause chain, agency vs. structure, counterfactual reasoning</td>
-<td width="25%">Timeline tables, comparison grids, geographic and demographic context, narrative structure blueprint</td>
-<td width="25%">Authoritative scholarly narrative — honest about uncertainty, contextual judgment, no anachronism</td>
+<td>Verified chronologies, key actors and roles, ESTABLISHED/PROBABLE/CONTESTED/UNKNOWN epistemic status, source gaps</td>
+<td>Trigger → intermediate → root cause chain, agency vs. structure, counterfactual reasoning</td>
+<td>Timeline tables, comparison grids, geographic and demographic context, narrative structure blueprint</td>
+<td>Authoritative scholarly narrative — honest about uncertainty, contextual judgment, no anachronism</td>
 </tr>
 </table>
 
@@ -460,6 +368,77 @@ Master finance team for personal, corporate, and business finance.
 <td>Structured financial report: Analysis → Advice → Audit Findings → Final Recommendation</td>
 </tr>
 </table>
+
+---
+
+## Technologies Used
+
+A full-stack overview of every layer Zyron is built on — from the on-device UI to the cloud orchestration backend.
+
+### Backend — Python / FastAPI / LangGraph
+
+| Technology | Version | Integration |
+|---|---|---|
+| **Python** | 3.11 | Backend runtime on Railway |
+| **FastAPI** | 0.111 | REST API server — `/health` + `/orchestrate` endpoints |
+| **LangGraph** | latest | Multi-agent pipeline graph — three parallel specialist nodes + writer synthesis node |
+| **LangChain** | latest | LLM abstraction layer used inside LangGraph nodes for prompt building and provider calls |
+| **Pydantic** | v2 | Request / response model validation (`models.py`) |
+| **Docker** | — | Containerised backend — consistent builds and local dev environment |
+| **Railway** | — | Cloud deployment platform — auto-deploy from `main` branch |
+| **Uvicorn** | — | ASGI server for FastAPI |
+
+### Frontend — React Native / Expo
+
+| Technology | Version | Integration |
+|---|---|---|
+| **React Native** | 0.81.5 | Core UI framework — all screens, navigation, animations |
+| **Expo SDK** | 54 | Build toolchain, native module access, OTA updates |
+| **expo-secure-store** | — | Android Keystore-backed encrypted API key storage |
+| **expo-sqlite** | — | On-device SQLite database for conversation + memory persistence |
+| **expo-speech** | — | Text-to-speech output for Live Talk voice responses |
+| **expo-speech-recognition** | — | Real-time STT — mic dictation and Live Talk input |
+| **expo-local-authentication** | — | Biometric / PIN gate for API Config Lock |
+| **expo-blur** | — | Settings modal blur backgrounds |
+| **expo-linear-gradient** | — | Agent glow accent effects |
+| **expo-clipboard** | — | Copy-to-clipboard on code blocks |
+| **expo-web-browser** | — | GitHub OAuth redirect handler |
+| **react-native-webview** | — | KaTeX LaTeX rendering sandbox |
+| **react-native-svg** | — | SVG team icons, decorative elements, Live Talk neural animation |
+| **react-native-keyboard-controller** | — | Cross-platform keyboard layout tracking |
+| **react-native-safe-area-context** | — | Edge-to-edge safe area insets |
+| **@react-native-async-storage** | — | User profile, team selection, custom agents + teams |
+| **@react-native-community/netinfo** | — | Offline detection |
+
+### AI Providers
+
+| Provider | Models Used | Role |
+|---|---|---|
+| **OpenRouter** | `nvidia/nemotron-3-super-120b-a12b:free` + 100+ | Default free-tier agent socket |
+| **OpenAI** | `gpt-4o-mini`, `gpt-4o`, o-series | General reasoning and synthesis |
+| **Anthropic** | `claude-3-5-haiku-latest`, `claude-3-5-sonnet` | High-quality analysis and writing |
+| **Google Gemini** | `gemini-2.5-flash`, `gemini-pro` | STEM, multimodal |
+| **Groq** | `llama-3.3-70b-versatile` | Ultra-low-latency inference for Live Talk |
+| **Mistral** | `mistral-small-latest` | Writer / synthesis agent default |
+| **DeepSeek** | `deepseek-chat`, `deepseek-reasoner` | Extended chain-of-thought reasoning |
+| **GLM / Zhipu** | `glm-4-flash`, `glm-4-air` | Low-cost high-speed inference |
+
+### Data & Storage
+
+| Technology | Integration |
+|---|---|
+| **SQLite** (`expo-sqlite`) | Full conversation history, session index, user memory facts — all stored on-device |
+| **AsyncStorage** | Non-sensitive user preferences — active team, profile settings, custom agents, custom teams |
+| **Android Keystore** (`EncryptedSharedPreferences`) | All API keys — hardware-backed encryption, never stored in JS bundle or AsyncStorage |
+
+### Rendering & Math
+
+| Technology | Integration |
+|---|---|
+| **KaTeX 0.17** | LaTeX formula typesetting — inline (`$...$`) and display (`$$...$$`) math rendered in a sandboxed WebView |
+| **react-native-webview** | WebView host for KaTeX rendering |
+| **mathParser.utils.js** | Custom parser that detects and splits LaTeX and chemical formulae out of raw LLM text before rendering |
+| **SyntaxCode component** | Syntax-highlighted code blocks with language auto-detection and copy-to-clipboard |
 
 ---
 
@@ -498,6 +477,11 @@ The input bar now includes a **microphone button** alongside the text field. Tap
 - Requests `RECORD_AUDIO` permission on first use
 - Live partial results update the input field in real time as you speak
 - Tap the mic button again (or tap Stop) to end dictation early
+
+### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="#7B2FFF" stroke="#7B2FFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Real-Time Streaming
+- **Server-Sent Events (SSE)** for all supporting providers — tokens stream live to screen
+- **Per-agent streaming state** — each agent has its own progress bar and status label (Thinking / Building / Stress-testing / Documenting / etc.)
+- **Graceful abort** — stop mid-generation, cancels cleanly across all active sockets
 
 ### <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle"><circle cx="11" cy="11" r="7" stroke="#7B2FFF" stroke-width="1.8"/><path d="M16.5 16.5L21 21" stroke="#7B2FFF" stroke-width="2" stroke-linecap="round"/><path d="M8 11h6M11 8v6" stroke="#7B2FFF" stroke-width="1.6" stroke-linecap="round"/></svg> Web Search *(New)*
 Zyron enriches every query with live web results before the agent pipeline runs — no manual "search mode" toggle required.
@@ -617,83 +601,9 @@ User attaches file / image
 - **API Config panel** — per-provider key entry, model selection, key status verification, share-key-across-agents toggle
 - **Privacy panel** — privacy mode, profile context injection toggle
 - **Reset panel** — wipe conversation history, clear API keys, full factory reset
-
 ---
 
-## Technologies Used
 
-A full-stack overview of every layer Zyron is built on — from the on-device UI to the cloud orchestration backend.
-
-### Backend — Python / FastAPI / LangGraph
-
-| Technology | Version | Integration |
-|---|---|---|
-| **Python** | 3.13 | Backend runtime on Railway |
-| **FastAPI** | 0.115.12 | REST API server — `/health` + `/orchestrate` endpoints |
-| **LangGraph** | 1.2.9 | Multi-agent pipeline graph — three parallel specialist nodes + writer synthesis node |
-| **LangChain** | 1.3.14 | LLM abstraction layer used inside LangGraph nodes for prompt building and provider calls |
-| **Pydantic** | 2.11.4 | Request / response model validation (`models.py`) |
-| **Uvicorn** | 0.34.3 | ASGI server for FastAPI |
-| **Docker** | — | Containerised backend — consistent builds and local dev environment |
-| **Railway** | — | Cloud deployment platform — auto-deploy from `main` branch |
-
-### Frontend — React Native / Expo
-
-| Technology | Version | Integration |
-|---|---|---|
-| **React Native** | 0.81.5 | Core UI framework — all screens, navigation, animations |
-| **React** | 19.1.0 | UI component runtime |
-| **Expo SDK** | 54.0.36 | Build toolchain, native module access, OTA updates |
-| **expo-secure-store** | 15.0.8 | Android Keystore-backed encrypted API key storage |
-| **expo-sqlite** | 16.0.10 | On-device SQLite database for conversation + memory persistence |
-| **expo-speech** | 14.0.8 | Text-to-speech output for Live Talk voice responses |
-| **expo-speech-recognition** | 3.1.3 | Real-time STT — mic dictation and Live Talk input |
-| **expo-local-authentication** | 17.0.8 | Biometric / PIN gate for API Config Lock |
-| **expo-blur** | 15.0.8 | Settings modal blur backgrounds |
-| **expo-linear-gradient** | 15.0.8 | Agent glow accent effects |
-| **expo-clipboard** | 8.0.8 | Copy-to-clipboard on code blocks |
-| **expo-web-browser** | 15.0.11 | GitHub OAuth redirect handler |
-| **expo-document-picker** | 14.0.8 | File attachment for document analysis |
-| **expo-image-picker** | 17.0.11 | Image attachment for vision analysis |
-| **react-native-webview** | 13.15.0 | KaTeX LaTeX rendering sandbox |
-| **react-native-svg** | 15.12.1 | SVG team icons, decorative elements, Live Talk neural animation |
-| **react-native-keyboard-controller** | 1.22.1 | Cross-platform keyboard layout tracking |
-| **react-native-safe-area-context** | 5.6.0 | Edge-to-edge safe area insets |
-| **@react-native-async-storage/async-storage** | 2.2.0 | User profile, team selection, custom agents + teams |
-| **@react-native-community/netinfo** | 11.4.1 | Offline detection |
-| **TypeScript** | 5.9.2 | Static typing across the entire frontend codebase |
-
-### AI Providers
-
-| Provider | Models Used | Role |
-|---|---|---|
-| **OpenRouter** | `nvidia/nemotron-3-super-120b-a12b:free` + 100+ | Default free-tier agent socket |
-| **OpenAI** | `gpt-4o-mini`, `gpt-4o`, o-series | General reasoning and synthesis |
-| **Anthropic** | `claude-3-5-haiku-latest`, `claude-3-5-sonnet` | High-quality analysis and writing |
-| **Google Gemini** | `gemini-2.5-flash`, `gemini-pro` | STEM, multimodal |
-| **Groq** | `llama-3.3-70b-versatile` | Ultra-low-latency inference for Live Talk |
-| **Mistral** | `mistral-small-latest` | Writer / synthesis agent default |
-| **DeepSeek** | `deepseek-chat`, `deepseek-reasoner` | Extended chain-of-thought reasoning |
-| **GLM / Zhipu** | `glm-4-flash`, `glm-4-air` | Low-cost high-speed inference |
-
-### Data & Storage
-
-| Technology | Integration |
-|---|---|
-| **SQLite** (`expo-sqlite`) | Full conversation history, session index, user memory facts — all stored on-device |
-| **AsyncStorage** | Non-sensitive user preferences — active team, profile settings, custom agents, custom teams |
-| **Android Keystore** (`EncryptedSharedPreferences`) | All API keys — hardware-backed encryption, never stored in JS bundle or AsyncStorage |
-
-### Rendering & Math
-
-| Technology | Integration |
-|---|---|
-| **KaTeX 0.17** | LaTeX formula typesetting — inline (`$...$`) and display (`$$...$$`) math rendered in a sandboxed WebView |
-| **react-native-webview** | WebView host for KaTeX rendering |
-| **mathParser.utils.js** | Custom parser that detects and splits LaTeX and chemical formulae out of raw LLM text before rendering |
-| **SyntaxCode component** | Syntax-highlighted code blocks with language auto-detection and copy-to-clipboard |
-
----
 
 ## Supported AI Providers
 
@@ -711,6 +621,34 @@ Zyron connects to **eight AI providers**. Each agent socket is independently con
 | **GLM / Zhipu** | `glm-4-flash` | GLM-4 Flash, Air, Plus |
 
 All providers support free model tiers where available. Keys are stored per-agent and can be shared across agents via the share-key setting.
+
+---
+
+## Tech Stack
+
+```
+React Native 0.81.5 + Expo SDK 54
+├── expo-secure-store              Android Keystore-backed key storage
+├── expo-sqlite                    On-device conversation + memory persistence
+├── expo-speech                    TTS — Live Talk voice output
+├── expo-speech-recognition        STT — Mic input + Live Talk voice input
+├── expo-local-authentication      Biometric/PIN API lock gate
+├── expo-blur                      Settings modal blur backgrounds
+├── expo-linear-gradient           Agent glow effects
+├── expo-clipboard                 Code block copy-to-clipboard
+├── expo-web-browser               GitHub OAuth redirect handler
+├── react-native-webview           KaTeX LaTeX rendering
+├── react-native-svg               SVG icons, decorative elements, team icons
+├── react-native-keyboard-controller  Cross-platform keyboard layout tracking
+├── react-native-safe-area-context    Edge-to-edge safe area handling
+├── @react-native-async-storage       User profile, team selection, custom teams/agents
+├── @react-native-community/netinfo   Offline detection
+└── katex 0.17                     LaTeX math typesetting
+```
+
+**Backend:** Python 3.11 · FastAPI · LangGraph · Railway deployment
+
+**Build toolchain:** EAS Build with development / preview / production-APK / production-AAB profiles.
 
 ---
 
@@ -864,19 +802,6 @@ eas build --profile production --platform android
 
 ---
 
-## Download
-
-| Version | Status | Download |
-|---------|--------|----------|
-| v1.0.0 | ✅ Stable (Recommended) | [Download APK](https://github.com/NomanRafique01/Zyron/releases/download/v1.0.0/zyron.apk) |
-| v0.9.0-beta | 🧪 Beta (Legacy) | [Download APK](https://github.com/NomanRafique01/Zyron/releases/download/beta/Zyron.apk) |
-
-> **Minimum requirement:** Android 5.0 (SDK 21) or higher.
->
-> For full release notes and version history, visit the [Releases page](https://github.com/NomanRafique01/Zyron/releases).
-
----
-
 ## Configuration
 
 API keys are entered directly in the app's **Settings → API Config** panel after launch. Keys are stored in Android Keystore-backed encrypted storage — never in source code or config files.
@@ -921,29 +846,6 @@ Target SDK: **34 (Android 14)**
 
 ---
 
-## AI Tools Used in Building Zyron
-
-<div align="center">
-
-<img src="https://raw.githubusercontent.com/NomanRafique01/Zyron/main/assets/tool.icons/codex.png" width="64" height="64" style="object-fit:contain"/><br/>
-<b>OpenAI Codex</b> &nbsp;·&nbsp; <sub>powered by <b>GPT‑4o / o3</b> — alongside <b>GPT‑5.5</b></sub>
-
-</div>
-
-Codex (with GPT‑5.5 alongside it) was the primary AI assistant throughout the entire development lifecycle of Zyron:
-
-| Area | What Codex handled |
-|------|--------------------|
-| **UI logic & planning** | Architecting component hierarchy, state-management patterns, hook extraction strategy, and overall screen flow |
-| **Dynamic & responsive UI** | Building animated coordination panels, adaptive layouts, keyboard-avoidance logic, and gesture-driven interactions that feel native on every Android device |
-| **Debugging** | Tracing race conditions in the agent pipeline, RAF-batching issues, animation driver conflicts, and storage-migration edge cases |
-| **Documentation** | Writing and maintaining this README, `SECURITY.md`, `CHANGELOG.md`, `STRUCTURE.md`, and all in-code JSDoc |
-| **Backend design** | Designing the FastAPI / LangGraph orchestration layer, circuit-breaker fallback chains, and document-extraction endpoint |
-| **Deployment** | EAS build profiles, Play Store AAB configuration, Railway production deployment, and environment-variable strategy |
-| **Git & version control** | Commit message authoring, branch strategy, release tagging, and changelog generation |
-
----
-
 ## Security
 
 API keys live on the device. The app's security model is built around three principles:
@@ -953,6 +855,60 @@ API keys live on the device. The app's security model is built around three prin
 3. **Spend caps** — the most important protection is a hard monthly spend limit on every provider dashboard (see [`SECURITY.md`](SECURITY.md))
 
 For production deployments requiring keys to leave the device entirely, `SECURITY.md` describes a ~50-line stateless Cloudflare Worker / Vercel Edge Function proxy that eliminates on-device key storage.
+
+---
+
+## AI Tools Used in Building Zyron
+
+Two AI coding assistants were used throughout the entire development lifecycle of Zyron — each with a distinct role.
+
+<table>
+<tr>
+<td align="center" width="50%">
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/OpenAI_Logo.svg/320px-OpenAI_Logo.svg.png" width="48" height="48" style="object-fit:contain"/><br/>
+<b>OpenAI Codex</b><br/>
+<sub>powered by <b>GPT‑4o / o3 / GPT‑5.5</b></sub>
+
+</td>
+<td align="center" width="50%">
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg" width="72" height="48" style="object-fit:contain"/><br/>
+<b>IBM Bob</b><br/>
+<sub>IBM's AI software engineering assistant</sub>
+
+</td>
+</tr>
+</table>
+
+### <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/OpenAI_Logo.svg/320px-OpenAI_Logo.svg.png" width="18" height="18" style="vertical-align:middle"/> OpenAI Codex *(Primary)*
+
+Codex (with GPT‑5.5 alongside it) was the **primary AI assistant** across the entire project:
+
+| Area | What Codex handled |
+|------|--------------------|
+| **UI logic & planning** | Component hierarchy, state-management patterns, hook extraction strategy, and overall screen flow |
+| **Dynamic & responsive UI** | Animated coordination panels, adaptive layouts, keyboard-avoidance logic, and gesture-driven interactions |
+| **Debugging** | Race conditions in the agent pipeline, RAF-batching issues, animation driver conflicts, storage-migration edge cases |
+| **Documentation** | Writing and maintaining this README, `SECURITY.md`, `CHANGELOG.md`, `STRUCTURE.md`, and all in-code JSDoc |
+| **Backend design** | FastAPI / LangGraph orchestration layer, circuit-breaker fallback chains, document-extraction endpoint |
+| **Deployment** | EAS build profiles, Play Store AAB configuration, Railway production deployment, environment-variable strategy |
+| **Git & version control** | Commit message authoring, branch strategy, release tagging, and changelog generation |
+
+### <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/IBM_logo.svg" width="36" height="18" style="vertical-align:middle"/> IBM Bob *(Parallel Assistant)*
+
+IBM Bob was used **in parallel with Codex** for targeted engineering tasks throughout the project:
+
+| Area | What IBM Bob handled |
+|------|----------------------|
+| **Code review & refinement** | Reviewing component logic, identifying redundant renders, and suggesting minimal targeted fixes |
+| **Architecture decisions** | Validating agent-orchestration design, LangGraph pipeline structure, and fallback-chain strategy |
+| **README authoring** | Drafting, iterating, and polishing README sections including this AI Tools section |
+| **Feature implementation** | Screen-level feature work in `MainApp.screen.jsx` and related chat-flow components |
+| **Debugging assistance** | Cross-validating bug hypotheses raised during Codex sessions for a second-opinion resolution |
+| **Best-practice guidance** | Enforcing minimal-change discipline — every edit traces directly to a user requirement |
+
+> Both tools were run side-by-side. Codex drove the bulk of the codebase; IBM Bob contributed precision edits, architectural review, and documentation polish.
 
 ---
 
